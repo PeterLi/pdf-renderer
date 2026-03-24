@@ -940,6 +940,7 @@ export class AnnotationLayer {
     const commit = () => {
       if (committed) return;
       committed = true;
+      console.log('[Text commit] Committing with value:', input.value);
       const content = input.value.trim();
       if (content) {
         const fontSize = Math.max(this.strokeWidth * 4, 14);
@@ -965,7 +966,22 @@ export class AnnotationLayer {
       console.log('[Text commit] Re-enabled canvas pointer events');
     };
 
-    input.addEventListener('blur', commit);
+    // CRITICAL FIX: Delay blur listener to prevent immediate closure
+    // The input needs time to actually receive focus before blur can trigger
+    let blurEnabled = false;
+    setTimeout(() => {
+      blurEnabled = true;
+      console.log('[Text input] Blur listener now enabled');
+    }, 100);
+    
+    input.addEventListener('blur', () => {
+      if (blurEnabled) {
+        console.log('[Text blur] Blur event fired');
+        commit();
+      } else {
+        console.log('[Text blur] Blur event ignored (too soon)');
+      }
+    });
     input.addEventListener('keydown', (e) => {
       e.stopPropagation(); // Don't trigger global shortcuts while typing
       if (e.key === 'Escape') {
