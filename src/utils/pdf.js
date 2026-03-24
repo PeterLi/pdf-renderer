@@ -2,10 +2,9 @@
  * PDF.js helpers — loading, rendering, thumbnails.
  */
 import * as pdfjsLib from 'pdfjs-dist';
-import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-// Configure worker - use Vite's import with ?url
-pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
+// Configure worker - use public folder copy (most reliable with Vite)
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 /**
  * Load a PDF document from a URL or ArrayBuffer.

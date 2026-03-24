@@ -7,6 +7,10 @@ export default defineConfig({
     assetsDir: 'assets',
   },
   optimizeDeps: {
-    include: ['pdfjs-dist', 'pdf-lib'],
+    include: ['pdfjs-dist'],
+    exclude: ['pdfjs-dist/build/pdf.worker.min.mjs'],
+  },
+  worker: {
+    format: 'es',
   },
 });
