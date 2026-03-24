@@ -138,11 +138,73 @@ export async function exportAnnotatedPDF(originalPdfBytes, store, canvasScale = 
           });
           break;
         }
+
+        case 'stamp': {
+          try {
+            const { x, y, width, height, stamp, rotation } = ann.data;
+            
+            // Load SVG and convert to PNG via canvas
+            const svgUrl = `/pdf-stamps/${stamp}.svg`;
+            const img = await loadImage(svgUrl);
+            
+            // Create canvas to rasterize SVG (with extra space for rotation)
+            const maxDim = Math.max(width, height);
+            const canvasSize = rotation ? maxDim * 2 : maxDim;
+            const canvas = document.createElement('canvas');
+            canvas.width = canvasSize;
+            canvas.height = canvasSize;
+            const ctx = canvas.getContext('2d');
+            
+            ctx.save();
+            
+            // Center and rotate if needed
+            ctx.translate(canvasSize / 2, canvasSize / 2);
+            if (rotation) {
+              ctx.rotate((rotation * Math.PI) / 180);
+            }
+            ctx.drawImage(img, -width / 2, -height / 2, width, height);
+            
+            ctx.restore();
+            
+            // Convert canvas to PNG blob
+            const pngDataUrl = canvas.toDataURL('image/png');
+            const pngBytes = await fetch(pngDataUrl).then(r => r.arrayBuffer());
+            
+            // Embed PNG in PDF
+            const pngImage = await doc.embedPng(pngBytes);
+            
+            // Calculate position accounting for rotation
+            const centerX = (x + width / 2) / canvasScale;
+            const centerY = pdfHeight - (y + height / 2) / canvasScale;
+            
+            page.drawImage(pngImage, {
+              x: centerX - (canvasSize / canvasScale) / 2,
+              y: centerY - (canvasSize / canvasScale) / 2,
+              width: canvasSize / canvasScale,
+              height: canvasSize / canvasScale,
+            });
+            
+            console.log(`[export] Embedded stamp: ${stamp} at ${x},${y} rotation:${rotation}`);
+          } catch (err) {
+            console.error('[export] Failed to embed stamp:', err);
+          }
+          break;
+        }
       }
     }
   }
 
   return doc.save();
+}
+
+// Helper to load image
+function loadImage(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = url;
+  });
 }
 
 function hexToRgb(hex) {

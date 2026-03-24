@@ -1177,8 +1177,11 @@ export class AnnotationLayer {
     console.log('[_createTextInput] Input offsetParent:', input.offsetParent);
     console.log('[_createTextInput] Input computed style:', window.getComputedStyle(input).display, window.getComputedStyle(input).visibility, window.getComputedStyle(input).zIndex);
     
-    input.focus();
-    console.log('[_createTextInput] Focused input, activeElement:', document.activeElement === input);
+    // Delay focus to next frame to ensure input is fully rendered
+    requestAnimationFrame(() => {
+      input.focus();
+      console.log('[_createTextInput] Focused input, activeElement:', document.activeElement === input);
+    });
     
     // CRITICAL FIX: Disable pointer events on annotation canvas while text input is active
     this.canvas.style.pointerEvents = 'none';
