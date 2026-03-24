@@ -14,26 +14,39 @@
 
 ### Try the Demo
 
-**index.html is your working example!** Just open it and use it.
+Open `index.html` - it's a complete working example!
 
 **Load PDFs via URL:**
 ```
 http://localhost:5175/?pdfUrl=https://example.com/doc.pdf
 ```
 
-### Embed in Your Project
+### Use in Your Project
 
-Copy the code from `index.html` - it shows exactly how to use it.
+**1. Copy the library files:**
+- `src/PDFRenderer.js` - Main library
+- `src/utils/` - Helper utilities  
+- `src/components/` - UI components
+- `src/styles.css` - Styling
+- `public/pdf.worker.min.mjs` - PDF.js worker
 
-**Or use the library:**
+**2. Copy the HTML structure from `index.html`**
+
+**3. Initialize like this:**
 ```javascript
 import PDFRenderer from './src/PDFRenderer.js';
 
-const viewer = new PDFRenderer({
-  container: '#pdf-container',
-  pdfUrl: 'document.pdf'
+document.addEventListener('DOMContentLoaded', () => {
+  const viewer = new PDFRenderer({
+    container: '#app',
+    pdfUrl: null,  // or auto-load a PDF
+    showOpenButton: true,
+    showDemoButton: true
+  });
 });
 ```
+
+**See `examples/README.md` for detailed usage guide!**
 
 ### Programmatic API
 
