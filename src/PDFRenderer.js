@@ -13,23 +13,18 @@ import { showToast } from './utils/toast.js';
 
 /**
  * PDFRenderer - Embeddable PDF viewer with annotations
- * 
+ *
  * @example
  * const viewer = new PDFRenderer({
- *   container: '#pdf-container',
  *   pdfUrl: 'document.pdf',
- *   showOpenButton: true,
- *   showDemoButton: true
  * });
  */
-export class PDFRenderer {
+class PDFRenderer {
   constructor(options = {}) {
-    // Configuration
+    console.log('[PDFRenderer] Constructor called with options:', options);
+
     this.config = {
-      container: options.container || '#pdf-container',
       pdfUrl: options.pdfUrl || null,
-      showOpenButton: options.showOpenButton !== false,
-      showDemoButton: options.showDemoButton !== false,
       onLoad: options.onLoad || null,
       onError: options.onError || null,
     };
@@ -41,10 +36,10 @@ export class PDFRenderer {
     this.totalPages = 0;
     this.currentScale = 1;
     this.baseScale = 1;
-    
+
     this.store = new AnnotationStore();
     this.annotationLayer = null;
-    
+
     // Form state
     this.formLayer = null;
     this.formMode = false;
@@ -53,194 +48,253 @@ export class PDFRenderer {
     this.hasForm = false;
 
     // Initialize
+    console.log('[PDFRenderer] Caching DOM elements...');
     this._cacheElements();
-    this._setupEventListeners();
+    console.log('[PDFRenderer] DOM elements cached:', Object.fromEntries(
+      Object.entries(this.els).map(([k, v]) => [k, v ? 'found' : 'NULL'])
+    ));
+    console.log('[PDFRenderer] Binding events...');
+    this._bindEvents();
+    console.log('[PDFRenderer] Events bound, starting initialization...');
     this._initialize();
   }
 
+  // ============================================================
+  // DOM & Event Setup
+  // ============================================================
+
   _cacheElements() {
     const $ = (sel) => document.querySelector(sel);
-    
-    console.log('[PDFRenderer] Caching elements...');
-    
+    const $$ = (sel) => document.querySelectorAll(sel);
+    this.$ = $;
+    this.$$ = $$;
+
     this.els = {
-      // Toolbar
-      btnSidebar:    $('#btn-sidebar'),
-      btnOpen:       $('#btn-open'),
-      filename:      $('#filename'),
-      btnPrev:       $('#btn-prev'),
-      btnNext:       $('#btn-next'),
-      pageInput:     $('#page-input'),
-      pageCount:     $('#page-count'),
-      btnZoomOut:    $('#btn-zoom-out'),
-      btnZoomIn:     $('#btn-zoom-in'),
-      zoomLevel:     $('#zoom-level'),
-      btnFitWidth:   $('#btn-fit-width'),
-      btnFitPage:    $('#btn-fit-page'),
-      btnAnnotations:$('#btn-annotations'),
-      btnHelp:       $('#btn-help'),
+      btnSidebar:     $('#btn-sidebar'),
+      btnOpen:        $('#btn-open'),
+      filename:       $('#filename'),
+      btnPrev:        $('#btn-prev'),
+      btnNext:        $('#btn-next'),
+      pageInput:      $('#page-input'),
+      pageCount:      $('#page-count'),
+      btnZoomOut:     $('#btn-zoom-out'),
+      btnZoomIn:      $('#btn-zoom-in'),
+      zoomLevel:      $('#zoom-level'),
+      btnFitWidth:    $('#btn-fit-width'),
+      btnFitPage:     $('#btn-fit-page'),
+      btnAnnotations: $('#btn-annotations'),
+      btnHelp:        $('#btn-help'),
 
-      // Annotation bar
-      annotationBar: $('#annotation-bar'),
-      strokeWidth:   $('#stroke-width'),
-      strokeValue:   $('#stroke-value'),
-      customColor:   $('#custom-color'),
-      btnUndo:       $('#btn-undo'),
-      btnRedo:       $('#btn-redo'),
-      btnToggleLayer:$('#btn-toggle-layer'),
-      btnClear:      $('#btn-clear'),
-      btnExportJSON: $('#btn-export-json'),
-      btnImportJSON: $('#btn-import-json'),
-      btnSavePDF:    $('#btn-save-pdf'),
+      annotationBar:  $('#annotation-bar'),
+      strokeWidth:    $('#stroke-width'),
+      strokeValue:    $('#stroke-value'),
+      customColor:    $('#custom-color'),
+      btnUndo:        $('#btn-undo'),
+      btnRedo:        $('#btn-redo'),
+      btnToggleLayer: $('#btn-toggle-layer'),
+      btnClear:       $('#btn-clear'),
+      btnExportJSON:  $('#btn-export-json'),
+      btnImportJSON:  $('#btn-import-json'),
+      btnSavePDF:     $('#btn-save-pdf'),
 
-      // Layout
-      sidebar:       $('#sidebar'),
-      thumbnailList: $('#thumbnail-list'),
-      viewport:      $('#viewport'),
-      landing:       $('#landing'),
-      pdfContainer:  $('#pdf-container'),
-      pageWrapper:   $('#page-wrapper'),
-      pdfCanvas:     $('#pdf-canvas'),
-      annotCanvas:   $('#annotation-canvas'),
+      sidebar:        $('#sidebar'),
+      thumbnailList:  $('#thumbnail-list'),
+      viewport:       $('#viewport'),
+      landing:        $('#landing'),
+      pdfContainer:   $('#pdf-container'),
+      pageWrapper:    $('#page-wrapper'),
+      pdfCanvas:      $('#pdf-canvas'),
+      annotCanvas:    $('#annotation-canvas'),
 
-      // Landing
-      btnOpenLanding:$('#btn-open-landing'),
-      btnDemo:       $('#btn-demo'),
+      btnOpenLanding: $('#btn-open-landing'),
+      btnDemo:        $('#btn-demo'),
 
-      // Overlays
-      helpOverlay:   $('#help-overlay'),
-      btnCloseHelp:  $('#btn-close-help'),
+      helpOverlay:    $('#help-overlay'),
+      btnCloseHelp:   $('#btn-close-help'),
       btnCloseSidebar:$('#btn-close-sidebar'),
 
-      // Form mode
-      btnFormMode:   $('#btn-form-mode'),
-      formBar:       $('#form-bar'),
-      formFieldCount:$('#form-field-count'),
-      btnClearForm:  $('#btn-clear-form'),
+      btnFormMode:    $('#btn-form-mode'),
+      formBar:        $('#form-bar'),
+      formFieldCount: $('#form-field-count'),
+      btnClearForm:   $('#btn-clear-form'),
       btnExportFilled:$('#btn-export-filled'),
 
-      // File inputs
-      fileInput:     $('#file-input'),
-      jsonInput:     $('#json-input'),
+      fileInput:      $('#file-input'),
+      jsonInput:      $('#json-input'),
     };
   }
 
-  _setupEventListeners() {
-    console.log('[PDFRenderer] Setting up event listeners...');
-    console.log('[PDFRenderer] btnOpen:', this.els.btnOpen);
-    console.log('[PDFRenderer] btnDemo:', this.els.btnDemo);
-    console.log('[PDFRenderer] btnOpenLanding:', this.els.btnOpenLanding);
-    
-    // File input
-    this.els.fileInput?.addEventListener('change', (e) => this._handleFileSelect(e));
-    this.els.btnOpen?.addEventListener('click', () => {
-      console.log('[PDFRenderer] Open button clicked');
-      this.els.fileInput?.click();
+  _bindEvents() {
+    const { els } = this;
+
+    // File open
+    els.btnOpen.addEventListener('click', () => els.fileInput.click());
+    els.btnOpenLanding.addEventListener('click', () => els.fileInput.click());
+    els.fileInput.addEventListener('change', (e) => {
+      if (e.target.files[0]) this._openFile(e.target.files[0]);
+      e.target.value = '';
     });
-    this.els.btnOpenLanding?.addEventListener('click', () => {
-      console.log('[PDFRenderer] Open landing button clicked');
-      this.els.fileInput?.click();
-    });
-    this.els.btnDemo?.addEventListener('click', () => {
-      console.log('[PDFRenderer] Demo button clicked');
-      this.loadDemo();
-    });
+
+    // Demo
+    els.btnDemo.addEventListener('click', () => this.openFromURL('./sample.pdf'));
 
     // Navigation
-    this.els.btnPrev?.addEventListener('click', () => this.prevPage());
-    this.els.btnNext?.addEventListener('click', () => this.nextPage());
-    this.els.pageInput?.addEventListener('change', (e) => this.goToPage(parseInt(e.target.value, 10)));
-
-    // Zoom
-    this.els.btnZoomOut?.addEventListener('click', () => this.zoomOut());
-    this.els.btnZoomIn?.addEventListener('click', () => this.zoomIn());
-    this.els.btnFitWidth?.addEventListener('click', () => this.fitToWidth());
-    this.els.btnFitPage?.addEventListener('click', () => this.fitToPage());
-
-    // Annotations
-    this.els.btnAnnotations?.addEventListener('click', () => this.toggleAnnotations());
-    this.els.strokeWidth?.addEventListener('input', (e) => this._updateStrokeWidth(e));
-    this.els.customColor?.addEventListener('input', (e) => this._updateCustomColor(e));
-    this.els.btnUndo?.addEventListener('click', () => this.undo());
-    this.els.btnRedo?.addEventListener('click', () => this.redo());
-    this.els.btnToggleLayer?.addEventListener('click', () => this.toggleAnnotationLayer());
-    this.els.btnClear?.addEventListener('click', () => this.clearAnnotations());
-    this.els.btnSavePDF?.addEventListener('click', () => this.savePDF());
-    
-    // Export/Import
-    this.els.btnExportJSON?.addEventListener('click', () => this.exportAnnotations());
-    this.els.btnImportJSON?.addEventListener('click', () => this.els.jsonInput?.click());
-    this.els.jsonInput?.addEventListener('change', (e) => this._handleJSONImport(e));
-
-    // Sidebar
-    this.els.btnSidebar?.addEventListener('click', () => this.toggleSidebar());
-    this.els.btnCloseSidebar?.addEventListener('click', () => this.closeSidebar());
-
-    // Help
-    this.els.btnHelp?.addEventListener('click', () => this.showHelp());
-    this.els.btnCloseHelp?.addEventListener('click', () => this.closeHelp());
-    this.els.helpOverlay?.addEventListener('click', (e) => {
-      if (e.target === this.els.helpOverlay) this.closeHelp();
+    els.btnPrev.addEventListener('click', () => this.goToPage(this.currentPage - 1));
+    els.btnNext.addEventListener('click', () => this.goToPage(this.currentPage + 1));
+    els.pageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        this.goToPage(parseInt(els.pageInput.value, 10) || 1);
+        els.pageInput.blur();
+      }
     });
 
+    // Zoom
+    els.btnZoomIn.addEventListener('click', () => this._zoomTo(this.currentScale * 1.2));
+    els.btnZoomOut.addEventListener('click', () => this._zoomTo(this.currentScale / 1.2));
+    els.zoomLevel.addEventListener('click', () => this._zoomTo(1));
+    els.btnFitWidth.addEventListener('click', () => this._fitToWidth());
+    els.btnFitPage.addEventListener('click', () => this._fitToPage());
+
+    // Sidebar
+    els.btnSidebar.addEventListener('click', () => this._toggleSidebar());
+    els.btnCloseSidebar.addEventListener('click', () => this._toggleSidebar());
+
+    // Annotation bar toggle
+    els.btnAnnotations.addEventListener('click', () => this._toggleAnnotationBar());
+
     // Form mode
-    this.els.btnFormMode?.addEventListener('click', () => this.toggleFormMode());
-    this.els.btnClearForm?.addEventListener('click', () => this.clearForm());
-    this.els.btnExportFilled?.addEventListener('click', () => this.exportFilledPDF());
+    els.btnFormMode.addEventListener('click', () => this._toggleFormMode());
+    els.btnClearForm.addEventListener('click', () => this._clearFormFields());
+    els.btnExportFilled.addEventListener('click', () => this._exportFilledPDF());
+
+    // Tool buttons (only ones with data-tool attribute)
+    this.$$('.tool-btn[data-tool]').forEach(btn => {
+      btn.addEventListener('click', () => this._setActiveTool(btn.dataset.tool));
+    });
+
+    // Color swatches
+    this.$$('.color-swatch').forEach(swatch => {
+      swatch.addEventListener('click', () => this._setActiveColor(swatch.dataset.color));
+    });
+    els.customColor.addEventListener('input', (e) => this._setActiveColor(e.target.value));
+
+    // Stroke width
+    els.strokeWidth.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value, 10);
+      els.strokeValue.textContent = val;
+      if (this.annotationLayer) this.annotationLayer.strokeWidth = val;
+    });
+
+    // Undo / Redo
+    els.btnUndo.addEventListener('click', () => {
+      const page = this.store.undo();
+      if (page !== null) {
+        if (page !== this.currentPage) this.goToPage(page);
+        this.annotationLayer?.redraw();
+        this._updateUndoRedoButtons();
+      }
+    });
+    els.btnRedo.addEventListener('click', () => {
+      const page = this.store.redo();
+      if (page !== null) {
+        if (page !== this.currentPage) this.goToPage(page);
+        this.annotationLayer?.redraw();
+        this._updateUndoRedoButtons();
+      }
+    });
+
+    // Toggle annotation layer visibility
+    els.btnToggleLayer.addEventListener('click', () => {
+      if (!this.annotationLayer) return;
+      this.annotationLayer.visible = !this.annotationLayer.visible;
+      els.btnToggleLayer.classList.toggle('active', this.annotationLayer.visible);
+      els.btnToggleLayer.querySelector('span').textContent = this.annotationLayer.visible ? 'Visible' : 'Hidden';
+      this.annotationLayer.redraw();
+    });
+
+    // Clear annotations
+    els.btnClear.addEventListener('click', () => {
+      if (!this.pdfDoc) return;
+      this.store.clearPage(this.currentPage);
+      this.annotationLayer?.redraw();
+      this._updateUndoRedoButtons();
+      showToast('Annotations cleared on this page.', 'info');
+    });
+
+    // Export / Import
+    els.btnExportJSON.addEventListener('click', () => this._exportAnnotationsJSON());
+    els.btnImportJSON.addEventListener('click', () => els.jsonInput.click());
+    els.jsonInput.addEventListener('change', (e) => {
+      if (e.target.files[0]) this._importAnnotationsJSON(e.target.files[0]);
+      e.target.value = '';
+    });
+    els.btnSavePDF.addEventListener('click', () => this._savePDF());
+
+    // Help
+    els.btnHelp.addEventListener('click', () => this._toggleOverlay(els.helpOverlay));
+    els.btnCloseHelp.addEventListener('click', () => els.helpOverlay.classList.add('hidden'));
+
+    // Drag & Drop
+    els.viewport.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      els.viewport.classList.add('drag-over');
+    });
+    els.viewport.addEventListener('dragleave', () => {
+      els.viewport.classList.remove('drag-over');
+    });
+    els.viewport.addEventListener('drop', (e) => {
+      e.preventDefault();
+      els.viewport.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file && file.type === 'application/pdf') {
+        this._openFile(file);
+      } else {
+        showToast('Please drop a PDF file.', 'error');
+      }
+    });
 
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => this._handleKeyboard(e));
 
-    // Color palette
-    this._setupColorPalette();
-
-    // Tool buttons
-    this._setupToolButtons();
-  }
-
-  _setupColorPalette() {
-    const colors = document.querySelectorAll('.color-btn');
-    colors.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        colors.forEach((b) => b.classList.remove('active'));
-        btn.classList.add('active');
-        this.annotationLayer?.setColor(btn.dataset.color);
-      });
+    // Window resize
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(async () => {
+        if (this.pdfDoc) {
+          await this._calculateBaseScale();
+          await this._renderCurrentPage();
+        }
+      }, 150);
     });
-  }
 
-  _setupToolButtons() {
-    const tools = document.querySelectorAll('.tool-btn');
-    tools.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        tools.forEach((b) => b.classList.remove('active'));
-        btn.classList.add('active');
-        this.annotationLayer?.setTool(btn.dataset.tool);
-      });
-    });
+    // Scroll-based zoom (Ctrl+wheel)
+    els.viewport.addEventListener('wheel', (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? 0.9 : 1.1;
+        this._zoomTo(this.currentScale * delta);
+      }
+    }, { passive: false });
   }
 
   async _initialize() {
-    // Hide demo buttons if configured
-    if (!this.config.showOpenButton && this.els.btnOpenLanding) {
-      this.els.btnOpenLanding.style.display = 'none';
-    }
-    if (!this.config.showDemoButton && this.els.btnDemo) {
-      this.els.btnDemo.style.display = 'none';
-    }
-
-    // Auto-load PDF if URL provided
+    console.log('[PDFRenderer] _initialize called, pdfUrl:', this.config.pdfUrl);
     if (this.config.pdfUrl) {
       try {
-        await this.loadPDF(this.config.pdfUrl);
+        console.log('[PDFRenderer] Loading PDF from URL:', this.config.pdfUrl);
+        await this.openFromURL(this.config.pdfUrl);
+        console.log('[PDFRenderer] PDF loaded successfully');
       } catch (error) {
-        console.error('Failed to load PDF:', error);
+        console.error('[PDFRenderer] Failed to load PDF:', error);
         if (this.config.onError) {
           this.config.onError(error);
         } else {
           showToast('Failed to load PDF: ' + error.message, 'error');
         }
       }
+    } else {
+      console.log('[PDFRenderer] No pdfUrl provided, waiting for user action');
     }
   }
 
@@ -248,474 +302,436 @@ export class PDFRenderer {
   // Public API
   // ============================================================
 
-  /**
-   * Load a PDF from URL or File
-   */
-  async loadPDF(source) {
+  async openFromURL(url) {
+    console.log('[PDFRenderer] openFromURL called:', url);
     try {
-      let bytes;
-      let filename = 'document.pdf';
+      const resp = await fetch(url);
+      console.log('[PDFRenderer] Fetch response:', resp.status, resp.statusText);
+      if (!resp.ok) {
+        throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+      }
+      const buffer = await resp.arrayBuffer();
+      console.log('[PDFRenderer] Received', buffer.byteLength, 'bytes');
+      const file = new File([buffer], url.split('/').pop() || 'document.pdf', { type: 'application/pdf' });
+      await this._openFile(file);
+    } catch (err) {
+      console.error('[PDFRenderer] openFromURL error:', err);
+      showToast('Failed to load PDF from URL.', 'error');
+    }
+  }
 
-      if (typeof source === 'string') {
-        // URL
-        const response = await fetch(source);
-        if (!response.ok) throw new Error(`Failed to fetch PDF: ${response.statusText}`);
-        bytes = await response.arrayBuffer();
-        filename = source.split('/').pop() || 'document.pdf';
-      } else if (source instanceof File) {
-        // File object
-        bytes = await source.arrayBuffer();
-        filename = source.name;
-      } else if (source instanceof ArrayBuffer) {
-        // Raw bytes
-        bytes = source;
-      } else {
-        throw new Error('Invalid source: must be URL, File, or ArrayBuffer');
+  async goToPage(num) {
+    num = Math.max(1, Math.min(num, this.totalPages));
+    this.currentPage = num;
+    await this._renderCurrentPage();
+    this.els.viewport.scrollTop = 0;
+  }
+
+  // ============================================================
+  // Private: PDF Loading & Rendering
+  // ============================================================
+
+  async _openFile(file) {
+    console.log('[PDFRenderer] _openFile called:', file.name, file.size, 'bytes');
+    try {
+      const buffer = await file.arrayBuffer();
+      this.pdfBytes = new Uint8Array(buffer).slice();
+      const pdfJsBytes = new Uint8Array(buffer);
+      console.log('[PDFRenderer] Calling loadPDF...');
+      this.pdfDoc = await loadPDF(pdfJsBytes);
+      console.log('[PDFRenderer] PDF loaded, pages:', this.pdfDoc.numPages);
+      this.totalPages = this.pdfDoc.numPages;
+      this.currentPage = 1;
+
+      // Reset annotations
+      this.store.pages.clear();
+      this.store.undoStack = [];
+      this.store.redoStack = [];
+
+      // Init annotation layer
+      if (!this.annotationLayer) {
+        this.annotationLayer = new AnnotationLayer(this.els.annotCanvas, this.store, () => this._updateUndoRedoButtons());
       }
 
-      this.pdfBytes = new Uint8Array(bytes);
-      this.pdfDoc = await loadPDF(this.pdfBytes);
-      this.totalPages = this.pdfDoc.numPages;
-
-      // Update UI
-      this.els.filename.textContent = filename;
+      // UI update
+      this.els.filename.textContent = file.name || 'Document';
       this.els.pageCount.textContent = this.totalPages;
-      this.els.landing.style.display = 'none';
-      this.els.pdfContainer.style.display = 'block';
+      this.els.landing.classList.add('hidden');
+      this.els.pdfContainer.classList.remove('hidden');
+      this._enableControls(true);
 
-      // Check for forms
-      await this._checkForForms();
+      // Detect form fields
+      await this._detectAndSetupForm();
 
-      // Render first page
+      // Calculate fit-to-width scale
+      await this._calculateBaseScale();
+      this.currentScale = this.baseScale;
       await this._renderCurrentPage();
-
-      // Generate thumbnails
       await this._generateThumbnails();
 
-      // Notify callback
       if (this.config.onLoad) {
-        this.config.onLoad({ pages: this.totalPages, filename });
+        this.config.onLoad({ pages: this.totalPages, filename: file.name });
       }
 
-      showToast(`Loaded ${filename} (${this.totalPages} pages)`, 'success');
-    } catch (error) {
-      console.error('Error loading PDF:', error);
-      throw error;
+      showToast(`Loaded "${file.name}" — ${this.totalPages} page${this.totalPages > 1 ? 's' : ''}`, 'success');
+    } catch (err) {
+      console.error('PDF loading error:', err);
+      showToast(`Failed to open PDF: ${err.message || 'Unknown error'}`, 'error');
     }
   }
 
-  /**
-   * Load demo PDF
-   */
-  async loadDemo() {
-    console.log('[PDFRenderer] loadDemo() called');
-    await this.loadPDF('sample.pdf');
-  }
-
-  /**
-   * Navigate to specific page
-   */
-  async goToPage(pageNum) {
-    if (pageNum < 1 || pageNum > this.totalPages) return;
-    this.currentPage = pageNum;
-    this.els.pageInput.value = pageNum;
-    await this._renderCurrentPage();
-  }
-
-  /**
-   * Go to previous page
-   */
-  async prevPage() {
-    if (this.currentPage > 1) {
-      await this.goToPage(this.currentPage - 1);
-    }
-  }
-
-  /**
-   * Go to next page
-   */
-  async nextPage() {
-    if (this.currentPage < this.totalPages) {
-      await this.goToPage(this.currentPage + 1);
-    }
-  }
-
-  /**
-   * Zoom in
-   */
-  async zoomIn() {
-    this.currentScale = Math.min(this.currentScale + 0.25, 5);
-    await this._renderCurrentPage();
-  }
-
-  /**
-   * Zoom out
-   */
-  async zoomOut() {
-    this.currentScale = Math.max(this.currentScale - 0.25, 0.25);
-    await this._renderCurrentPage();
-  }
-
-  /**
-   * Fit to width
-   */
-  async fitToWidth() {
-    const page = await this.pdfDoc.getPage(this.currentPage);
+  async _calculateBaseScale() {
+    if (!this.pdfDoc) return;
+    const page = await this.pdfDoc.getPage(1);
     const viewport = page.getViewport({ scale: 1 });
-    const containerWidth = this.els.viewport.clientWidth - 80;
+    const containerWidth = this.els.viewport.clientWidth - 48;
     this.baseScale = containerWidth / viewport.width;
-    this.currentScale = this.baseScale;
-    await this._renderCurrentPage();
-  }
-
-  /**
-   * Fit to page
-   */
-  async fitToPage() {
-    const page = await this.pdfDoc.getPage(this.currentPage);
-    const viewport = page.getViewport({ scale: 1 });
-    const containerWidth = this.els.viewport.clientWidth - 80;
-    const containerHeight = this.els.viewport.clientHeight - 40;
-    const scaleW = containerWidth / viewport.width;
-    const scaleH = containerHeight / viewport.height;
-    this.currentScale = Math.min(scaleW, scaleH);
-    await this._renderCurrentPage();
-  }
-
-  /**
-   * Toggle annotations toolbar
-   */
-  toggleAnnotations() {
-    const visible = this.els.annotationBar.style.display !== 'none';
-    this.els.annotationBar.style.display = visible ? 'none' : 'flex';
-    this.els.btnAnnotations.classList.toggle('active', !visible);
-  }
-
-  /**
-   * Undo last annotation
-   */
-  undo() {
-    this.annotationLayer?.undo();
-  }
-
-  /**
-   * Redo last undone annotation
-   */
-  redo() {
-    this.annotationLayer?.redo();
-  }
-
-  /**
-   * Toggle annotation layer visibility
-   */
-  toggleAnnotationLayer() {
-    const visible = this.els.annotCanvas.style.display !== 'none';
-    this.els.annotCanvas.style.display = visible ? 'none' : 'block';
-    this.els.btnToggleLayer.classList.toggle('active', !visible);
-  }
-
-  /**
-   * Clear all annotations on current page
-   */
-  clearAnnotations() {
-    if (!confirm('Clear all annotations on this page?')) return;
-    this.annotationLayer?.clear();
-    this.store.clearPage(this.currentPage);
-  }
-
-  /**
-   * Export annotations to JSON
-   */
-  exportAnnotations() {
-    const json = this.store.toJSON();
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'annotations.json';
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('Annotations exported', 'success');
-  }
-
-  /**
-   * Save annotated PDF
-   */
-  async savePDF() {
-    try {
-      const pdfBytes = await exportAnnotatedPDF(this.pdfDoc, this.pdfBytes, this.store);
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'annotated.pdf';
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast('PDF saved with annotations', 'success');
-    } catch (error) {
-      console.error('Error saving PDF:', error);
-      showToast('Failed to save PDF', 'error');
-    }
-  }
-
-  /**
-   * Toggle sidebar
-   */
-  toggleSidebar() {
-    this.els.sidebar.classList.toggle('open');
-  }
-
-  /**
-   * Close sidebar
-   */
-  closeSidebar() {
-    this.els.sidebar.classList.remove('open');
-  }
-
-  /**
-   * Show help overlay
-   */
-  showHelp() {
-    this.els.helpOverlay.style.display = 'flex';
-  }
-
-  /**
-   * Close help overlay
-   */
-  closeHelp() {
-    this.els.helpOverlay.style.display = 'none';
-  }
-
-  /**
-   * Toggle form mode
-   */
-  async toggleFormMode() {
-    this.formMode = !this.formMode;
-    this.els.btnFormMode.classList.toggle('active', this.formMode);
-    this.els.formBar.style.display = this.formMode ? 'flex' : 'none';
-    this.els.annotationBar.style.display = this.formMode ? 'none' : (this.els.btnAnnotations.classList.contains('active') ? 'flex' : 'none');
-    
-    if (this.formMode) {
-      await this._enterFormMode();
-    } else {
-      this._exitFormMode();
-    }
-  }
-
-  /**
-   * Clear form values
-   */
-  clearForm() {
-    if (!confirm('Clear all form values?')) return;
-    this.formLayer?.clear();
-  }
-
-  /**
-   * Export filled PDF
-   */
-  async exportFilledPDF() {
-    try {
-      const values = readFieldValues();
-      const filledBytes = await exportFilledPDF(this.pdfBytes, values);
-      const blob = new Blob([filledBytes], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'filled-form.pdf';
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast('Form exported', 'success');
-    } catch (error) {
-      console.error('Error exporting form:', error);
-      showToast('Failed to export form', 'error');
-    }
-  }
-
-  // ============================================================
-  // Private Methods
-  // ============================================================
-
-  async _handleFileSelect(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    await this.loadPDF(file);
-  }
-
-  async _handleJSONImport(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    try {
-      const text = await file.text();
-      this.store.fromJSON(text);
-      await this._renderCurrentPage();
-      showToast('Annotations imported', 'success');
-    } catch (error) {
-      console.error('Error importing annotations:', error);
-      showToast('Failed to import annotations', 'error');
-    }
-  }
-
-  _updateStrokeWidth(e) {
-    const width = parseInt(e.target.value, 10);
-    this.els.strokeValue.textContent = width;
-    this.annotationLayer?.setStrokeWidth(width);
-  }
-
-  _updateCustomColor(e) {
-    this.annotationLayer?.setColor(e.target.value);
-  }
-
-  _handleKeyboard(e) {
-    // Navigation
-    if (e.key === 'ArrowLeft') this.prevPage();
-    if (e.key === 'ArrowRight') this.nextPage();
-    
-    // Zoom
-    if (e.key === '+' || e.key === '=') this.zoomIn();
-    if (e.key === '-' || e.key === '_') this.zoomOut();
-    
-    // Annotations
-    if (e.ctrlKey && e.key === 'z') this.undo();
-    if (e.ctrlKey && e.key === 'y') this.redo();
-    
-    // Help
-    if (e.key === '?') this.showHelp();
-    if (e.key === 'Escape') this.closeHelp();
+    this.baseScale = Math.max(0.25, Math.min(this.baseScale, 3));
   }
 
   async _renderCurrentPage() {
-    const page = await this.pdfDoc.getPage(this.currentPage);
-    const viewport = page.getViewport({ scale: this.currentScale });
-    
-    // Resize canvases
-    this.els.pdfCanvas.width = viewport.width;
-    this.els.pdfCanvas.height = viewport.height;
-    this.els.annotCanvas.width = viewport.width;
-    this.els.annotCanvas.height = viewport.height;
-    
-    // Set wrapper size
-    this.els.pageWrapper.style.width = `${viewport.width}px`;
-    this.els.pageWrapper.style.height = `${viewport.height}px`;
-    
-    // Render PDF
-    await renderPage(this.pdfDoc, this.currentPage, this.els.pdfCanvas, this.currentScale);
-    
-    // Update zoom display
+    if (!this.pdfDoc) return;
+
+    const dims = await renderPage(this.pdfDoc, this.currentPage, this.els.pdfCanvas, this.currentScale);
+
+    // Size annotation canvas to match
+    this.annotationLayer.page = this.currentPage;
+    this.annotationLayer.scale = this.currentScale;
+    this.annotationLayer.resize(dims.width, dims.height);
+    this.store.setPage(this.currentPage);
+
+    // Update UI
+    this.els.pageInput.value = this.currentPage;
     this.els.zoomLevel.textContent = `${Math.round(this.currentScale * 100)}%`;
-    
-    // Render annotations
-    this._renderAnnotations();
-    
-    // Update thumbnails
-    this._updateThumbnailSelection();
-    
-    // Update form if in form mode
+    this.els.btnPrev.disabled = this.currentPage <= 1;
+    this.els.btnNext.disabled = this.currentPage >= this.totalPages;
+    this._updateUndoRedoButtons();
+    this._updateThumbnailHighlight();
+
     if (this.formMode) {
       await this._renderFormFields();
     }
   }
 
-  _renderAnnotations() {
-    const ctx = this.els.annotCanvas.getContext('2d');
-    ctx.clearRect(0, 0, this.els.annotCanvas.width, this.els.annotCanvas.height);
-    
-    const annotations = this.store.getPage(this.currentPage);
-    
-    if (!this.annotationLayer) {
-      this.annotationLayer = new AnnotationLayer(this.els.annotCanvas, annotations, this.store);
-    } else {
-      this.annotationLayer.setAnnotations(annotations);
-    }
-    
-    this.annotationLayer.render();
+  _enableControls(enabled) {
+    const btns = [this.els.btnPrev, this.els.btnNext, this.els.btnZoomIn, this.els.btnZoomOut,
+                  this.els.zoomLevel, this.els.btnFitWidth, this.els.btnFitPage];
+    btns.forEach(b => b.disabled = !enabled);
   }
+
+  // ============================================================
+  // Private: Thumbnails
+  // ============================================================
 
   async _generateThumbnails() {
     this.els.thumbnailList.innerHTML = '';
-    
     for (let i = 1; i <= this.totalPages; i++) {
-      const li = document.createElement('li');
-      li.className = 'thumbnail-item';
-      if (i === this.currentPage) li.classList.add('active');
-      
-      const canvas = document.createElement('canvas');
-      li.appendChild(canvas);
-      
-      const label = document.createElement('span');
-      label.textContent = i;
-      li.appendChild(label);
-      
-      li.addEventListener('click', () => this.goToPage(i));
-      this.els.thumbnailList.appendChild(li);
-      
-      // Render thumbnail
-      await renderThumbnail(this.pdfDoc, i, canvas);
+      const canvas = await renderThumbnail(this.pdfDoc, i, 150);
+      const item = document.createElement('div');
+      item.className = 'thumbnail-item' + (i === this.currentPage ? ' active' : '');
+      item.dataset.page = i;
+      item.appendChild(canvas);
+      const label = document.createElement('div');
+      label.className = 'thumbnail-label';
+      label.textContent = `Page ${i}`;
+      item.appendChild(label);
+      item.addEventListener('click', () => this.goToPage(i));
+      this.els.thumbnailList.appendChild(item);
     }
   }
 
-  _updateThumbnailSelection() {
-    const thumbnails = this.els.thumbnailList.querySelectorAll('.thumbnail-item');
-    thumbnails.forEach((thumb, idx) => {
-      thumb.classList.toggle('active', idx + 1 === this.currentPage);
+  _updateThumbnailHighlight() {
+    this.$$('.thumbnail-item').forEach(el => {
+      el.classList.toggle('active', Number(el.dataset.page) === this.currentPage);
     });
   }
 
-  async _checkForForms() {
-    try {
-      const formFields = await detectFormFields(this.pdfDoc);
-      this.hasForm = formFields.length > 0;
-      this.formFieldCount = formFields.length;
-      
-      // Group by page
-      this.formFieldsByPage.clear();
-      formFields.forEach(field => {
-        if (!this.formFieldsByPage.has(field.page)) {
-          this.formFieldsByPage.set(field.page, []);
-        }
-        this.formFieldsByPage.get(field.page).push(field);
-      });
-      
-      // Show/hide form button
-      if (this.els.btnFormMode) {
-        this.els.btnFormMode.style.display = this.hasForm ? 'block' : 'none';
-      }
-    } catch (error) {
-      console.warn('Could not detect forms:', error);
-      this.hasForm = false;
-    }
+  // ============================================================
+  // Private: Zoom
+  // ============================================================
+
+  async _zoomTo(scale) {
+    this.currentScale = Math.max(0.25, Math.min(scale, 5));
+    await this._renderCurrentPage();
   }
 
-  async _enterFormMode() {
-    if (!this.hasForm) {
-      showToast('No form fields detected', 'info');
-      return;
-    }
-    
-    this.els.formFieldCount.textContent = `${this.formFieldCount} fields`;
-    await this._renderFormFields();
+  async _fitToWidth() {
+    await this._calculateBaseScale();
+    await this._zoomTo(this.baseScale);
   }
 
-  _exitFormMode() {
+  async _fitToPage() {
+    if (!this.pdfDoc) return;
+    const page = await this.pdfDoc.getPage(this.currentPage);
+    const viewport = page.getViewport({ scale: 1 });
+    const containerWidth = this.els.viewport.clientWidth - 48;
+    const containerHeight = this.els.viewport.clientHeight - 48;
+    const scaleW = containerWidth / viewport.width;
+    const scaleH = containerHeight / viewport.height;
+    await this._zoomTo(Math.min(scaleW, scaleH));
+  }
+
+  // ============================================================
+  // Private: Annotations UI
+  // ============================================================
+
+  _updateUndoRedoButtons() {
+    this.els.btnUndo.disabled = !this.store.canUndo;
+    this.els.btnRedo.disabled = !this.store.canRedo;
+  }
+
+  _setActiveTool(tool) {
+    this.$$('.tool-btn[data-tool]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tool === tool);
+    });
+    if (this.annotationLayer) this.annotationLayer.setTool(tool);
+  }
+
+  _setActiveColor(color) {
+    this.$$('.color-swatch').forEach(s => {
+      s.classList.toggle('active', s.dataset.color === color);
+    });
+    if (this.annotationLayer) this.annotationLayer.color = color;
+    this.els.customColor.value = color;
+  }
+
+  // ============================================================
+  // Private: Form Filling
+  // ============================================================
+
+  async _detectAndSetupForm() {
+    this.formFieldsByPage = new Map();
+    this.formFieldCount = 0;
+    this.hasForm = false;
+    this.formMode = false;
+
     if (this.formLayer) {
       this.formLayer.destroy();
       this.formLayer = null;
     }
+
+    this.els.btnFormMode.classList.add('hidden');
+    this.els.formBar.classList.add('hidden');
+    this.els.btnFormMode.classList.remove('active');
+
+    if (!this.pdfDoc) return;
+
+    try {
+      const result = await detectFormFields(this.pdfDoc);
+      this.formFieldsByPage = result.fieldsByPage;
+      this.formFieldCount = result.fieldCount;
+      this.hasForm = result.hasForm;
+
+      if (this.hasForm) {
+        this.els.btnFormMode.classList.remove('hidden');
+        const existingValues = await readFieldValues(this.pdfBytes);
+        this.formLayer = new FormLayer(this.els.pageWrapper, () => {});
+        this.formLayer.setValues(existingValues);
+      }
+    } catch (err) {
+      console.warn('Form detection failed:', err);
+    }
+  }
+
+  _toggleFormMode() {
+    if (!this.hasForm) return;
+
+    this.formMode = !this.formMode;
+    this.els.btnFormMode.classList.toggle('active', this.formMode);
+
+    if (this.formMode) {
+      this.els.formBar.classList.remove('hidden');
+      this.els.annotationBar.classList.add('hidden');
+      this.els.btnAnnotations.classList.remove('active');
+      this.els.annotCanvas.style.pointerEvents = 'none';
+      this.els.annotCanvas.style.opacity = '0.3';
+      this.els.formFieldCount.textContent = `${this.formFieldCount} field${this.formFieldCount !== 1 ? 's' : ''}`;
+      this._renderFormFields();
+    } else {
+      this.els.formBar.classList.add('hidden');
+      this.els.annotCanvas.style.pointerEvents = '';
+      this.els.annotCanvas.style.opacity = '';
+      if (this.formLayer) {
+        this.formLayer.snapshotValues();
+        this.formLayer.destroy();
+      }
+    }
   }
 
   async _renderFormFields() {
-    const fields = this.formFieldsByPage.get(this.currentPage) || [];
-    
-    if (this.formLayer) {
-      this.formLayer.destroy();
+    if (!this.formMode || !this.formLayer || !this.pdfDoc) return;
+
+    const widgets = this.formFieldsByPage.get(this.currentPage) || [];
+    const page = await this.pdfDoc.getPage(this.currentPage);
+    const viewport = page.getViewport({ scale: this.currentScale });
+
+    this.formLayer.snapshotValues();
+    this.formLayer.render(widgets, viewport, this.currentScale);
+  }
+
+  async _clearFormFields() {
+    if (!this.formLayer) return;
+    this.formLayer.values.clear();
+    await this._renderFormFields();
+    showToast('Form fields cleared', 'info');
+  }
+
+  async _exportFilledPDF() {
+    if (!this.pdfBytes || !this.formLayer) {
+      showToast('No form data to export', 'error');
+      return;
     }
-    
-    if (fields.length > 0) {
-      this.formLayer = new FormLayer(this.els.pageWrapper, fields, this.currentScale);
-      this.formLayer.render();
+    this.formLayer.snapshotValues();
+    try {
+      const bytes = await exportFilledPDF(this.pdfBytes, this.formLayer.values);
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      this._downloadBlob(blob, 'filled.pdf');
+      showToast('Filled PDF exported!', 'success');
+    } catch (err) {
+      console.error('Export filled PDF error:', err);
+      showToast('Failed to export filled PDF.', 'error');
+    }
+  }
+
+  // ============================================================
+  // Private: Export / Import
+  // ============================================================
+
+  _exportAnnotationsJSON() {
+    const data = this.store.toJSON();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    this._downloadBlob(blob, 'annotations.json');
+    showToast('Annotations exported!', 'success');
+  }
+
+  _importAnnotationsJSON(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        this.store.fromJSON(data);
+        this.annotationLayer?.redraw();
+        showToast('Annotations imported!', 'success');
+      } catch {
+        showToast('Invalid annotation file.', 'error');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  async _savePDF() {
+    if (!this.pdfBytes) {
+      showToast('No PDF loaded', 'error');
+      return;
+    }
+    try {
+      const bytes = await exportAnnotatedPDF(this.pdfBytes, this.store, this.currentScale);
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      this._downloadBlob(blob, 'annotated.pdf');
+      showToast('Annotated PDF saved!', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to save PDF.', 'error');
+    }
+  }
+
+  _downloadBlob(blob, name) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ============================================================
+  // Private: UI Toggles
+  // ============================================================
+
+  _toggleSidebar() {
+    this.els.sidebar.classList.toggle('hidden');
+    this.els.btnSidebar.classList.toggle('active', !this.els.sidebar.classList.contains('hidden'));
+    setTimeout(async () => {
+      if (this.pdfDoc) {
+        await this._calculateBaseScale();
+        await this._renderCurrentPage();
+      }
+    }, 200);
+  }
+
+  _toggleAnnotationBar() {
+    if (this.formMode) {
+      this.formMode = false;
+      this.els.btnFormMode.classList.remove('active');
+      this.els.formBar.classList.add('hidden');
+      this.els.annotCanvas.style.pointerEvents = '';
+      this.els.annotCanvas.style.opacity = '';
+      if (this.formLayer) {
+        this.formLayer.snapshotValues();
+        this.formLayer.destroy();
+      }
+    }
+    this.els.annotationBar.classList.toggle('hidden');
+    this.els.btnAnnotations.classList.toggle('active', !this.els.annotationBar.classList.contains('hidden'));
+  }
+
+  _toggleOverlay(overlay) {
+    overlay.classList.toggle('hidden');
+  }
+
+  // ============================================================
+  // Private: Keyboard
+  // ============================================================
+
+  _handleKeyboard(e) {
+    const tag = e.target.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+    const ctrl = e.ctrlKey || e.metaKey;
+
+    if (ctrl && e.key === 'o') { e.preventDefault(); this.els.fileInput.click(); return; }
+    if (ctrl && !e.shiftKey && e.key === 'z') { e.preventDefault(); this.els.btnUndo.click(); return; }
+    if (ctrl && e.shiftKey && (e.key === 'z' || e.key === 'Z')) { e.preventDefault(); this.els.btnRedo.click(); return; }
+    if (ctrl && (e.key === '=' || e.key === '+')) { e.preventDefault(); this._zoomTo(this.currentScale * 1.2); return; }
+    if (ctrl && e.key === '-') { e.preventDefault(); this._zoomTo(this.currentScale / 1.2); return; }
+    if (ctrl && e.key === '0') { e.preventDefault(); this._zoomTo(1); return; }
+
+    if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); this.goToPage(this.currentPage - 1); return; }
+    if (e.key === 'ArrowDown' || e.key === 'PageDown') { e.preventDefault(); this.goToPage(this.currentPage + 1); return; }
+    if (e.key === 'Home') { e.preventDefault(); this.goToPage(1); return; }
+    if (e.key === 'End') { e.preventDefault(); this.goToPage(this.totalPages); return; }
+
+    if (e.key === 'f') { if (this.hasForm) this._toggleFormMode(); return; }
+    if (e.key === 'a') { this._toggleAnnotationBar(); return; }
+    if (e.key === 'v') { this._setActiveTool('select'); return; }
+    if (e.key === 'd') { this._setActiveTool('pen'); return; }
+    if (e.key === 'h') { this._setActiveTool('highlighter'); return; }
+    if (e.key === 'x') { this._setActiveTool('text'); return; }
+    if (e.key === 'r') { this._setActiveTool('rect'); return; }
+    if (e.key === 'c') { this._setActiveTool('circle'); return; }
+    if (e.key === 'l') { this._setActiveTool('arrow'); return; }
+    if (e.key === 'e') { this._setActiveTool('eraser'); return; }
+
+    if (e.key === 'w') { this._fitToWidth(); return; }
+    if (e.key === 'p') { this._fitToPage(); return; }
+    if (e.key === 't') { this._toggleSidebar(); return; }
+
+    if (e.key === '?') { this._toggleOverlay(this.els.helpOverlay); return; }
+
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      if (this.annotationLayer && this.annotationLayer.handleKeyDown(e)) {
+        e.preventDefault();
+        return;
+      }
+    }
+
+    if (e.key === 'Escape') {
+      if (this.annotationLayer && this.annotationLayer.handleKeyDown(e)) return;
+      this.els.helpOverlay.classList.add('hidden');
+      this._setActiveTool('select');
+      return;
     }
   }
 }
 
-// Export for use in other modules
 export default PDFRenderer;
