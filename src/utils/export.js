@@ -159,41 +159,39 @@ export async function exportAnnotatedPDF(originalPdfBytes, store, canvasScale = 
               ctx.rotate((rotation * Math.PI) / 180);
             }
             
-            // Draw custom or pre-made stamp
+            // Load stamp (custom or pre-made) as SVG
+            let svgUrl;
             if (stamp === 'custom' && customText) {
-              // Draw custom stamp with inset border (matching pre-made stamps)
-              const borderRadius = 8;
-              const strokeWidth = 6;
-              const inset = strokeWidth / 2 + 2;
+              // Generate SVG for custom stamp
+              const textLength = customText.length;
+              const charWidth = 18;
+              const padding = 40;
+              const svgWidth = Math.max(textLength * charWidth + padding, 120);
+              const svgHeight = 80;
               
-              ctx.strokeStyle = customColor;
-              ctx.lineWidth = strokeWidth;
-              ctx.beginPath();
-              ctx.roundRect(
-                -width / 2 + inset, 
-                -height / 2 + inset, 
-                width - inset * 2, 
-                height - inset * 2, 
-                borderRadius
-              );
-              ctx.stroke();
+              const svg = `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgWidth} ${svgHeight}">
+                  <rect x="4" y="4" width="${svgWidth - 8}" height="${svgHeight - 8}" rx="8" ry="8" 
+                        fill="none" stroke="${customColor}" stroke-width="6"/>
+                  <text x="${svgWidth / 2}" y="44" font-family="Arial, sans-serif" font-size="32" 
+                        font-weight="bold" fill="${customColor}" text-anchor="middle" 
+                        dominant-baseline="middle">${customText}</text>
+                </svg>
+              `;
               
-              // Scale font size with stamp dimensions
-              const baseFontSize = 32;
-              const baseHeight = 60;
-              const scaledFontSize = (height / baseHeight) * baseFontSize;
-              const fontSize = Math.min(scaledFontSize, height * 0.5);
-              
-              ctx.fillStyle = customColor;
-              ctx.font = `bold ${fontSize}px Arial, sans-serif`;
-              ctx.textAlign = 'center';
-              ctx.textBaseline = 'middle';
-              ctx.fillText(customText, 0, 0);
+              const blob = new Blob([svg], { type: 'image/svg+xml' });
+              svgUrl = URL.createObjectURL(blob);
             } else {
-              // Load and draw pre-made SVG stamp
-              const svgUrl = `/pdf-stamps/${stamp}.svg`;
-              const img = await loadImage(svgUrl);
-              ctx.drawImage(img, -width / 2, -height / 2, width, height);
+              svgUrl = `/pdf-stamps/${stamp}.svg`;
+            }
+            
+            // Load and draw SVG
+            const img = await loadImage(svgUrl);
+            ctx.drawImage(img, -width / 2, -height / 2, width, height);
+            
+            // Clean up blob URL
+            if (stamp === 'custom' && svgUrl.startsWith('blob:')) {
+              URL.revokeObjectURL(svgUrl);
             }
             
             ctx.restore();

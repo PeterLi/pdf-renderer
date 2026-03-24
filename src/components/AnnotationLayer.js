@@ -430,74 +430,67 @@ export class AnnotationLayer {
     ctx.stroke();
   }
 
-  async _loadStamp(stampName) {
-    // Check cache first
-    if (this._stampCache.has(stampName)) {
-      return this._stampCache.get(stampName);
+  async _loadStamp(stampName, customText, customColor) {
+    // Check cache first (custom stamps use unique cache key)
+    const cacheKey = stampName === 'custom' ? `custom-${customText}-${customColor}` : stampName;
+    if (this._stampCache.has(cacheKey)) {
+      return this._stampCache.get(cacheKey);
+    }
+
+    // Generate custom stamp SVG or load pre-made
+    let svgUrl;
+    if (stampName === 'custom' && customText) {
+      // Generate SVG dynamically for custom stamps
+      const textLength = customText.length;
+      const charWidth = 18;
+      const padding = 40;
+      const width = Math.max(textLength * charWidth + padding, 120);
+      const height = 80;
+      
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}">
+          <rect x="4" y="4" width="${width - 8}" height="${height - 8}" rx="8" ry="8" 
+                fill="none" stroke="${customColor}" stroke-width="6"/>
+          <text x="${width / 2}" y="44" font-family="Arial, sans-serif" font-size="32" 
+                font-weight="bold" fill="${customColor}" text-anchor="middle" 
+                dominant-baseline="middle">${customText}</text>
+        </svg>
+      `;
+      
+      // Convert SVG to data URL
+      const blob = new Blob([svg], { type: 'image/svg+xml' });
+      svgUrl = URL.createObjectURL(blob);
+    } else {
+      svgUrl = `/pdf-stamps/${stampName}.svg`;
     }
 
     // Load SVG as image
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
-        this._stampCache.set(stampName, img);
+        this._stampCache.set(cacheKey, img);
+        // Clean up blob URL for custom stamps
+        if (stampName === 'custom' && svgUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(svgUrl);
+        }
         resolve(img);
       };
       img.onerror = () => {
         console.error(`Failed to load stamp: ${stampName}`);
         reject(new Error(`Failed to load stamp: ${stampName}`));
       };
-      img.src = `/pdf-stamps/${stampName}.svg`;
+      img.src = svgUrl;
     });
   }
 
   _drawStamp(ctx, stampName, x, y, width, height, rotation, customText, customColor) {
-    // Handle custom stamps
-    if (stampName === 'custom' && customText) {
-      ctx.save();
-      
-      // Apply rotation if specified
-      if (rotation) {
-        const centerX = x + width / 2;
-        const centerY = y + height / 2;
-        ctx.translate(centerX, centerY);
-        ctx.rotate((rotation * Math.PI) / 180);
-        ctx.translate(-centerX, -centerY);
-      }
-      
-      // Draw rounded rectangle with stroke inset (like pre-made stamps)
-      const borderRadius = 8;
-      const strokeWidth = 6;
-      const inset = strokeWidth / 2 + 2; // Inset to match pre-made stamps
-      
-      ctx.strokeStyle = customColor;
-      ctx.lineWidth = strokeWidth;
-      ctx.beginPath();
-      ctx.roundRect(x + inset, y + inset, width - inset * 2, height - inset * 2, borderRadius);
-      ctx.stroke();
-      
-      // Draw text - scale font size with stamp dimensions
-      const baseFontSize = 32; // Base font size at default height (60px)
-      const baseHeight = 60;
-      const scaledFontSize = (height / baseHeight) * baseFontSize;
-      const fontSize = Math.min(scaledFontSize, height * 0.5);
-      
-      ctx.fillStyle = customColor;
-      ctx.font = `bold ${fontSize}px Arial, sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(customText, x + width / 2, y + height / 2);
-      
-      ctx.restore();
-      return;
-    }
-    
-    // Handle pre-made stamps (SVG)
-    const img = this._stampCache.get(stampName);
+    // Get cache key (custom stamps have unique keys)
+    const cacheKey = stampName === 'custom' ? `custom-${customText}-${customColor}` : stampName;
+    const img = this._stampCache.get(cacheKey);
     
     if (!img) {
       // Load stamp async and redraw when ready
-      this._loadStamp(stampName).then(() => {
+      this._loadStamp(stampName, customText, customColor).then(() => {
         this.redraw();
       }).catch(err => {
         console.error('Failed to load stamp:', err);
@@ -509,12 +502,13 @@ export class AnnotationLayer {
       ctx.strokeRect(x, y, width, height);
       ctx.fillStyle = '#666';
       ctx.font = '12px sans-serif';
-      ctx.fillText('Loading...', x + 5, y + height / 2);
+      ctx.textAlign = 'center';
+      ctx.fillText('Loading...', x + width / 2, y + height / 2);
       ctx.restore();
       return;
     }
 
-    // Draw the stamp image
+    // Draw the stamp image (works for both custom and pre-made)
     ctx.save();
     
     // Apply rotation if specified
