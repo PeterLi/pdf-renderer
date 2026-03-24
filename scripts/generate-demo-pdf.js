@@ -32,7 +32,6 @@ async function generateDemoPDF() {
     color: rgb(0.7, 0.8, 0.95),
   });
 
-
   // Body text
   const bodyY = height - 240;
   page1.drawText('Welcome to the PDF Renderer demo!', {
