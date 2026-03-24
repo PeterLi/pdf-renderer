@@ -2,9 +2,67 @@
 
 **A beautiful, production-grade PDF viewer and annotation tool built with Vite + PDF.js + pdf-lib.**
 
-**Status:** ✅ **Working!** All core features functional.
+**Status:** ✅ **Working!** All core features functional. 🎉 **Embeddable as a library!**
 
-**Last Updated:** March 24, 2026, 11:44 PM AEDT
+**Last Updated:** March 25, 2026, 1:00 AM AEDT
+
+**Live Demo:** [https://pdf-renderer-seven.vercel.app](https://pdf-renderer-seven.vercel.app)
+
+---
+
+## 📦 Quick Start - Embed in Your Project
+
+### Basic Usage
+
+```javascript
+import PDFRenderer from './src/PDFRenderer.js';
+
+// Create viewer instance
+const viewer = new PDFRenderer({
+  container: '#pdf-container',
+  pdfUrl: 'document.pdf',          // Optional: auto-load PDF
+  showOpenButton: true,             // Optional: show file picker
+  showDemoButton: true,             // Optional: show demo button
+  onLoad: (info) => {              // Optional: callback
+    console.log('Loaded:', info);
+  }
+});
+```
+
+### Load PDF via Query Parameter
+
+```
+https://your-site.com/?pdfUrl=https://example.com/doc.pdf
+```
+
+### Programmatic API
+
+```javascript
+// Load PDF
+await viewer.loadPDF('document.pdf');
+await viewer.loadPDF(fileObject);
+await viewer.loadPDF(arrayBuffer);
+
+// Navigation
+viewer.nextPage();
+viewer.prevPage();
+viewer.goToPage(5);
+
+// Zoom
+viewer.zoomIn();
+viewer.zoomOut();
+viewer.fitToWidth();
+viewer.fitToPage();
+
+// Annotations
+viewer.toggleAnnotations();
+viewer.savePDF();
+viewer.exportAnnotations();
+
+// Forms
+viewer.toggleFormMode();
+viewer.exportFilledPDF();
+```
 
 ---
 
@@ -150,6 +208,143 @@ Press `?` to show help overlay.
 | **Home** | First page |
 | **End** | Last page |
 | **?** | Show help |
+
+---
+
+## 🔌 Embedding Guide
+
+### Installation in Your Project
+
+**Option 1: Copy files**
+```bash
+# Copy the entire src/ folder to your project
+cp -r src/ your-project/pdf-renderer/
+```
+
+**Option 2: Use as git submodule**
+```bash
+git submodule add https://github.com/PeterLi/pdf-renderer.git
+```
+
+### HTML Setup
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="pdf-renderer/src/styles.css">
+</head>
+<body>
+  <!-- Include the viewer HTML -->
+  <div id="pdf-app">
+    <!-- Copy the structure from index.html -->
+  </div>
+  
+  <script type="module">
+    import PDFRenderer from './pdf-renderer/src/PDFRenderer.js';
+    
+    const viewer = new PDFRenderer({
+      container: '#pdf-container',
+      pdfUrl: 'document.pdf'
+    });
+  </script>
+</body>
+</html>
+```
+
+### Configuration Options
+
+```javascript
+new PDFRenderer({
+  // Required
+  container: '#pdf-container',     // CSS selector for container
+  
+  // Optional
+  pdfUrl: null,                    // Auto-load PDF on init
+  showOpenButton: true,            // Show file picker button
+  showDemoButton: true,            // Show demo button
+  
+  // Callbacks
+  onLoad: (info) => {
+    // Called when PDF loads
+    // info: { pages: number, filename: string }
+  },
+  onError: (error) => {
+    // Called on errors
+  }
+});
+```
+
+### Query Parameter Support
+
+**Load PDF from URL:**
+```
+https://your-site.com/?pdfUrl=https://example.com/doc.pdf
+```
+
+**Alternative parameter names:**
+- `?pdfUrl=...`
+- `?pdf=...`
+- `?url=...`
+
+**URL encoding:**
+```javascript
+const pdfUrl = 'https://example.com/my doc.pdf';
+const encoded = encodeURIComponent(pdfUrl);
+window.location.href = `/?pdfUrl=${encoded}`;
+```
+
+### Examples
+
+**1. Simple embed:**
+```javascript
+const viewer = new PDFRenderer({
+  container: '#viewer',
+  pdfUrl: 'document.pdf'
+});
+```
+
+**2. Load from remote URL:**
+```javascript
+const viewer = new PDFRenderer({
+  container: '#viewer',
+  pdfUrl: 'https://example.com/doc.pdf',
+  onLoad: (info) => {
+    console.log(`Loaded ${info.pages} pages`);
+  }
+});
+```
+
+**3. Programmatic control:**
+```javascript
+const viewer = new PDFRenderer({ container: '#viewer' });
+
+// Load PDF later
+document.querySelector('#load-btn').addEventListener('click', async () => {
+  await viewer.loadPDF('document.pdf');
+  viewer.goToPage(5);
+  viewer.zoomIn();
+});
+```
+
+**4. Handle file upload:**
+```javascript
+const viewer = new PDFRenderer({ container: '#viewer' });
+
+fileInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  await viewer.loadPDF(file);
+});
+```
+
+**5. Load from ArrayBuffer:**
+```javascript
+const viewer = new PDFRenderer({ container: '#viewer' });
+
+fetch('document.pdf')
+  .then(res => res.arrayBuffer())
+  .then(buffer => viewer.loadPDF(buffer));
+```
 
 ---
 
