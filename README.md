@@ -208,6 +208,7 @@ Press `?` to show help overlay.
 
 | Key | Action |
 |-----|--------|
+| **V** | Select tool |
 | **P** | Pen tool |
 | **H** | Highlighter |
 | **T** | Text tool |
@@ -215,7 +216,10 @@ Press `?` to show help overlay.
 | **C** | Circle |
 | **A** | Arrow |
 | **E** | Eraser |
-| **V** | Select (not yet implemented) |
+| **Delete/Backspace** | Delete selected annotation |
+| **Escape** | Deselect all |
+| **Shift + Click** | Add to selection (multi-select) |
+| **Double-click** | Edit text annotation |
 | **Ctrl/Cmd + Z** | Undo |
 | **Ctrl/Cmd + Shift + Z** | Redo |
 | **Ctrl/Cmd + +** | Zoom in |
@@ -422,57 +426,32 @@ pdf-renderer/
 
 ---
 
-## 🐛 Known Issues & Fixes
+## 🐛 Known Issues
 
-### Issue: "getOrInsertComputed is not a function"
-**Status:** ✅ Fixed  
-**Solution:** Downgraded PDF.js from v5 → v4.0.379
+No known issues! All features are working as expected.
 
-### Issue: "Underlying ArrayBuffer has been detached"
-**Status:** ✅ Fixed  
-**Solution:** Create separate byte copies for PDF.js and pdf-lib
-
-### Issue: Annotations at wrong positions in exported PDF
-**Status:** ✅ Fixed  
-**Solution:** Scale coordinates by current zoom level when exporting
-
-### Issue: Text tool input not appearing
-**Status:** ✅ Fixed (March 24, 2026)  
-**Root cause:** Race condition - blur event fired immediately after focus()  
-**Solution:** Delay blur listener by 100ms to let focus settle
-
-**Technical details:**
-When the text input was created and focused programmatically, a `blur` event would fire instantly (before focus properly settled), causing the input to be removed before the user could see it. Fixed by adding a 100ms delay before enabling the blur listener.
-
-```javascript
-// Don't enable blur immediately
-let blurEnabled = false;
-setTimeout(() => { blurEnabled = true; }, 100);
-input.addEventListener('blur', () => {
-  if (blurEnabled) commit();
-});
-```
-
-### Issue: Select tool doesn't work
-**Status:** ✅ Fixed (March 24, 2026)  
-**Features:** Click to select, drag to move, resize handles, multi-select (Shift+click), double-click text to edit, Delete key to remove
+**If you find a bug:**
+1. Check browser console for errors
+2. Test with `sample.pdf` to rule out PDF-specific issues
+3. Verify you're using the latest version from GitHub
 
 ---
 
 ## 🔮 Future Enhancements
 
 ### High Priority
-- [ ] **Select tool** - Move/edit/resize annotations
-- [ ] **Multi-select** - Select multiple annotations (Shift+click)
 - [ ] **Copy/paste** - Duplicate annotations
+- [ ] **Rotation** - Rotate annotations (especially text)
+- [ ] **Grouping** - Group multiple annotations together
 
 ### Nice to Have
-- [ ] **Signature capture** - Draw signature and fill `_Image` fields
-- [ ] **Annotation layers** - Multiple annotation sets
+- [ ] **Signature capture** - Draw signature and save as reusable stamp
+- [ ] **Annotation layers** - Multiple annotation sets (show/hide layers)
 - [ ] **Collaboration** - Real-time annotations (WebSocket)
-- [ ] **Cloud storage** - Save/load from cloud
-- [ ] **PDF form filling** - Integration with pdf-form-tool
-- [ ] **Custom URL annotations** - Clickable areas
+- [ ] **Cloud storage** - Save/load from cloud services
+- [ ] **More shapes** - Triangle, star, polygon
+- [ ] **Custom URL annotations** - Clickable areas that link to URLs
+- [ ] **Search annotations** - Find annotations by text/color/type
 
 ---
 

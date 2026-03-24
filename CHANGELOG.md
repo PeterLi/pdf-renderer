@@ -4,7 +4,37 @@ All notable changes and fixes to the PDF Renderer project.
 
 ---
 
-## [2.0.0] - 2026-03-25
+## [2.0.1] - 2026-03-25 (02:20 AM)
+
+### Bug Fixes
+
+#### Library Initialization Issues
+**Problem:** PDFRenderer library wrapper wasn't working - buttons non-functional, no console logs after import.
+
+**Root Causes:**
+1. **Export conflict** - `export class PDFRenderer` conflicted with `export default PDFRenderer`
+2. **DOM timing** - `DOMContentLoaded` event already fired before module script ran
+3. **Module script behavior** - `type="module"` scripts are deferred by default
+
+**Fixes Applied:**
+- ✅ Removed `export` from class declaration (kept only default export)
+- ✅ Added `document.readyState` check to handle already-loaded DOM
+- ✅ Wrapped initialization properly for both loading and interactive states
+
+```javascript
+// Fixed initialization
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init(); // DOM already ready
+}
+```
+
+**Result:** Library now works perfectly in all scenarios! 🎉
+
+---
+
+## [2.0.0] - 2026-03-25 (01:00 AM)
 
 ### 🎉 Major Release: Reusable Library
 
