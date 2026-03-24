@@ -1102,11 +1102,12 @@ export class AnnotationLayer {
 
   _placeStamp(x, y) {
     // Get the parent PDFRenderer instance to access selectedStamp
-    // This is a bit hacky but works - stamps are selected in PDFRenderer
-    const selectedStamp = window.pdfViewer?.selectedStamp;
+    // Check both window.pdfViewer and window.pdfRenderer (different names used)
+    const viewer = window.pdfViewer || window.pdfRenderer;
+    const selectedStamp = viewer?.selectedStamp;
     
     if (!selectedStamp) {
-      console.warn('[Stamp] No stamp selected');
+      console.warn('[Stamp] No stamp selected. Viewer:', viewer);
       return;
     }
 

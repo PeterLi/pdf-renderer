@@ -57,6 +57,10 @@ class PDFRenderer {
     this._bindEvents();
     console.log('[PDFRenderer] Events bound, starting initialization...');
     this._initialize();
+    
+    // Expose to window for AnnotationLayer to access selectedStamp
+    window.pdfViewer = this;
+    console.log('[PDFRenderer] Exposed as window.pdfViewer');
   }
 
   // ============================================================
@@ -184,8 +188,10 @@ class PDFRenderer {
               document.body.appendChild(dropdown);
               
               const rect = btn.getBoundingClientRect();
-              dropdown.style.left = `${rect.left}px`;
-              dropdown.style.top = `${rect.bottom + 8}px`;
+              // Center dropdown under button
+              const dropdownWidth = 230; // Approximate width
+              dropdown.style.left = `${rect.left + (rect.width / 2) - (dropdownWidth / 2)}px`;
+              dropdown.style.top = `${rect.bottom + 12}px`;
             }
           }
         } else {
@@ -200,10 +206,14 @@ class PDFRenderer {
       option.addEventListener('click', (e) => {
         e.stopPropagation();
         this.selectedStamp = option.dataset.stamp;
+        console.log('[Stamp] Selected stamp:', this.selectedStamp);
         this._setActiveTool('stamp');
         // Hide dropdown after selection
         const dropdown = this.$('#stamp-dropdown');
         if (dropdown) dropdown.classList.add('hidden');
+        
+        // Expose to window for AnnotationLayer
+        window.pdfViewer = this;
       });
     });
 
