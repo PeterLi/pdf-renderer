@@ -34,10 +34,25 @@ export async function renderPage(doc, pageNum, canvas, scale = 1) {
   canvas.style.width = `${Math.floor(viewport.width)}px`;
   canvas.style.height = `${Math.floor(viewport.height)}px`;
 
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', {
+    // Enable color management for better color accuracy
+    colorSpace: 'srgb',
+    alpha: true
+  });
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  await page.render({ canvasContext: ctx, viewport }).promise;
+  // Render with proper color intent and options
+  await page.render({ 
+    canvasContext: ctx, 
+    viewport,
+    // Use 'display' intent for screen viewing (better color accuracy)
+    intent: 'display',
+    // Enable annotations rendering
+    annotationMode: pdfjsLib.AnnotationMode.ENABLE,
+    // Render interactive forms if present
+    renderInteractiveForms: true,
+  }).promise;
+  
   return { width: viewport.width, height: viewport.height };
 }
 
@@ -61,8 +76,18 @@ export async function renderThumbnail(doc, pageNum, maxWidth = 150) {
   canvas.style.width = `${Math.floor(viewport.width)}px`;
   canvas.style.height = `${Math.floor(viewport.height)}px`;
 
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', {
+    colorSpace: 'srgb',
+    alpha: true
+  });
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  await page.render({ canvasContext: ctx, viewport }).promise;
+  
+  await page.render({ 
+    canvasContext: ctx, 
+    viewport,
+    intent: 'display',
+    annotationMode: pdfjsLib.AnnotationMode.ENABLE,
+  }).promise;
+  
   return canvas;
 }
