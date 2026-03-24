@@ -88,8 +88,11 @@ const els = {
 async function openFile(file) {
   try {
     const buffer = await file.arrayBuffer();
-    pdfBytes = new Uint8Array(buffer);
-    pdfDoc = await loadPDF(pdfBytes);
+    // Create a copy for pdf-lib export (PDF.js will consume the original)
+    pdfBytes = new Uint8Array(buffer).slice();
+    // Create another copy for PDF.js rendering
+    const pdfJsBytes = new Uint8Array(buffer);
+    pdfDoc = await loadPDF(pdfJsBytes);
     totalPages = pdfDoc.numPages;
     currentPage = 1;
 
