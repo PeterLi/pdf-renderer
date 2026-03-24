@@ -465,19 +465,25 @@ export class AnnotationLayer {
         ctx.translate(-centerX, -centerY);
       }
       
-      // Draw rounded rectangle
+      // Draw rounded rectangle with stroke inset (like pre-made stamps)
       const borderRadius = 8;
-      const strokeWidth = 4;
+      const strokeWidth = 6;
+      const inset = strokeWidth / 2 + 2; // Inset to match pre-made stamps
       
       ctx.strokeStyle = customColor;
       ctx.lineWidth = strokeWidth;
       ctx.beginPath();
-      ctx.roundRect(x, y, width, height, borderRadius);
+      ctx.roundRect(x + inset, y + inset, width - inset * 2, height - inset * 2, borderRadius);
       ctx.stroke();
       
-      // Draw text
+      // Draw text - scale font size with stamp dimensions
+      const baseFontSize = 32; // Base font size at default height (60px)
+      const baseHeight = 60;
+      const scaledFontSize = (height / baseHeight) * baseFontSize;
+      const fontSize = Math.min(scaledFontSize, height * 0.5);
+      
       ctx.fillStyle = customColor;
-      ctx.font = `bold ${Math.min(height * 0.5, 32)}px Arial, sans-serif`;
+      ctx.font = `bold ${fontSize}px Arial, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(customText, x + width / 2, y + height / 2);

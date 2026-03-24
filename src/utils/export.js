@@ -161,18 +161,31 @@ export async function exportAnnotatedPDF(originalPdfBytes, store, canvasScale = 
             
             // Draw custom or pre-made stamp
             if (stamp === 'custom' && customText) {
-              // Draw custom stamp
+              // Draw custom stamp with inset border (matching pre-made stamps)
               const borderRadius = 8;
-              const strokeWidth = 4;
+              const strokeWidth = 6;
+              const inset = strokeWidth / 2 + 2;
               
               ctx.strokeStyle = customColor;
               ctx.lineWidth = strokeWidth;
               ctx.beginPath();
-              ctx.roundRect(-width / 2, -height / 2, width, height, borderRadius);
+              ctx.roundRect(
+                -width / 2 + inset, 
+                -height / 2 + inset, 
+                width - inset * 2, 
+                height - inset * 2, 
+                borderRadius
+              );
               ctx.stroke();
               
+              // Scale font size with stamp dimensions
+              const baseFontSize = 32;
+              const baseHeight = 60;
+              const scaledFontSize = (height / baseHeight) * baseFontSize;
+              const fontSize = Math.min(scaledFontSize, height * 0.5);
+              
               ctx.fillStyle = customColor;
-              ctx.font = `bold ${Math.min(height * 0.5, 32)}px Arial, sans-serif`;
+              ctx.font = `bold ${fontSize}px Arial, sans-serif`;
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
               ctx.fillText(customText, 0, 0);
