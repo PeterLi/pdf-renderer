@@ -51,6 +51,7 @@ http://localhost:5175/?pdfUrl=https://example.com/doc.pdf
 - `?pdfUrl=document.pdf`
 - `?pdf=https://example.com/doc.pdf`
 - `?url=/path/to/file.pdf`
+- `?pdfBase64Url=aHR0cHM6Ly9leGFtcGxlLmNvbS9kb2MucGRm` (base64-encoded URL, useful for signed URLs)
 
 ### Programmatic API
 
@@ -169,7 +170,42 @@ npm run preview  # Preview production build
 
 **Option 1:** Click "Open File" button  
 **Option 2:** Drag & drop PDF onto the page  
-**Option 3:** Click "Load Demo" to try sample PDF
+**Option 3:** Click "Load Demo" to try sample PDF  
+**Option 4:** Load via URL parameters (see below)
+
+#### Loading PDFs via URL
+
+You can load PDFs directly using query parameters:
+
+**Standard URLs:**
+```
+?pdfUrl=https://example.com/document.pdf
+?pdf=/local/file.pdf
+?url=document.pdf
+```
+
+**Base64-encoded URLs (for complex/signed URLs):**
+```
+?pdfBase64Url=aHR0cHM6Ly9zMy5hbWF6b25hd3MuY29tL2J1Y2tldC9maWxlLnBkZj9zaWduYXR1cmU9eHl6
+```
+
+**Why base64-encode URLs?**
+- AWS S3 signed URLs have lots of special characters (`&`, `?`, `=`)
+- These break when used as query parameter values
+- Base64 encoding solves this problem
+
+**How to encode:**
+```javascript
+// JavaScript
+const signedUrl = 'https://s3.amazonaws.com/bucket/file.pdf?signature=xyz&expires=123...';
+const encoded = btoa(signedUrl);
+window.location.href = `?pdfBase64Url=${encoded}`;
+```
+
+```bash
+# Command line
+echo -n "https://s3.amazonaws.com/bucket/file.pdf?signature=xyz" | base64
+```
 
 ### Annotation Tools
 

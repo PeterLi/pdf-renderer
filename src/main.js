@@ -13,7 +13,18 @@ function init() {
   
   // Check for PDF URL in query parameters
   const params = new URLSearchParams(window.location.search);
-  const pdfUrl = params.get('pdfUrl') || params.get('pdf') || params.get('url');
+  let pdfUrl = params.get('pdfUrl') || params.get('pdf') || params.get('url');
+  
+  // Check for base64-encoded URL (useful for signed URLs with special chars)
+  const pdfBase64Url = params.get('pdfBase64Url');
+  if (pdfBase64Url) {
+    try {
+      pdfUrl = atob(pdfBase64Url);
+      console.log('[main.js] Decoded base64 URL:', pdfUrl);
+    } catch (err) {
+      console.error('[main.js] Failed to decode pdfBase64Url:', err);
+    }
+  }
 
   if (pdfUrl) {
     console.log('[main.js] Loading PDF from query parameter:', pdfUrl);
