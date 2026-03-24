@@ -817,12 +817,11 @@ select.form-field-input {
 .stamp-tool-container {
   position: relative;
   display: inline-block;
+  z-index: 1;
 }
 
 .stamp-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
+  position: fixed;
   margin-top: 8px;
   background: var(--surface);
   border: 1px solid rgba(255, 255, 255, 0.1);

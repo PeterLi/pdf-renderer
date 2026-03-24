@@ -175,7 +175,15 @@ class PDFRenderer {
           e.stopPropagation();
           const dropdown = this.$('#stamp-dropdown');
           if (dropdown) {
+            const isHidden = dropdown.classList.contains('hidden');
             dropdown.classList.toggle('hidden');
+            
+            // Position dropdown below button when showing
+            if (isHidden) {
+              const rect = btn.getBoundingClientRect();
+              dropdown.style.left = `${rect.left}px`;
+              dropdown.style.top = `${rect.bottom + 8}px`;
+            }
           }
         } else {
           this._setActiveTool(btn.dataset.tool);
