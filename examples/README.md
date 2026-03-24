@@ -1,74 +1,106 @@
-# PDF Renderer - Examples
+# PDF Renderer - Usage Examples
 
-**The main `index.html` is your best example!**
+## 📖 How to Use
 
-It's a fully working demo that shows exactly how to use the PDF renderer.
+**The `index.html` in the project root is your reference implementation!**
+
+It shows exactly how to embed the PDF Renderer in your project.
 
 ---
 
 ## Quick Start
 
-Just look at `../index.html` - that's your reference implementation.
+### 1. Copy the Library Files
 
-### Minimal Example
+Copy these to your project:
+```
+src/PDFRenderer.js          ← Main library
+src/utils/                  ← Helper utilities
+src/components/             ← UI components
+src/styles.css              ← Styling
+public/pdf.worker.min.mjs   ← PDF.js worker
+```
+
+### 2. Include in Your HTML
 
 ```html
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <link rel="stylesheet" href="../src/styles.css">
+  <meta charset="UTF-8">
+  <title>My PDF Viewer</title>
+  <link rel="stylesheet" href="src/styles.css">
 </head>
 <body>
-  <!-- Copy the entire #pdf-app div from index.html -->
-  <div id="pdf-app">
-    <!-- ... full structure ... -->
-  </div>
+  <!-- Your complete PDF viewer UI goes here -->
+  <!-- See index.html for the full structure -->
   
-  <script type="module">
-    import PDFRenderer from '../src/PDFRenderer.js';
+  <div id="app">
+    <div id="toolbar">
+      <button id="btn-open">Open PDF</button>
+      <!-- ... more toolbar buttons ... -->
+    </div>
     
-    const viewer = new PDFRenderer({
-      container: '#pdf-container',
-      pdfUrl: 'document.pdf'
-    });
-  </script>
+    <div id="pdf-container">
+      <div id="viewport">
+        <canvas id="pdf-canvas"></canvas>
+        <canvas id="annotation-canvas"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="main.js"></script>
 </body>
 </html>
 ```
 
----
-
-## Configuration
+### 3. Initialize in JavaScript
 
 ```javascript
-const viewer = new PDFRenderer({
-  // Required
-  container: '#pdf-container',
+import PDFRenderer from './PDFRenderer.js';
+
+document.addEventListener('DOMContentLoaded', () => {
+  const viewer = new PDFRenderer({
+    container: '#app',
+    pdfUrl: null,              // Auto-load a PDF, or null
+    showOpenButton: true,
+    showDemoButton: true,
+    
+    onLoad: (info) => {
+      console.log('Loaded:', info.filename, info.pages);
+    },
+    
+    onError: (error) => {
+      console.error('Error:', error);
+    }
+  });
   
-  // Optional
-  pdfUrl: 'document.pdf',        // Auto-load on init
-  showOpenButton: true,           // Show file picker
-  showDemoButton: true,           // Show demo button
-  
-  // Callbacks
-  onLoad: (info) => {
-    console.log(`Loaded ${info.pages} pages`);
-  },
-  onError: (error) => {
-    console.error('Error:', error);
-  }
+  // Optional: Expose for debugging
+  window.pdfViewer = viewer;
 });
 ```
 
 ---
 
-## Query Parameters
+## Load PDFs via URL Parameter
 
-Load PDFs from URL:
+Support query parameters in your viewer:
+
+```javascript
+const params = new URLSearchParams(window.location.search);
+const pdfUrl = params.get('pdfUrl') || params.get('pdf') || params.get('url');
+
+const viewer = new PDFRenderer({
+  container: '#app',
+  pdfUrl: pdfUrl,  // Auto-load from query param
+  // ... other options
+});
 ```
-?pdfUrl=https://example.com/doc.pdf
-?pdf=./local-file.pdf
-?url=data:application/pdf;base64,...
+
+**Then use:**
+```
+https://yoursite.com/?pdfUrl=https://example.com/doc.pdf
+https://yoursite.com/?pdf=document.pdf
 ```
 
 ---
@@ -76,16 +108,13 @@ Load PDFs from URL:
 ## Programmatic API
 
 ```javascript
-// Load PDF
-await viewer.loadPDF('doc.pdf');
-await viewer.loadPDF(fileObject);
-await viewer.loadPDF(arrayBuffer);
-await viewer.loadPDF('https://example.com/doc.pdf');
+// Load a PDF
+await viewer.loadPDF('document.pdf');
 
 // Navigation
-viewer.nextPage();
-viewer.prevPage();
-viewer.goToPage(5);
+await viewer.goToPage(5);
+await viewer.nextPage();
+await viewer.prevPage();
 
 // Zoom
 viewer.zoomIn();
@@ -94,162 +123,45 @@ viewer.fitToWidth();
 viewer.fitToPage();
 
 // Annotations
-viewer.toggleAnnotations();
-viewer.undo();
-viewer.redo();
-viewer.clearAnnotations();
-viewer.exportAnnotations();
-viewer.savePDF();
+viewer.savePDF();              // Download with annotations
+viewer.exportAnnotationsJSON(); // Export just annotations
+viewer.loadAnnotationsJSON();   // Import annotations
 
-// Forms
-viewer.toggleFormMode();
-viewer.clearForm();
-viewer.exportFilledPDF();
-
-// UI
-viewer.toggleSidebar();
-viewer.showHelp();
+// Form filling (if PDF has form fields)
+viewer.exportFilledPDF();       // Download filled form
 ```
 
 ---
 
-## Integration Tips
+## Customization
 
-### React
-```jsx
-import { useEffect, useRef } from 'react';
-import PDFRenderer from './PDFRenderer.js';
+### Colors & Theme
 
-function PDFViewer({ pdfUrl }) {
-  const viewerRef = useRef(null);
-  
-  useEffect(() => {
-    const viewer = new PDFRenderer({
-      container: '#pdf-container',
-      pdfUrl
-    });
-    viewerRef.current = viewer;
-    
-    return () => {
-      // Cleanup if needed
-    };
-  }, [pdfUrl]);
-  
-  return <div id="pdf-app">...</div>;
+Edit `src/styles.css` to change the look:
+```css
+:root {
+  --primary: #263b5e;
+  --primary-hover: #3a4f73;
+  --accent: #4a90e2;
+  /* ... customize colors ... */
 }
 ```
 
-### Vue
-```vue
-<template>
-  <div id="pdf-app">...</div>
-</template>
+### Layout
 
-<script>
-import PDFRenderer from './PDFRenderer.js';
-
-export default {
-  mounted() {
-    this.viewer = new PDFRenderer({
-      container: '#pdf-container',
-      pdfUrl: this.pdfUrl
-    });
-  },
-  beforeUnmount() {
-    // Cleanup if needed
-  }
-}
-</script>
-```
-
-### Vanilla JS
-```javascript
-document.addEventListener('DOMContentLoaded', () => {
-  const viewer = new PDFRenderer({
-    container: '#pdf-container',
-    pdfUrl: 'document.pdf'
-  });
-  
-  // Expose to global scope if needed
-  window.pdfViewer = viewer;
-});
-```
-
----
-
-## Common Use Cases
-
-### 1. Invoice Viewer
-```javascript
-const viewer = new PDFRenderer({
-  container: '#invoice-viewer',
-  pdfUrl: `/api/invoices/${invoiceId}/pdf`,
-  showOpenButton: false,  // Hide open button
-  showDemoButton: false,  // Hide demo button
-  onLoad: () => {
-    viewer.fitToWidth();  // Auto-fit
-  }
-});
-```
-
-### 2. Document Editor
-```javascript
-const viewer = new PDFRenderer({
-  container: '#editor',
-  onLoad: (info) => {
-    viewer.toggleAnnotations();  // Open annotation toolbar
-    document.getElementById('page-count').textContent = info.pages;
-  }
-});
-
-// Auto-save annotations
-setInterval(() => {
-  const json = viewer.store.toJSON();
-  localStorage.setItem('annotations', json);
-}, 30000);
-```
-
-### 3. Form Filler
-```javascript
-const viewer = new PDFRenderer({
-  container: '#form-viewer',
-  pdfUrl: 'application-form.pdf',
-  onLoad: async () => {
-    // Check if it has forms
-    if (viewer.hasForm) {
-      await viewer.toggleFormMode();
-    }
-  }
-});
-```
-
----
-
-## Troubleshooting
-
-**PDF not loading?**
-- Check CORS if loading from remote URL
-- Ensure PDF is valid
-- Check browser console for errors
-
-**Annotations not saving?**
-- Annotations are client-side only
-- Use `exportAnnotations()` or `savePDF()` to persist
-
-**Forms not showing?**
-- Not all PDFs have form fields
-- Check `viewer.hasForm` after loading
-
-**Styling issues?**
-- Make sure `styles.css` is loaded
-- Check z-index conflicts
-- Verify container has proper dimensions
+The HTML structure must include these IDs (see `index.html`):
+- `#btn-open`, `#btn-prev`, `#btn-next` - Navigation
+- `#pdf-canvas`, `#annotation-canvas` - Display
+- `#toolbar`, `#annotation-bar` - Controls
+- See full list in `PDFRenderer.js` → `_cacheElements()`
 
 ---
 
 ## Need Help?
 
-- 📖 [Main README](../README.md)
-- 📝 [CHANGELOG](../CHANGELOG.md)
-- 🐛 [Report Issues](https://github.com/PeterLi/pdf-renderer/issues)
-- ⭐ [Star on GitHub](https://github.com/PeterLi/pdf-renderer)
+**Look at `index.html`** - it's a complete working example showing:
+- Full HTML structure with all required IDs
+- Proper initialization with query param support
+- Clean minimal wrapper code
+
+Copy that pattern and customize it for your needs!
