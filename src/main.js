@@ -747,14 +747,5 @@ const pdfUrl = params.get('pdfUrl') || params.get('pdf') || params.get('url');
 
 if (pdfUrl) {
   console.log('[Init] Loading PDF from query parameter:', pdfUrl);
-  fetch(pdfUrl)
-    .then(res => {
-      if (!res.ok) throw new Error(`Failed to fetch PDF: ${res.statusText}`);
-      return res.arrayBuffer();
-    })
-    .then(bytes => handlePDFLoad(new Uint8Array(bytes), pdfUrl.split('/').pop() || 'document.pdf'))
-    .catch(error => {
-      console.error('[Init] Failed to load PDF from URL:', error);
-      showToast('Failed to load PDF: ' + error.message, 'error');
-    });
+  openFromURL(pdfUrl);
 }
