@@ -20,12 +20,21 @@
 ### Annotation Tools
 - ✅ **Pen** - Freehand drawing
 - ✅ **Highlighter** - Transparent highlighting
-- ✅ **Text boxes** - Add text annotations
+- ✅ **Text boxes** - Add text annotations (with proper focus handling!)
 - ✅ **Shapes** - Rectangle, circle, arrow
 - ✅ **Eraser** - Remove annotations
 - ✅ **Color picker** - 7 presets + custom color
 - ✅ **Stroke width** - Adjustable line thickness
 - ✅ **Undo/Redo** - Full history
+
+### Advanced Editing
+- ✅ **Selection tool** - Click to select annotations
+- ✅ **Move annotations** - Drag selected annotation to reposition
+- ✅ **Resize handles** - 8 handles (corners + edges) for shapes
+- ✅ **Multi-select** - Shift+click to select multiple
+- ✅ **Edit text** - Double-click text annotations to edit
+- ✅ **Delete** - Press Delete/Backspace to remove selected
+- ✅ **Deselect** - Press Escape or click empty space
 
 ### Export Features
 - ✅ **Save annotated PDF** - Embed annotations in PDF
