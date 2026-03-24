@@ -1,24 +1,30 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80">
-  <!-- Background flag/tab shape with shadow -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80">
   <defs>
     <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-      <feDropShadow dx="2" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.25"/>
     </filter>
   </defs>
   
-  <!-- Sticky flag background -->
-  <path d="M 4 4 L 196 4 L 196 64 L 180 76 L 164 64 L 164 64 L 4 64 Z" 
-        fill="#FFD54F" stroke="#F9A825" stroke-width="2" filter="url(#shadow)"/>
+  <!-- Arrow flag shape - main body -->
+  <path d="M 8 12 L 200 12 L 228 40 L 200 68 L 8 68 Z" 
+        fill="#FFEB3B" filter="url(#shadow)"/>
   
-  <!-- Arrow pointing right -->
-  <path d="M 164 34 L 180 44 L 164 54 Z" fill="#F9A825"/>
+  <!-- Darker border/outline -->
+  <path d="M 8 12 L 200 12 L 228 40 L 200 68 L 8 68 Z" 
+        fill="none" stroke="#F9A825" stroke-width="3"/>
   
-  <!-- Text -->
-  <text x="80" y="38" font-family="Arial, sans-serif" font-size="28" 
-        font-weight="bold" fill="#F57F17" text-anchor="middle" 
+  <!-- Text: SIGN HERE -->
+  <text x="100" y="43" font-family="Arial, sans-serif" font-size="28" 
+        font-weight="bold" fill="#212121" text-anchor="middle" 
         dominant-baseline="middle">SIGN HERE</text>
   
-  <!-- Slight texture lines for sticky tab effect -->
-  <line x1="10" y1="20" x2="150" y2="20" stroke="#FFF59D" stroke-width="1" opacity="0.5"/>
-  <line x1="10" y1="48" x2="150" y2="48" stroke="#F9A825" stroke-width="1" opacity="0.3"/>
+  <!-- Signature pen icon on the right -->
+  <g transform="translate(210, 40)">
+    <!-- Pen nib -->
+    <path d="M -2 -8 L 2 -8 L 3 -2 L -3 -2 Z" fill="#212121"/>
+    <!-- Pen body -->
+    <rect x="-1.5" y="-12" width="3" height="4" fill="#212121"/>
+    <!-- Signature line swoosh -->
+    <path d="M -8 2 Q -4 0 0 2 Q 4 4 8 2" stroke="#212121" stroke-width="1.5" fill="none"/>
+  </g>
 </svg>

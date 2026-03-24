@@ -37,7 +37,7 @@ const STAMP_ASPECT_RATIOS = {
   copy: 180 / 80,          // 2.25:1
   overdue: 240 / 80,       // 3:1
   void: 180 / 80,          // 2.25:1
-  sign: 200 / 80,          // 2.5:1 - special: stays in stamp mode
+  sign: 240 / 80,          // 3:1 - special: stays in stamp mode
 };
 const STAMP_DEFAULT_HEIGHT = 60; // Fixed height, width calculated from aspect ratio
 
