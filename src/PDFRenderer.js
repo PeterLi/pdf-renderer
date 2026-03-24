@@ -61,6 +61,8 @@ export class PDFRenderer {
   _cacheElements() {
     const $ = (sel) => document.querySelector(sel);
     
+    console.log('[PDFRenderer] Caching elements...');
+    
     this.els = {
       // Toolbar
       btnSidebar:    $('#btn-sidebar'),
@@ -124,11 +126,25 @@ export class PDFRenderer {
   }
 
   _setupEventListeners() {
+    console.log('[PDFRenderer] Setting up event listeners...');
+    console.log('[PDFRenderer] btnOpen:', this.els.btnOpen);
+    console.log('[PDFRenderer] btnDemo:', this.els.btnDemo);
+    console.log('[PDFRenderer] btnOpenLanding:', this.els.btnOpenLanding);
+    
     // File input
     this.els.fileInput?.addEventListener('change', (e) => this._handleFileSelect(e));
-    this.els.btnOpen?.addEventListener('click', () => this.els.fileInput?.click());
-    this.els.btnOpenLanding?.addEventListener('click', () => this.els.fileInput?.click());
-    this.els.btnDemo?.addEventListener('click', () => this.loadDemo());
+    this.els.btnOpen?.addEventListener('click', () => {
+      console.log('[PDFRenderer] Open button clicked');
+      this.els.fileInput?.click();
+    });
+    this.els.btnOpenLanding?.addEventListener('click', () => {
+      console.log('[PDFRenderer] Open landing button clicked');
+      this.els.fileInput?.click();
+    });
+    this.els.btnDemo?.addEventListener('click', () => {
+      console.log('[PDFRenderer] Demo button clicked');
+      this.loadDemo();
+    });
 
     // Navigation
     this.els.btnPrev?.addEventListener('click', () => this.prevPage());
@@ -292,6 +308,7 @@ export class PDFRenderer {
    * Load demo PDF
    */
   async loadDemo() {
+    console.log('[PDFRenderer] loadDemo() called');
     await this.loadPDF('sample.pdf');
   }
 
