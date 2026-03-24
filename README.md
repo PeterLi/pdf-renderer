@@ -2,9 +2,9 @@
 
 **A beautiful, production-grade PDF viewer and annotation tool built with Vite + PDF.js + pdf-lib.**
 
-**Status:** ✅ **Working!** All core features functional. 🎉 **Embeddable as a library!**
+**Status:** ✅ **Working!** All features functional, now with proper library architecture!
 
-**Last Updated:** March 25, 2026, 1:00 AM AEDT
+**Last Updated:** March 25, 2026, 2:26 AM AEDT
 
 **Live Demo:** [https://pdf-renderer-seven.vercel.app](https://pdf-renderer-seven.vercel.app)
 
@@ -23,25 +23,34 @@ http://localhost:5175/?pdfUrl=https://example.com/doc.pdf
 
 ### Use in Your Project
 
-**Copy the working code directly:**
+**Now with clean library architecture!**
 
 1. Copy these files to your project:
-   - `index.html` - Full UI structure
-   - `src/main.js` - Complete viewer code
+   - `src/PDFRenderer.js` - **Reusable library class** (722 lines)
+   - `src/main.js` - **Clean 44-line demo** showing how to use it
    - `src/utils/` - PDF utilities
    - `src/components/` - Annotation & form layers
    - `src/styles.css` - Styling
    - `public/pdf.worker.min.mjs` - PDF.js worker
-   - `public/sample.pdf` - Demo PDF
+   - `index.html` - Full working UI example
 
-2. Customize the HTML/CSS to match your design
+2. Customize the HTML structure or embed in your own page (see `examples/README.md`)
 
-3. The code works out of the box with query parameter support:
-   - `?pdfUrl=document.pdf`
-   - `?pdf=document.pdf`
-   - `?url=https://example.com/doc.pdf`
+3. Initialize the viewer:
+   ```javascript
+   import PDFRenderer from './src/PDFRenderer.js';
+   
+   const viewer = new PDFRenderer({
+     pdfUrl: 'document.pdf', // or null
+     onLoad: ({ pages, filename }) => console.log('Loaded!'),
+     onError: (error) => console.error('Error:', error)
+   });
+   ```
 
-**That's it!** Everything is self-contained and ready to use.
+**Query parameter support built-in:**
+- `?pdfUrl=document.pdf`
+- `?pdf=https://example.com/doc.pdf`
+- `?url=/path/to/file.pdf`
 
 ### Programmatic API
 
