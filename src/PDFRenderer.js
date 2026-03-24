@@ -180,6 +180,9 @@ class PDFRenderer {
             
             // Position dropdown below button when showing
             if (isHidden) {
+              // Move dropdown to body to escape overflow clipping
+              document.body.appendChild(dropdown);
+              
               const rect = btn.getBoundingClientRect();
               dropdown.style.left = `${rect.left}px`;
               dropdown.style.top = `${rect.bottom + 8}px`;

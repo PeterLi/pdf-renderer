@@ -159,7 +159,7 @@ body {
   z-index: 90;
   flex-shrink: 0;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: visible;
 }
 
 .annotation-bar.hidden { display: none; }
