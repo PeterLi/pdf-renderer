@@ -813,10 +813,80 @@ select.form-field-input {
   padding-right: 16px;
 }
 
+/* ---------- Stamp Tool ---------- */
+.stamp-tool-container {
+  position: relative;
+  display: inline-block;
+}
+
+.stamp-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  padding: 12px;
+  z-index: 1000;
+  min-width: 360px;
+}
+
+.stamp-dropdown.hidden {
+  display: none;
+}
+
+.stamp-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.stamp-option {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+}
+
+.stamp-option:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 139, 245, 0.2);
+}
+
+.stamp-option:active {
+  transform: translateY(0);
+}
+
+.stamp-option img {
+  width: 100%;
+  height: auto;
+  max-height: 40px;
+  object-fit: contain;
+  pointer-events: none;
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 768px) {
   .toolbar-filename { display: none; }
   .tool-btn span { display: none; }
   .shortcut-grid { grid-template-columns: 1fr; }
   :root { --sidebar-w: 140px; }
+  
+  .stamp-dropdown {
+    min-width: 280px;
+  }
+  
+  .stamp-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }

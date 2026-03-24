@@ -169,7 +169,42 @@ class PDFRenderer {
 
     // Tool buttons (only ones with data-tool attribute)
     this.$$('.tool-btn[data-tool]').forEach(btn => {
-      btn.addEventListener('click', () => this._setActiveTool(btn.dataset.tool));
+      btn.addEventListener('click', (e) => {
+        // Special handling for stamp tool - toggle dropdown
+        if (btn.dataset.tool === 'stamp') {
+          e.stopPropagation();
+          const dropdown = this.$('#stamp-dropdown');
+          if (dropdown) {
+            dropdown.classList.toggle('hidden');
+          }
+        } else {
+          this._setActiveTool(btn.dataset.tool);
+        }
+      });
+    });
+
+    // Stamp dropdown options
+    this.selectedStamp = null;
+    this.$$('.stamp-option').forEach(option => {
+      option.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.selectedStamp = option.dataset.stamp;
+        this._setActiveTool('stamp');
+        // Hide dropdown after selection
+        const dropdown = this.$('#stamp-dropdown');
+        if (dropdown) dropdown.classList.add('hidden');
+      });
+    });
+
+    // Close stamp dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      const dropdown = this.$('#stamp-dropdown');
+      const stampBtn = this.$('#tool-stamp');
+      if (dropdown && !dropdown.classList.contains('hidden')) {
+        if (!dropdown.contains(e.target) && e.target !== stampBtn) {
+          dropdown.classList.add('hidden');
+        }
+      }
     });
 
     // Color swatches

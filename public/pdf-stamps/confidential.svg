@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 80">
+  <rect x="5" y="5" width="290" height="70" rx="10" ry="10" 
+        fill="none" stroke="#d32f2f" stroke-width="6"/>
+  <text x="150" y="52" font-family="Arial, sans-serif" font-size="32" 
+        font-weight="bold" fill="#d32f2f" text-anchor="middle">CONFIDENTIAL</text>
+</svg>

@@ -66,37 +66,77 @@
     <!-- Annotation Toolbar -->
     <div id="annotation-bar" class="annotation-bar hidden">
       <div class="annotation-tools">
-        <button id="tool-select" class="tool-btn active" title="Select (V)" data-tool="select">
+        <button id="tool-select" class="tool-btn active" title="Select (V)" aria-label="Select tool" data-tool="select">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>
-          <span>Select</span>
         </button>
-        <button id="tool-pen" class="tool-btn" title="Pen (D)" data-tool="pen">
+        <button id="tool-pen" class="tool-btn" title="Pen (D)" aria-label="Pen tool" data-tool="pen">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-          <span>Pen</span>
         </button>
-        <button id="tool-highlighter" class="tool-btn" title="Highlighter (H)" data-tool="highlighter">
+        <button id="tool-highlighter" class="tool-btn" title="Highlighter (H)" aria-label="Highlighter tool" data-tool="highlighter">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-          <span>Highlight</span>
         </button>
-        <button id="tool-text" class="tool-btn" title="Text (X)" data-tool="text">
+        <button id="tool-text" class="tool-btn" title="Text (X)" aria-label="Text tool" data-tool="text">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
-          <span>Text</span>
         </button>
-        <button id="tool-rect" class="tool-btn" title="Rectangle (R)" data-tool="rect">
+        <button id="tool-rect" class="tool-btn" title="Rectangle (R)" aria-label="Rectangle tool" data-tool="rect">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-          <span>Rect</span>
         </button>
-        <button id="tool-circle" class="tool-btn" title="Circle (C)" data-tool="circle">
+        <button id="tool-circle" class="tool-btn" title="Circle (C)" aria-label="Circle tool" data-tool="circle">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
-          <span>Circle</span>
         </button>
-        <button id="tool-arrow" class="tool-btn" title="Arrow (L)" data-tool="arrow">
+        <button id="tool-arrow" class="tool-btn" title="Arrow (L)" aria-label="Arrow tool" data-tool="arrow">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          <span>Arrow</span>
         </button>
-        <button id="tool-eraser" class="tool-btn" title="Eraser (E)" data-tool="eraser">
+        
+        <!-- Stamp Tool with Dropdown -->
+        <div class="stamp-tool-container">
+          <button id="tool-stamp" class="tool-btn" title="Stamp (S)" aria-label="Stamp tool" data-tool="stamp">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="15" width="18" height="4" rx="1"/>
+              <path d="M6 15V9a6 6 0 0 1 12 0v6"/>
+            </svg>
+          </button>
+          <div id="stamp-dropdown" class="stamp-dropdown hidden">
+            <div class="stamp-grid">
+              <button class="stamp-option" data-stamp="paid" title="PAID">
+                <img src="/pdf-stamps/paid.svg" alt="PAID">
+              </button>
+              <button class="stamp-option" data-stamp="approved" title="APPROVED">
+                <img src="/pdf-stamps/approved.svg" alt="APPROVED">
+              </button>
+              <button class="stamp-option" data-stamp="rejected" title="REJECTED">
+                <img src="/pdf-stamps/rejected.svg" alt="REJECTED">
+              </button>
+              <button class="stamp-option" data-stamp="invoice" title="INVOICE">
+                <img src="/pdf-stamps/invoice.svg" alt="INVOICE">
+              </button>
+              <button class="stamp-option" data-stamp="processed" title="PROCESSED">
+                <img src="/pdf-stamps/processed.svg" alt="PROCESSED">
+              </button>
+              <button class="stamp-option" data-stamp="reviewed" title="REVIEWED">
+                <img src="/pdf-stamps/reviewed.svg" alt="REVIEWED">
+              </button>
+              <button class="stamp-option" data-stamp="confidential" title="CONFIDENTIAL">
+                <img src="/pdf-stamps/confidential.svg" alt="CONFIDENTIAL">
+              </button>
+              <button class="stamp-option" data-stamp="urgent" title="URGENT">
+                <img src="/pdf-stamps/urgent.svg" alt="URGENT">
+              </button>
+              <button class="stamp-option" data-stamp="draft" title="DRAFT">
+                <img src="/pdf-stamps/draft.svg" alt="DRAFT">
+              </button>
+              <button class="stamp-option" data-stamp="final" title="FINAL">
+                <img src="/pdf-stamps/final.svg" alt="FINAL">
+              </button>
+              <button class="stamp-option" data-stamp="copy" title="COPY">
+                <img src="/pdf-stamps/copy.svg" alt="COPY">
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <button id="tool-eraser" class="tool-btn" title="Eraser (E)" aria-label="Eraser tool" data-tool="eraser">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16l9-9 8 8-4 4z"/><line x1="6" y1="11" x2="13" y2="18"/></svg>
-          <span>Eraser</span>
         </button>
 
         <div class="tool-divider"></div>
@@ -126,13 +166,11 @@
         <div class="tool-divider"></div>
 
         <!-- Undo / Redo -->
-        <button id="btn-undo" class="tool-btn" title="Undo (Ctrl+Z)" disabled>
+        <button id="btn-undo" class="tool-btn" title="Undo (Ctrl+Z)" aria-label="Undo" disabled>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-          <span>Undo</span>
         </button>
-        <button id="btn-redo" class="tool-btn" title="Redo (Ctrl+Shift+Z)" disabled>
+        <button id="btn-redo" class="tool-btn" title="Redo (Ctrl+Shift+Z)" aria-label="Redo" disabled>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.13-9.36L23 10"/></svg>
-          <span>Redo</span>
         </button>
 
         <div class="tool-divider"></div>

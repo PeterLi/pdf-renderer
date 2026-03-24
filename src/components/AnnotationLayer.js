@@ -58,6 +58,9 @@ export class AnnotationLayer {
     this._resizeOrigBounds = null;    // Bounds at resize start
     this._resizeOrigData = null;      // Deep clone of annotation data at resize start
 
+    // Stamp cache - stores loaded SVG images
+    this._stampCache = new Map();     // stamp name -> Image object
+
     this._bindEvents();
   }
 
@@ -218,6 +221,13 @@ export class AnnotationLayer {
           w: Math.abs(x2 - x1) || 1, h: Math.abs(y2 - y1) || 1,
         };
       }
+      case 'stamp':
+        return {
+          x: ann.data.x,
+          y: ann.data.y,
+          w: ann.data.width,
+          h: ann.data.height,
+        };
       default:
         return { x: 0, y: 0, w: 0, h: 0 };
     }
@@ -323,6 +333,12 @@ export class AnnotationLayer {
         ctx.stroke();
         break;
       }
+
+      case 'stamp': {
+        const { x, y, width, height, stamp, rotation } = ann.data;
+        this._drawStamp(ctx, stamp, x, y, width, height, rotation || 0);
+        break;
+      }
     }
     ctx.restore();
   }
@@ -341,6 +357,65 @@ export class AnnotationLayer {
     const last = points[points.length - 1];
     ctx.lineTo(last.x, last.y);
     ctx.stroke();
+  }
+
+  async _loadStamp(stampName) {
+    // Check cache first
+    if (this._stampCache.has(stampName)) {
+      return this._stampCache.get(stampName);
+    }
+
+    // Load SVG as image
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        this._stampCache.set(stampName, img);
+        resolve(img);
+      };
+      img.onerror = () => {
+        console.error(`Failed to load stamp: ${stampName}`);
+        reject(new Error(`Failed to load stamp: ${stampName}`));
+      };
+      img.src = `/pdf-stamps/${stampName}.svg`;
+    });
+  }
+
+  _drawStamp(ctx, stampName, x, y, width, height, rotation) {
+    const img = this._stampCache.get(stampName);
+    
+    if (!img) {
+      // Load stamp async and redraw when ready
+      this._loadStamp(stampName).then(() => {
+        this.redraw();
+      }).catch(err => {
+        console.error('Failed to load stamp:', err);
+      });
+      // Draw placeholder while loading
+      ctx.save();
+      ctx.strokeStyle = '#666';
+      ctx.setLineDash([5, 5]);
+      ctx.strokeRect(x, y, width, height);
+      ctx.fillStyle = '#666';
+      ctx.font = '12px sans-serif';
+      ctx.fillText('Loading...', x + 5, y + height / 2);
+      ctx.restore();
+      return;
+    }
+
+    // Draw the stamp image
+    ctx.save();
+    
+    // Apply rotation if specified
+    if (rotation) {
+      const centerX = x + width / 2;
+      const centerY = y + height / 2;
+      ctx.translate(centerX, centerY);
+      ctx.rotate((rotation * Math.PI) / 180);
+      ctx.translate(-centerX, -centerY);
+    }
+    
+    ctx.drawImage(img, x, y, width, height);
+    ctx.restore();
   }
 
   // ============================================================
@@ -409,6 +484,10 @@ export class AnnotationLayer {
         ann.data.x1 += dx; ann.data.y1 += dy;
         ann.data.x2 += dx; ann.data.y2 += dy;
         break;
+      case 'stamp':
+        ann.data.x += dx;
+        ann.data.y += dy;
+        break;
     }
   }
 
@@ -465,6 +544,12 @@ export class AnnotationLayer {
           y: newBounds.y + (p.y - origBounds.y) * scaleY,
         }));
         break;
+      case 'stamp':
+        ann.data.x = newBounds.x;
+        ann.data.y = newBounds.y;
+        ann.data.width = newBounds.w;
+        ann.data.height = newBounds.h;
+        break;
     }
   }
 
@@ -514,6 +599,13 @@ export class AnnotationLayer {
       console.log('[Text Tool] Creating text input at', x, y);
       this._drawing = false;
       this._createTextInput(x, y);
+      return;
+    }
+
+    // Stamp tool: place selected stamp at click position
+    if (this.tool === 'stamp') {
+      this._drawing = false;
+      this._placeStamp(x, y);
       return;
     }
 
@@ -1006,5 +1098,40 @@ export class AnnotationLayer {
         commit();
       }
     });
+  }
+
+  _placeStamp(x, y) {
+    // Get the parent PDFRenderer instance to access selectedStamp
+    // This is a bit hacky but works - stamps are selected in PDFRenderer
+    const selectedStamp = window.pdfViewer?.selectedStamp;
+    
+    if (!selectedStamp) {
+      console.warn('[Stamp] No stamp selected');
+      return;
+    }
+
+    console.log('[Stamp] Placing stamp:', selectedStamp, 'at', x, y);
+
+    // Create stamp annotation
+    // Stamps are stored with the SVG path and dimensions
+    // Default size: 150x60px (will be resizable)
+    this.store.add(this._page, {
+      id: uid(),
+      page: this._page,
+      type: 'stamp',
+      color: this.color, // Not really used for stamps but keep for consistency
+      width: 1,
+      data: {
+        x: x - 75, // Center the stamp
+        y: y - 30,
+        width: 150,
+        height: 60,
+        stamp: selectedStamp,
+        rotation: 0, // Support rotation
+      },
+    });
+
+    this.redraw();
+    this.onChanged();
   }
 }
