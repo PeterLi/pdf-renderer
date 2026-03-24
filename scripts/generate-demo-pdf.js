@@ -32,12 +32,6 @@ async function generateDemoPDF() {
     color: rgb(0.7, 0.8, 0.95),
   });
 
-  page1.drawText('Interact Technology', {
-    x: 60, y: height - 160,
-    size: 14,
-    font: helvetica,
-    color: rgb(0.6, 0.7, 0.85),
-  });
 
   // Body text
   const bodyY = height - 240;
