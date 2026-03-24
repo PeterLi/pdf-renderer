@@ -37,6 +37,7 @@ const STAMP_ASPECT_RATIOS = {
   copy: 180 / 80,          // 2.25:1
   overdue: 240 / 80,       // 3:1
   void: 180 / 80,          // 2.25:1
+  sign: 200 / 80,          // 2.5:1 - special: stays in stamp mode
 };
 const STAMP_DEFAULT_HEIGHT = 60; // Fixed height, width calculated from aspect ratio
 
@@ -1361,19 +1362,24 @@ export class AnnotationLayer {
       data: stampData,
     });
 
-    // Auto-switch to select tool and select the stamp for immediate resize/rotate
-    // Call PDFRenderer's _setActiveTool to update both UI and layer
-    if (viewer && viewer._setActiveTool) {
-      viewer._setActiveTool('select');
+    // Special handling for "sign" stamp - stays in stamp mode for multiple placements
+    if (selectedStamp !== 'sign') {
+      // Auto-switch to select tool and select the stamp for immediate resize/rotate
+      // Call PDFRenderer's _setActiveTool to update both UI and layer
+      if (viewer && viewer._setActiveTool) {
+        viewer._setActiveTool('select');
+      } else {
+        // Fallback: just update the layer
+        this.setTool('select');
+      }
+      
+      this._selected.clear();
+      this._selected.add(stampId);
+      
+      console.log('[Stamp] Auto-selected stamp for immediate editing');
     } else {
-      // Fallback: just update the layer
-      this.setTool('select');
+      console.log('[Sign Stamp] Staying in stamp mode for multiple placements');
     }
-    
-    this._selected.clear();
-    this._selected.add(stampId);
-    
-    console.log('[Stamp] Auto-selected stamp for immediate editing');
 
     this.redraw();
     this.onChanged();

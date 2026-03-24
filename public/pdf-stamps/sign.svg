@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80">
+  <!-- Background flag/tab shape with shadow -->
+  <defs>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="2" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Sticky flag background -->
+  <path d="M 4 4 L 196 4 L 196 64 L 180 76 L 164 64 L 164 64 L 4 64 Z" 
+        fill="#FFD54F" stroke="#F9A825" stroke-width="2" filter="url(#shadow)"/>
+  
+  <!-- Arrow pointing right -->
+  <path d="M 164 34 L 180 44 L 164 54 Z" fill="#F9A825"/>
+  
+  <!-- Text -->
+  <text x="80" y="38" font-family="Arial, sans-serif" font-size="28" 
+        font-weight="bold" fill="#F57F17" text-anchor="middle" 
+        dominant-baseline="middle">SIGN HERE</text>
+  
+  <!-- Slight texture lines for sticky tab effect -->
+  <line x1="10" y1="20" x2="150" y2="20" stroke="#FFF59D" stroke-width="1" opacity="0.5"/>
+  <line x1="10" y1="48" x2="150" y2="48" stroke="#F9A825" stroke-width="1" opacity="0.3"/>
+</svg>
