@@ -22,6 +22,22 @@ const HANDLE_CURSORS = {
   rotate: 'grab',
 };
 
+// Stamp aspect ratios (width:height ratio from SVG viewBox)
+const STAMP_ASPECT_RATIOS = {
+  paid: 200 / 80,          // 2.5:1
+  approved: 240 / 80,      // 3:1
+  rejected: 240 / 80,      // 3:1
+  invoice: 220 / 80,       // 2.75:1
+  processed: 260 / 80,     // 3.25:1
+  reviewed: 240 / 80,      // 3:1
+  confidential: 300 / 80,  // 3.75:1
+  urgent: 220 / 80,        // 2.75:1
+  draft: 200 / 80,         // 2.5:1
+  final: 200 / 80,         // 2.5:1
+  copy: 180 / 80,          // 2.25:1
+};
+const STAMP_DEFAULT_HEIGHT = 60; // Fixed height, width calculated from aspect ratio
+
 export class AnnotationLayer {
   /**
    * @param {HTMLCanvasElement} canvas  The annotation overlay canvas
@@ -1217,9 +1233,12 @@ export class AnnotationLayer {
 
     console.log('[Stamp] Placing stamp:', selectedStamp, 'at', x, y);
 
+    // Calculate width based on aspect ratio to preserve proportions
+    const aspectRatio = STAMP_ASPECT_RATIOS[selectedStamp] || 2.5;
+    const height = STAMP_DEFAULT_HEIGHT;
+    const width = height * aspectRatio;
+
     // Create stamp annotation
-    // Stamps are stored with the SVG path and dimensions
-    // Default size: 150x60px (will be resizable)
     this.store.add(this._page, {
       id: uid(),
       page: this._page,
@@ -1227,10 +1246,10 @@ export class AnnotationLayer {
       color: this.color, // Not really used for stamps but keep for consistency
       width: 1,
       data: {
-        x: x - 75, // Center the stamp
-        y: y - 30,
-        width: 150,
-        height: 60,
+        x: x - (width / 2), // Center the stamp horizontally
+        y: y - (height / 2), // Center the stamp vertically
+        width: width,
+        height: height,
         stamp: selectedStamp,
         rotation: 0, // Support rotation
       },
