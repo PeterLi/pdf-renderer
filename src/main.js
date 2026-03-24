@@ -6,6 +6,8 @@ import { loadPDF, renderPage, renderThumbnail } from './utils/pdf.js';
 import { AnnotationStore } from './utils/annotations.js';
 import { AnnotationLayer } from './components/AnnotationLayer.js';
 import { exportAnnotatedPDF } from './utils/export.js';
+import { detectFormFields, readFieldValues, exportFilledPDF } from './utils/forms.js';
+import { FormLayer } from './components/FormLayer.js';
 import { showToast } from './utils/toast.js';
 
 // ============================================================
@@ -20,6 +22,13 @@ let baseScale = 1; // scale for "fit to width"
 
 const store = new AnnotationStore();
 let annotationLayer = null;
+
+// Form filling state
+let formLayer = null;
+let formMode = false;
+let formFieldsByPage = new Map(); // pageNum -> widget annotations
+let formFieldCount = 0;
+let hasForm = false;
 
 // ============================================================
 // DOM References
@@ -76,6 +85,13 @@ const els = {
   btnCloseHelp:  $('#btn-close-help'),
   btnCloseSidebar:$('#btn-close-sidebar'),
 
+  // Form mode
+  btnFormMode:   $('#btn-form-mode'),
+  formBar:       $('#form-bar'),
+  formFieldCount:$('#form-field-count'),
+  btnClearForm:  $('#btn-clear-form'),
+  btnExportFilled:$('#btn-export-filled'),
+
   // File inputs
   fileInput:     $('#file-input'),
   jsonInput:     $('#json-input'),
@@ -112,6 +128,9 @@ async function openFile(file) {
     els.landing.classList.add('hidden');
     els.pdfContainer.classList.remove('hidden');
     enableControls(true);
+
+    // Detect form fields
+    await detectAndSetupForm();
 
     // Calculate fit-to-width scale
     await calculateBaseScale();
@@ -168,6 +187,11 @@ async function renderCurrentPage() {
   els.btnNext.disabled = currentPage >= totalPages;
   updateUndoRedoButtons();
   updateThumbnailHighlight();
+
+  // Re-render form fields if in form mode
+  if (formMode) {
+    await renderFormFields();
+  }
 }
 
 function enableControls(enabled) {
@@ -268,6 +292,124 @@ function setActiveColor(color) {
 }
 
 // ============================================================
+// Form Filling
+// ============================================================
+
+async function detectAndSetupForm() {
+  // Reset form state
+  formFieldsByPage = new Map();
+  formFieldCount = 0;
+  hasForm = false;
+  formMode = false;
+
+  if (formLayer) {
+    formLayer.destroy();
+    formLayer = null;
+  }
+
+  // Hide form UI
+  els.btnFormMode.classList.add('hidden');
+  els.formBar.classList.add('hidden');
+  els.btnFormMode.classList.remove('active');
+
+  if (!pdfDoc) return;
+
+  try {
+    const result = await detectFormFields(pdfDoc);
+    formFieldsByPage = result.fieldsByPage;
+    formFieldCount = result.fieldCount;
+    hasForm = result.hasForm;
+
+    if (hasForm) {
+      // Show the form mode button
+      els.btnFormMode.classList.remove('hidden');
+
+      // Read existing field values from pdf-lib
+      const existingValues = await readFieldValues(pdfBytes);
+
+      // Create form layer
+      formLayer = new FormLayer(els.pageWrapper, onFormChanged);
+      formLayer.setValues(existingValues);
+    }
+  } catch (err) {
+    console.warn('Form detection failed:', err);
+  }
+}
+
+function toggleFormMode() {
+  if (!hasForm) return;
+
+  formMode = !formMode;
+  els.btnFormMode.classList.toggle('active', formMode);
+
+  if (formMode) {
+    // Enter form mode: show form bar, hide annotation bar, disable annotation canvas
+    els.formBar.classList.remove('hidden');
+    els.annotationBar.classList.add('hidden');
+    els.btnAnnotations.classList.remove('active');
+    els.annotCanvas.style.pointerEvents = 'none';
+    els.annotCanvas.style.opacity = '0.3';
+    els.formFieldCount.textContent = `${formFieldCount} field${formFieldCount !== 1 ? 's' : ''}`;
+
+    // Render form fields for current page
+    renderFormFields();
+  } else {
+    // Exit form mode: hide form bar, restore annotation canvas
+    els.formBar.classList.add('hidden');
+    els.annotCanvas.style.pointerEvents = '';
+    els.annotCanvas.style.opacity = '';
+
+    if (formLayer) {
+      formLayer.snapshotValues();
+      formLayer.destroy();
+    }
+  }
+}
+
+async function renderFormFields() {
+  if (!formMode || !formLayer || !pdfDoc) return;
+
+  const widgets = formFieldsByPage.get(currentPage) || [];
+  const page = await pdfDoc.getPage(currentPage);
+  const viewport = page.getViewport({ scale: currentScale });
+
+  formLayer.snapshotValues();
+  formLayer.render(widgets, viewport, currentScale);
+}
+
+function onFormChanged() {
+  // Could be used to track dirty state
+}
+
+async function clearFormFields() {
+  if (!formLayer) return;
+  formLayer.values.clear();
+  // Re-render to reflect cleared values
+  await renderFormFields();
+  showToast('Form fields cleared', 'info');
+}
+
+async function exportFilledPDFHandler() {
+  if (!pdfBytes || !formLayer) {
+    showToast('No form data to export', 'error');
+    return;
+  }
+
+  // Snapshot latest values
+  formLayer.snapshotValues();
+
+  try {
+    const bytes = await exportFilledPDF(pdfBytes, formLayer.values);
+    const blob = new Blob([bytes], { type: 'application/pdf' });
+    downloadBlob(blob, 'filled.pdf');
+    showToast('Filled PDF exported!', 'success');
+  } catch (err) {
+    console.error('Export filled PDF error:', err);
+    showToast('Failed to export filled PDF.', 'error');
+  }
+}
+
+// ============================================================
 // Export / Import
 // ============================================================
 
@@ -363,6 +505,11 @@ function bindEvents() {
 
   // Annotation bar toggle
   els.btnAnnotations.addEventListener('click', toggleAnnotationBar);
+
+  // Form mode
+  els.btnFormMode.addEventListener('click', toggleFormMode);
+  els.btnClearForm.addEventListener('click', clearFormFields);
+  els.btnExportFilled.addEventListener('click', exportFilledPDFHandler);
 
   // Tool buttons
   $$('.tool-btn[data-tool]').forEach(btn => {
@@ -490,6 +637,18 @@ function toggleSidebar() {
 }
 
 function toggleAnnotationBar() {
+  // If in form mode, exit form mode first
+  if (formMode) {
+    formMode = false;
+    els.btnFormMode.classList.remove('active');
+    els.formBar.classList.add('hidden');
+    els.annotCanvas.style.pointerEvents = '';
+    els.annotCanvas.style.opacity = '';
+    if (formLayer) {
+      formLayer.snapshotValues();
+      formLayer.destroy();
+    }
+  }
   els.annotationBar.classList.toggle('hidden');
   els.btnAnnotations.classList.toggle('active', !els.annotationBar.classList.contains('hidden'));
 }
@@ -499,9 +658,9 @@ function toggleOverlay(overlay) {
 }
 
 function handleKeyboard(e) {
-  // Don't handle if user is typing in an input
+  // Don't handle if user is typing in an input or form field
   const tag = e.target.tagName;
-  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
 
   const ctrl = e.ctrlKey || e.metaKey;
 
@@ -538,6 +697,7 @@ function handleKeyboard(e) {
   if (e.key === 'End') { e.preventDefault(); goToPage(totalPages); return; }
 
   // Tool shortcuts
+  if (e.key === 'f') { if (hasForm) toggleFormMode(); return; }
   if (e.key === 'a') { toggleAnnotationBar(); return; }
   if (e.key === 'v') { setActiveTool('select'); return; }
   if (e.key === 'd') { setActiveTool('pen'); return; }

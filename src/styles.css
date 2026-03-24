@@ -92,6 +92,7 @@ body {
 }
 .toolbar-btn:active:not(:disabled) { background: rgba(255,255,255,.18); }
 .toolbar-btn:disabled { opacity: .35; cursor: default; }
+.toolbar-btn.hidden { display: none; }
 .toolbar-btn.active { background: rgba(255,255,255,.18); color: #fff; }
 
 .toolbar-divider {
@@ -711,6 +712,105 @@ body {
 .viewport::-webkit-scrollbar-thumb:hover,
 .thumbnail-list::-webkit-scrollbar-thumb:hover {
   background: rgba(0,0,0,.25);
+}
+
+/* ---------- Form Mode Bar ---------- */
+.form-bar {
+  display: flex;
+  align-items: center;
+  height: var(--annot-bar-h);
+  padding: 0 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  z-index: 90;
+  flex-shrink: 0;
+}
+.form-bar.hidden { display: none; }
+
+.form-bar-tools {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+}
+
+.form-field-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  padding: 0 8px;
+}
+
+/* ---------- Form Field Overlay ---------- */
+.form-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.form-field-input {
+  position: absolute;
+  pointer-events: auto;
+  box-sizing: border-box;
+  border: 2px solid rgba(76, 139, 245, 0.5);
+  border-radius: 2px;
+  background: rgba(76, 139, 245, 0.06);
+  color: var(--text);
+  font-family: var(--font);
+  padding: 1px 3px;
+  outline: none;
+  transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
+}
+.form-field-input:hover {
+  border-color: var(--accent);
+  background: rgba(76, 139, 245, 0.1);
+}
+.form-field-input:focus {
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 2px rgba(76, 139, 245, 0.25);
+  z-index: 10;
+}
+
+/* Text input & textarea specifics */
+.form-field-input[type="text"],
+textarea.form-field-input {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  resize: none;
+}
+textarea.form-field-input {
+  overflow-y: auto;
+}
+
+/* Checkbox & radio styling */
+.form-field-input[type="checkbox"],
+.form-field-input[type="radio"] {
+  padding: 0;
+  cursor: pointer;
+  accent-color: var(--accent);
+  background: rgba(76, 139, 245, 0.06);
+}
+.form-field-input[type="checkbox"]:checked,
+.form-field-input[type="radio"]:checked {
+  background: var(--accent);
+}
+
+/* Select / dropdown */
+select.form-field-input {
+  cursor: pointer;
+  padding: 0 2px;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236B7280'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+  background-size: 8px;
+  padding-right: 16px;
 }
 
 /* ---------- Responsive ---------- */

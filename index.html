@@ -51,6 +51,9 @@
       </div>
 
       <div class="toolbar-section toolbar-right">
+        <button id="btn-form-mode" class="toolbar-btn hidden" title="Form Mode (F)" aria-label="Toggle form mode">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="7" y1="8" x2="17" y2="8"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="7" y1="16" x2="13" y2="16"/></svg>
+        </button>
         <button id="btn-annotations" class="toolbar-btn" title="Annotation Tools (A)" aria-label="Toggle annotations">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
         </button>
@@ -164,6 +167,22 @@
       </div>
     </div>
 
+    <!-- Form Mode Bar -->
+    <div id="form-bar" class="form-bar hidden">
+      <div class="form-bar-tools">
+        <span id="form-field-count" class="form-field-count">0 fields</span>
+        <div class="tool-divider"></div>
+        <button id="btn-clear-form" class="tool-btn" title="Clear All Fields">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <span>Clear Fields</span>
+        </button>
+        <button id="btn-export-filled" class="tool-btn primary" title="Export Filled PDF">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Export Filled PDF</span>
+        </button>
+      </div>
+    </div>
+
     <!-- Main Content Area -->
     <div id="main-content" class="main-content">
       <!-- Thumbnail Sidebar -->
@@ -256,6 +275,7 @@
             <div class="shortcut-row"><kbd>Ctrl</kbd>+<kbd>O</kbd><span>Open file</span></div>
             <div class="shortcut-row"><kbd>Ctrl</kbd>+<kbd>Z</kbd><span>Undo</span></div>
             <div class="shortcut-row"><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd><span>Redo</span></div>
+            <div class="shortcut-row"><kbd>F</kbd><span>Toggle form mode</span></div>
             <div class="shortcut-row"><kbd>T</kbd><span>Toggle thumbnails</span></div>
             <div class="shortcut-row"><kbd>?</kbd><span>Show this help</span></div>
             <div class="shortcut-row"><kbd>Esc</kbd><span>Close overlay / deselect</span></div>
