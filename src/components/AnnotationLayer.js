@@ -14,9 +14,12 @@ const HANDLE_HALF = HANDLE_SIZE / 2;
 const HANDLE_HIT = HANDLE_HALF + 3; // Hit area slightly larger than visual
 const SELECTION_PAD = 4;
 const SELECTION_COLOR = '#4C8BF5';
+const ROTATION_HANDLE_OFFSET = 20; // Distance above top-right corner
+const ROTATION_HANDLE_RADIUS = 6;
 const HANDLE_CURSORS = {
   nw: 'nwse-resize', n: 'ns-resize', ne: 'nesw-resize', e: 'ew-resize',
   se: 'nwse-resize', s: 'ns-resize', sw: 'nesw-resize', w: 'ew-resize',
+  rotate: 'grab',
 };
 
 export class AnnotationLayer {
@@ -49,7 +52,7 @@ export class AnnotationLayer {
 
     // Selection state
     this._selected = new Set();       // Set of selected annotation IDs
-    this._dragMode = null;            // 'move' | 'resize' | null
+    this._dragMode = null;            // 'move' | 'resize' | 'rotate' | null
     this._dragMoved = false;          // Whether pointer actually moved during drag
     this._lastDragX = 0;
     this._lastDragY = 0;
@@ -57,6 +60,11 @@ export class AnnotationLayer {
     this._resizeAnnId = null;         // ID of annotation being resized
     this._resizeOrigBounds = null;    // Bounds at resize start
     this._resizeOrigData = null;      // Deep clone of annotation data at resize start
+    
+    // Rotation state
+    this._rotateAnnId = null;         // ID of annotation being rotated
+    this._rotateStartAngle = 0;       // Starting rotation angle
+    this._rotateOrigRotation = 0;     // Original rotation value
 
     // Stamp cache - stores loaded SVG images
     this._stampCache = new Map();     // stamp name -> Image object
@@ -257,12 +265,23 @@ export class AnnotationLayer {
     };
   }
 
-  /** Check if a point hits a resize handle of any selected annotation. */
+  /** Check if a point hits a resize or rotation handle of any selected annotation. */
   _getHandleAt(x, y) {
     for (const id of this._selected) {
       const ann = this._getAnnotation(id);
       if (!ann || ann.type === 'text') continue; // no resize handles for text
       const bounds = this._getBounds(ann);
+      
+      // Check rotation handle first (for stamp/rect/circle)
+      if (ann.type === 'stamp' || ann.type === 'rect' || ann.type === 'circle') {
+        const rotatePos = this._getRotationHandlePosition(bounds);
+        const dist = Math.hypot(x - rotatePos.x, y - rotatePos.y);
+        if (dist <= ROTATION_HANDLE_RADIUS + 3) {
+          return { handle: 'rotate', annId: id };
+        }
+      }
+      
+      // Check resize handles
       const handles = this._getHandlePositions(bounds);
       for (const [name, pos] of Object.entries(handles)) {
         if (Math.abs(x - pos.x) <= HANDLE_HIT && Math.abs(y - pos.y) <= HANDLE_HIT) {
@@ -271,6 +290,14 @@ export class AnnotationLayer {
       }
     }
     return null;
+  }
+
+  /** Get the position of the rotation handle for a bounding rect. */
+  _getRotationHandlePosition(bounds) {
+    return {
+      x: bounds.x + bounds.w,
+      y: bounds.y - ROTATION_HANDLE_OFFSET
+    };
   }
 
   // ============================================================
@@ -451,6 +478,43 @@ export class AnnotationLayer {
           ctx.fillRect(pos.x - HANDLE_HALF, pos.y - HANDLE_HALF, HANDLE_SIZE, HANDLE_SIZE);
           ctx.strokeRect(pos.x - HANDLE_HALF, pos.y - HANDLE_HALF, HANDLE_SIZE, HANDLE_SIZE);
         }
+        
+        // Rotation handle (above top-right corner) - for stamp and shapes
+        if (ann.type === 'stamp' || ann.type === 'rect' || ann.type === 'circle') {
+          const rotatePos = this._getRotationHandlePosition(bounds);
+          
+          // Draw line from corner to handle
+          ctx.strokeStyle = SELECTION_COLOR;
+          ctx.lineWidth = 1;
+          ctx.setLineDash([3, 2]);
+          ctx.beginPath();
+          ctx.moveTo(bounds.x + bounds.w, bounds.y);
+          ctx.lineTo(rotatePos.x, rotatePos.y);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          
+          // Draw rotation handle (circle with arc arrows)
+          ctx.fillStyle = '#fff';
+          ctx.strokeStyle = SELECTION_COLOR;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(rotatePos.x, rotatePos.y, ROTATION_HANDLE_RADIUS, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          
+          // Draw rotation icon (circular arrows)
+          ctx.strokeStyle = SELECTION_COLOR;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(rotatePos.x, rotatePos.y, 3, -Math.PI / 4, Math.PI, false);
+          ctx.stroke();
+          // Arrowhead
+          const arrowSize = 2;
+          ctx.beginPath();
+          ctx.moveTo(rotatePos.x - 3, rotatePos.y);
+          ctx.lineTo(rotatePos.x - 3 - arrowSize, rotatePos.y - arrowSize);
+          ctx.stroke();
+        }
       }
 
       ctx.restore();
@@ -621,20 +685,37 @@ export class AnnotationLayer {
   }
 
   _onSelectDown(x, y, e) {
-    // 1. Check resize handles first (if something is already selected)
+    // 1. Check resize/rotate handles first (if something is already selected)
     if (this._selected.size > 0) {
       const handleInfo = this._getHandleAt(x, y);
       if (handleInfo) {
         const ann = this._getAnnotation(handleInfo.annId);
         if (ann) {
-          this._dragMode = 'resize';
-          this._dragMoved = false;
-          this._resizeHandle = handleInfo.handle;
-          this._resizeAnnId = handleInfo.annId;
-          this._resizeOrigBounds = this._getBounds(ann);
-          this._resizeOrigData = structuredClone(ann.data);
-          this.canvas.setPointerCapture(e.pointerId);
-          this.canvas.style.cursor = HANDLE_CURSORS[handleInfo.handle];
+          if (handleInfo.handle === 'rotate') {
+            // Rotation mode
+            this._dragMode = 'rotate';
+            this._dragMoved = false;
+            this._rotateAnnId = handleInfo.annId;
+            const bounds = this._getBounds(ann);
+            const centerX = bounds.x + bounds.w / 2;
+            const centerY = bounds.y + bounds.h / 2;
+            this._rotateCenterX = centerX;
+            this._rotateCenterY = centerY;
+            this._rotateStartAngle = Math.atan2(y - centerY, x - centerX);
+            this._rotateOrigRotation = ann.data.rotation || 0;
+            this.canvas.setPointerCapture(e.pointerId);
+            this.canvas.style.cursor = 'grabbing';
+          } else {
+            // Resize mode
+            this._dragMode = 'resize';
+            this._dragMoved = false;
+            this._resizeHandle = handleInfo.handle;
+            this._resizeAnnId = handleInfo.annId;
+            this._resizeOrigBounds = this._getBounds(ann);
+            this._resizeOrigData = structuredClone(ann.data);
+            this.canvas.setPointerCapture(e.pointerId);
+            this.canvas.style.cursor = HANDLE_CURSORS[handleInfo.handle];
+          }
           return;
         }
       }
@@ -730,6 +811,26 @@ export class AnnotationLayer {
         this.redraw();
       }
 
+    } else if (this._dragMode === 'rotate') {
+      // Push undo on first actual movement
+      if (!this._dragMoved) {
+        this._dragMoved = true;
+        this.store.pushUndo();
+      }
+      const ann = this._getAnnotation(this._rotateAnnId);
+      if (ann) {
+        // Calculate angle from center to current pointer
+        const currentAngle = Math.atan2(y - this._rotateCenterY, x - this._rotateCenterX);
+        const angleDiff = currentAngle - this._rotateStartAngle;
+        const newRotation = this._rotateOrigRotation + (angleDiff * 180 / Math.PI);
+        
+        // Update annotation rotation
+        if (!ann.data.rotation) ann.data.rotation = 0;
+        ann.data.rotation = newRotation % 360;
+        
+        this.redraw();
+      }
+
     } else {
       // Not dragging — update cursor based on what's under pointer
       this._updateSelectCursor(x, y);
@@ -762,6 +863,9 @@ export class AnnotationLayer {
         this._resizeOrigBounds = null;
         this._resizeOrigData = null;
         this._resizeAnnId = null;
+        this._rotateAnnId = null;
+        this._rotateStartAngle = 0;
+        this._rotateOrigRotation = 0;
         if (this._dragMoved) {
           this.onChanged();
         }

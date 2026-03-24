@@ -161,6 +161,11 @@ function hitTestAnnotation(a, x, y, tol) {
       const { x1, y1, x2, y2 } = a.data;
       return distToSegment(x, y, x1, y1, x2, y2) < tol + a.width;
     }
+    case 'stamp': {
+      const { x: sx, y: sy, width, height } = a.data;
+      return x >= sx - tol && x <= sx + width + tol && 
+             y >= sy - tol && y <= sy + height + tol;
+    }
     default: return false;
   }
 }
