@@ -4,6 +4,52 @@ All notable changes and fixes to the PDF Renderer project.
 
 ---
 
+## [2.0.0] - 2026-03-25
+
+### 🎉 Major Release: Reusable Library
+
+**Converted from standalone app to embeddable library!**
+
+#### New Library Features
+- ✅ **PDFRenderer class** - Easy to instantiate and embed
+- ✅ **Query parameter support** - Load PDFs via `?pdfUrl=...`
+- ✅ **Configuration options** - Customize behavior and callbacks
+- ✅ **Programmatic API** - Control viewer from your code
+- ✅ **Multiple parameter names** - `?pdfUrl=`, `?pdf=`, `?url=`
+- ✅ **Backward compatible** - Demo page still works as before
+
+#### Usage Examples
+
+```javascript
+// Basic embed
+const viewer = new PDFRenderer({
+  container: '#pdf-container',
+  pdfUrl: 'document.pdf'
+});
+
+// Via query param
+https://your-site.com/?pdfUrl=https://example.com/doc.pdf
+
+// Programmatic control
+viewer.loadPDF('doc.pdf');
+viewer.goToPage(5);
+viewer.savePDF();
+```
+
+#### Documentation
+- ✅ Comprehensive embedding guide in README
+- ✅ API reference with examples
+- ✅ Query parameter documentation
+- ✅ Configuration options reference
+
+#### Technical Changes
+- Created `src/PDFRenderer.js` - Main library class
+- Refactored `src/main.js` - Demo instantiation
+- Updated README with Quick Start guide
+- Added 5 usage examples
+
+---
+
 ## [1.0.0] - 2026-03-24
 
 ### Initial Release
