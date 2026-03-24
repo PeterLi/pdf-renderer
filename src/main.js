@@ -304,7 +304,8 @@ async function savePDF() {
   console.log('[save] First 10 bytes:', Array.from(pdfBytes.slice(0, 10)));
   
   try {
-    const bytes = await exportAnnotatedPDF(pdfBytes, store);
+    // Pass current scale so annotations are positioned correctly
+    const bytes = await exportAnnotatedPDF(pdfBytes, store, currentScale);
     const blob = new Blob([bytes], { type: 'application/pdf' });
     downloadBlob(blob, 'annotated.pdf');
     showToast('Annotated PDF saved!', 'success');
