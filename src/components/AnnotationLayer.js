@@ -925,9 +925,16 @@ export class AnnotationLayer {
     
     wrapper.appendChild(input);
     console.log('[_createTextInput] Appended input to wrapper');
+    console.log('[_createTextInput] Input in DOM?', document.body.contains(input));
+    console.log('[_createTextInput] Input offsetParent:', input.offsetParent);
+    console.log('[_createTextInput] Input computed style:', window.getComputedStyle(input).display, window.getComputedStyle(input).visibility, window.getComputedStyle(input).zIndex);
     
     input.focus();
     console.log('[_createTextInput] Focused input, activeElement:', document.activeElement === input);
+    
+    // CRITICAL FIX: Disable pointer events on annotation canvas while text input is active
+    this.canvas.style.pointerEvents = 'none';
+    console.log('[_createTextInput] Disabled canvas pointer events');
 
     let committed = false;
     const commit = () => {
@@ -953,6 +960,9 @@ export class AnnotationLayer {
         this.onChanged();
       }
       input.remove();
+      // CRITICAL: Re-enable pointer events on canvas
+      this.canvas.style.pointerEvents = 'auto';
+      console.log('[Text commit] Re-enabled canvas pointer events');
     };
 
     input.addEventListener('blur', commit);
@@ -961,6 +971,8 @@ export class AnnotationLayer {
       if (e.key === 'Escape') {
         committed = true;
         input.remove();
+        this.canvas.style.pointerEvents = 'auto';
+        console.log('[Text escape] Re-enabled canvas pointer events');
       }
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
