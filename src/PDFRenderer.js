@@ -180,18 +180,29 @@ class PDFRenderer {
           const dropdown = this.$('#stamp-dropdown');
           if (dropdown) {
             const isHidden = dropdown.classList.contains('hidden');
-            dropdown.classList.toggle('hidden');
             
-            // Position dropdown below button when showing
             if (isHidden) {
+              // Showing dropdown
               // Move dropdown to body to escape overflow clipping
               document.body.appendChild(dropdown);
               
+              // Show it temporarily to measure
+              dropdown.style.visibility = 'hidden';
+              dropdown.classList.remove('hidden');
+              
               const rect = btn.getBoundingClientRect();
-              // Center dropdown under button
-              const dropdownWidth = 230; // Approximate width
-              dropdown.style.left = `${rect.left + (rect.width / 2) - (dropdownWidth / 2)}px`;
+              const dropdownRect = dropdown.getBoundingClientRect();
+              
+              // Position dropdown so the arrow (at center) points at center of button
+              const buttonCenterX = rect.left + (rect.width / 2);
+              const dropdownWidth = dropdownRect.width;
+              
+              dropdown.style.left = `${buttonCenterX - (dropdownWidth / 2)}px`;
               dropdown.style.top = `${rect.bottom + 12}px`;
+              dropdown.style.visibility = 'visible';
+            } else {
+              // Hiding dropdown
+              dropdown.classList.add('hidden');
             }
           }
         } else {
