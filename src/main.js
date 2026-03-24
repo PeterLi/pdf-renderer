@@ -291,7 +291,15 @@ function importAnnotationsJSON(file) {
 }
 
 async function savePDF() {
-  if (!pdfBytes) return;
+  if (!pdfBytes) {
+    showToast('No PDF loaded', 'error');
+    return;
+  }
+  
+  console.log('[save] pdfBytes type:', pdfBytes.constructor.name);
+  console.log('[save] pdfBytes length:', pdfBytes.length);
+  console.log('[save] First 10 bytes:', Array.from(pdfBytes.slice(0, 10)));
+  
   try {
     const bytes = await exportAnnotatedPDF(pdfBytes, store);
     const blob = new Blob([bytes], { type: 'application/pdf' });

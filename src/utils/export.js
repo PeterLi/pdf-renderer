@@ -10,6 +10,13 @@ import { PDFDocument, rgb } from 'pdf-lib';
  * @returns {Promise<Uint8Array>}
  */
 export async function exportAnnotatedPDF(originalPdfBytes, store) {
+  console.log('[export] Received bytes type:', originalPdfBytes?.constructor.name);
+  console.log('[export] Bytes length:', originalPdfBytes?.length || originalPdfBytes?.byteLength);
+  
+  if (!originalPdfBytes || (originalPdfBytes.length === 0 && originalPdfBytes.byteLength === 0)) {
+    throw new Error('No PDF bytes provided');
+  }
+  
   const doc = await PDFDocument.load(originalPdfBytes);
   const pages = doc.getPages();
 
