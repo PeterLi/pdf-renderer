@@ -556,8 +556,19 @@ function handleKeyboard(e) {
   // Help
   if (e.key === '?') { toggleOverlay(els.helpOverlay); return; }
 
-  // Escape
+  // Delete / Backspace — delete selected annotations
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    if (annotationLayer && annotationLayer.handleKeyDown(e)) {
+      e.preventDefault();
+      return;
+    }
+  }
+
+  // Escape — deselect annotations first, then fall through to close overlays
   if (e.key === 'Escape') {
+    if (annotationLayer && annotationLayer.handleKeyDown(e)) {
+      return;
+    }
     els.helpOverlay.classList.add('hidden');
     setActiveTool('select');
     return;

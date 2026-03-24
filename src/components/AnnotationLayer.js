@@ -1,10 +1,23 @@
 /**
- * AnnotationLayer — handles drawing on a canvas overlay.
+ * AnnotationLayer — handles drawing and interaction on a canvas overlay.
  *
- * Sits on top of the PDF canvas and manages all pointer events
- * for creating pen strokes, highlights, shapes, text, and erasing.
+ * Sits on top of the PDF canvas and manages all pointer events for:
+ *   - Selection (click, multi-select, drag-to-move, resize handles)
+ *   - Drawing (pen strokes, highlights, shapes, text, erasing)
+ *   - Text editing (double-click to edit existing text annotations)
  */
 import { uid } from '../utils/annotations.js';
+
+// --- Constants ---
+const HANDLE_SIZE = 8;
+const HANDLE_HALF = HANDLE_SIZE / 2;
+const HANDLE_HIT = HANDLE_HALF + 3; // Hit area slightly larger than visual
+const SELECTION_PAD = 4;
+const SELECTION_COLOR = '#4C8BF5';
+const HANDLE_CURSORS = {
+  nw: 'nwse-resize', n: 'ns-resize', ne: 'nesw-resize', e: 'ew-resize',
+  se: 'nwse-resize', s: 'ns-resize', sw: 'nesw-resize', w: 'ew-resize',
+};
 
 export class AnnotationLayer {
   /**
@@ -22,11 +35,11 @@ export class AnnotationLayer {
     this.tool = 'select';
     this.color = '#E53935';
     this.strokeWidth = 3;
-    this.page = 1;
+    this._page = 1;
     this.scale = 1;
     this.visible = true;
 
-    // Drawing state
+    // Drawing state (for pen/highlighter/shapes)
     this._drawing = false;
     this._points = [];
     this._startX = 0;
@@ -34,10 +47,34 @@ export class AnnotationLayer {
     this._currentX = 0;
     this._currentY = 0;
 
+    // Selection state
+    this._selected = new Set();       // Set of selected annotation IDs
+    this._dragMode = null;            // 'move' | 'resize' | null
+    this._dragMoved = false;          // Whether pointer actually moved during drag
+    this._lastDragX = 0;
+    this._lastDragY = 0;
+    this._resizeHandle = null;        // Handle name ('nw', 'n', etc.)
+    this._resizeAnnId = null;         // ID of annotation being resized
+    this._resizeOrigBounds = null;    // Bounds at resize start
+    this._resizeOrigData = null;      // Deep clone of annotation data at resize start
+
     this._bindEvents();
   }
 
-  /** Resize canvas to match PDF canvas. */
+  // --- Page property (clears selection on change) ---
+
+  get page() { return this._page; }
+  set page(val) {
+    if (val !== this._page) {
+      this._selected.clear();
+      this._dragMode = null;
+    }
+    this._page = val;
+  }
+
+  // --- Public API ---
+
+  /** Resize canvas to match PDF canvas dimensions. */
   resize(width, height) {
     const dpr = window.devicePixelRatio || 1;
     this.canvas.width = Math.floor(width * dpr);
@@ -48,19 +85,22 @@ export class AnnotationLayer {
     this.redraw();
   }
 
-  /** Update current tool. */
+  /** Update current tool. Clears selection when switching away from select. */
   setTool(tool) {
-    this.tool = tool;
-    // Update cursor class
-    this.canvas.className = 'annotation-canvas';
-    if (tool !== 'select') {
-      this.canvas.classList.add(`tool-${tool}`);
-    } else {
-      this.canvas.classList.add('tool-select');
+    if (tool !== 'select' && this.tool === 'select') {
+      this._selected.clear();
+      this._dragMode = null;
     }
+    this.tool = tool;
+    this.canvas.className = 'annotation-canvas';
+    this.canvas.classList.add(`tool-${tool}`);
+    if (tool === 'select') {
+      this.canvas.style.cursor = 'default';
+    }
+    this.redraw();
   }
 
-  /** Full redraw of all annotations for the current page. */
+  /** Full redraw of all annotations + selection UI for the current page. */
   redraw() {
     const ctx = this.ctx;
     const w = this.canvas.width / (window.devicePixelRatio || 1);
@@ -69,11 +109,163 @@ export class AnnotationLayer {
 
     if (!this.visible) return;
 
-    const annotations = this.store.get(this.page);
+    const annotations = this.store.get(this._page);
     for (const ann of annotations) {
       this._drawAnnotation(ctx, ann);
     }
+
+    // Selection UI on top
+    this._drawSelectionUI();
   }
+
+  /** Clear all selection. */
+  clearSelection() {
+    this._selected.clear();
+    this._dragMode = null;
+    this.redraw();
+  }
+
+  /** Whether any annotations are selected. */
+  get hasSelection() {
+    return this._selected.size > 0;
+  }
+
+  /** Delete all selected annotations. */
+  deleteSelected() {
+    if (this._selected.size === 0) return;
+    this.store.pushUndo();
+    const annotations = this.store.get(this._page);
+    for (let i = annotations.length - 1; i >= 0; i--) {
+      if (this._selected.has(annotations[i].id)) {
+        annotations.splice(i, 1);
+      }
+    }
+    this._selected.clear();
+    this.redraw();
+    this.onChanged();
+  }
+
+  /**
+   * Handle keyboard events delegated from the main app.
+   * Returns true if the event was consumed.
+   */
+  handleKeyDown(e) {
+    if (this.tool !== 'select') return false;
+
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      if (this._selected.size > 0) {
+        this.deleteSelected();
+        return true;
+      }
+    }
+
+    if (e.key === 'Escape') {
+      if (this._selected.size > 0) {
+        this.clearSelection();
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  // ============================================================
+  // Annotation helpers
+  // ============================================================
+
+  /** Find annotation by ID on current page. */
+  _getAnnotation(id) {
+    return this.store.get(this._page).find(a => a.id === id);
+  }
+
+  /** Compute bounding rectangle for an annotation. */
+  _getBounds(ann) {
+    switch (ann.type) {
+      case 'pen':
+      case 'highlighter': {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        for (const p of ann.data.points) {
+          if (p.x < minX) minX = p.x;
+          if (p.y < minY) minY = p.y;
+          if (p.x > maxX) maxX = p.x;
+          if (p.y > maxY) maxY = p.y;
+        }
+        const pad = ann.width / 2;
+        return {
+          x: minX - pad, y: minY - pad,
+          w: maxX - minX + ann.width, h: maxY - minY + ann.width,
+        };
+      }
+      case 'text': {
+        const fontSize = ann.data.fontSize || 14;
+        const w = this._measureTextWidth(ann.data.content, fontSize);
+        const h = fontSize * 1.3;
+        return { x: ann.data.x, y: ann.data.y - fontSize, w: Math.max(w, 20), h };
+      }
+      case 'rect':
+        return { x: ann.data.x, y: ann.data.y, w: ann.data.w, h: ann.data.h };
+      case 'circle':
+        return {
+          x: ann.data.cx - Math.abs(ann.data.rx),
+          y: ann.data.cy - Math.abs(ann.data.ry),
+          w: Math.abs(ann.data.rx) * 2,
+          h: Math.abs(ann.data.ry) * 2,
+        };
+      case 'arrow': {
+        const { x1, y1, x2, y2 } = ann.data;
+        return {
+          x: Math.min(x1, x2), y: Math.min(y1, y2),
+          w: Math.abs(x2 - x1) || 1, h: Math.abs(y2 - y1) || 1,
+        };
+      }
+      default:
+        return { x: 0, y: 0, w: 0, h: 0 };
+    }
+  }
+
+  /** Measure rendered text width using canvas context. */
+  _measureTextWidth(text, fontSize) {
+    this.ctx.save();
+    this.ctx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    const w = this.ctx.measureText(text).width;
+    this.ctx.restore();
+    return w;
+  }
+
+  /** Get the 8 resize handle positions for a bounding rect. */
+  _getHandlePositions(bounds) {
+    const { x, y, w, h } = bounds;
+    return {
+      nw: { x, y },
+      n:  { x: x + w / 2, y },
+      ne: { x: x + w, y },
+      e:  { x: x + w, y: y + h / 2 },
+      se: { x: x + w, y: y + h },
+      s:  { x: x + w / 2, y: y + h },
+      sw: { x, y: y + h },
+      w:  { x, y: y + h / 2 },
+    };
+  }
+
+  /** Check if a point hits a resize handle of any selected annotation. */
+  _getHandleAt(x, y) {
+    for (const id of this._selected) {
+      const ann = this._getAnnotation(id);
+      if (!ann || ann.type === 'text') continue; // no resize handles for text
+      const bounds = this._getBounds(ann);
+      const handles = this._getHandlePositions(bounds);
+      for (const [name, pos] of Object.entries(handles)) {
+        if (Math.abs(x - pos.x) <= HANDLE_HIT && Math.abs(y - pos.y) <= HANDLE_HIT) {
+          return { handle: name, annId: id };
+        }
+      }
+    }
+    return null;
+  }
+
+  // ============================================================
+  // Drawing — annotations
+  // ============================================================
 
   _drawAnnotation(ctx, ann) {
     ctx.save();
@@ -85,13 +277,13 @@ export class AnnotationLayer {
 
     switch (ann.type) {
       case 'pen':
-        this._drawPath(ctx, ann.data.points, 1);
+        this._drawPath(ctx, ann.data.points);
         break;
 
       case 'highlighter':
         ctx.globalAlpha = 0.35;
         ctx.lineWidth = ann.width;
-        this._drawPath(ctx, ann.data.points, 1);
+        this._drawPath(ctx, ann.data.points);
         ctx.globalAlpha = 1;
         break;
 
@@ -135,12 +327,11 @@ export class AnnotationLayer {
     ctx.restore();
   }
 
-  _drawPath(ctx, points, _opacity) {
+  _drawPath(ctx, points) {
     if (points.length < 2) return;
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].y);
     for (let i = 1; i < points.length; i++) {
-      // Smooth with quadratic curves
       const prev = points[i - 1];
       const curr = points[i];
       const mx = (prev.x + curr.x) / 2;
@@ -152,7 +343,134 @@ export class AnnotationLayer {
     ctx.stroke();
   }
 
-  // --- Pointer events ---
+  // ============================================================
+  // Drawing — selection UI
+  // ============================================================
+
+  _drawSelectionUI() {
+    if (this._selected.size === 0) return;
+    const ctx = this.ctx;
+
+    for (const id of this._selected) {
+      const ann = this._getAnnotation(id);
+      if (!ann) continue;
+      const bounds = this._getBounds(ann);
+      const p = SELECTION_PAD;
+
+      ctx.save();
+
+      // Dashed selection outline
+      ctx.strokeStyle = SELECTION_COLOR;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([5, 3]);
+      ctx.strokeRect(bounds.x - p, bounds.y - p, bounds.w + p * 2, bounds.h + p * 2);
+      ctx.setLineDash([]);
+
+      // Resize handles (not for text — text uses double-click to edit)
+      if (ann.type !== 'text') {
+        const handles = this._getHandlePositions(bounds);
+        ctx.lineWidth = 1.5;
+        for (const pos of Object.values(handles)) {
+          ctx.fillStyle = '#fff';
+          ctx.strokeStyle = SELECTION_COLOR;
+          ctx.fillRect(pos.x - HANDLE_HALF, pos.y - HANDLE_HALF, HANDLE_SIZE, HANDLE_SIZE);
+          ctx.strokeRect(pos.x - HANDLE_HALF, pos.y - HANDLE_HALF, HANDLE_SIZE, HANDLE_SIZE);
+        }
+      }
+
+      ctx.restore();
+    }
+  }
+
+  // ============================================================
+  // Annotation manipulation — move & resize
+  // ============================================================
+
+  /** Translate an annotation by (dx, dy). */
+  _moveAnnotation(ann, dx, dy) {
+    switch (ann.type) {
+      case 'pen':
+      case 'highlighter':
+        for (const p of ann.data.points) { p.x += dx; p.y += dy; }
+        break;
+      case 'text':
+        ann.data.x += dx;
+        ann.data.y += dy;
+        break;
+      case 'rect':
+        ann.data.x += dx;
+        ann.data.y += dy;
+        break;
+      case 'circle':
+        ann.data.cx += dx;
+        ann.data.cy += dy;
+        break;
+      case 'arrow':
+        ann.data.x1 += dx; ann.data.y1 += dy;
+        ann.data.x2 += dx; ann.data.y2 += dy;
+        break;
+    }
+  }
+
+  /** Compute new bounds when a resize handle is dragged to (mouseX, mouseY). */
+  _computeResizedBounds(origBounds, handle, mouseX, mouseY) {
+    let left = origBounds.x;
+    let top = origBounds.y;
+    let right = origBounds.x + origBounds.w;
+    let bottom = origBounds.y + origBounds.h;
+
+    // Adjust edges based on which handle is being dragged
+    if (handle === 'nw' || handle === 'w' || handle === 'sw') left = mouseX;
+    if (handle === 'ne' || handle === 'e' || handle === 'se') right = mouseX;
+    if (handle === 'nw' || handle === 'n' || handle === 'ne') top = mouseY;
+    if (handle === 'sw' || handle === 's' || handle === 'se') bottom = mouseY;
+
+    // Normalize (handle flipping when dragged past opposite edge)
+    return {
+      x: Math.min(left, right),
+      y: Math.min(top, bottom),
+      w: Math.abs(right - left),
+      h: Math.abs(bottom - top),
+    };
+  }
+
+  /** Apply resized bounds to an annotation, scaling its data appropriately. */
+  _applyResize(ann, newBounds, origBounds, origData) {
+    const scaleX = origBounds.w > 1 ? newBounds.w / origBounds.w : 1;
+    const scaleY = origBounds.h > 1 ? newBounds.h / origBounds.h : 1;
+
+    switch (ann.type) {
+      case 'rect':
+        ann.data.x = newBounds.x;
+        ann.data.y = newBounds.y;
+        ann.data.w = newBounds.w;
+        ann.data.h = newBounds.h;
+        break;
+      case 'circle':
+        ann.data.cx = newBounds.x + newBounds.w / 2;
+        ann.data.cy = newBounds.y + newBounds.h / 2;
+        ann.data.rx = newBounds.w / 2;
+        ann.data.ry = newBounds.h / 2;
+        break;
+      case 'arrow':
+        ann.data.x1 = newBounds.x + (origData.x1 - origBounds.x) * scaleX;
+        ann.data.y1 = newBounds.y + (origData.y1 - origBounds.y) * scaleY;
+        ann.data.x2 = newBounds.x + (origData.x2 - origBounds.x) * scaleX;
+        ann.data.y2 = newBounds.y + (origData.y2 - origBounds.y) * scaleY;
+        break;
+      case 'pen':
+      case 'highlighter':
+        ann.data.points = origData.points.map(p => ({
+          x: newBounds.x + (p.x - origBounds.x) * scaleX,
+          y: newBounds.y + (p.y - origBounds.y) * scaleY,
+        }));
+        break;
+    }
+  }
+
+  // ============================================================
+  // Pointer events
+  // ============================================================
 
   _bindEvents() {
     this.canvas.addEventListener('pointerdown', (e) => this._onPointerDown(e));
@@ -161,6 +479,7 @@ export class AnnotationLayer {
     this.canvas.addEventListener('pointerleave', (e) => {
       if (this._drawing) this._onPointerUp(e);
     });
+    this.canvas.addEventListener('dblclick', (e) => this._onDblClick(e));
   }
 
   _canvasCoords(e) {
@@ -171,16 +490,33 @@ export class AnnotationLayer {
     };
   }
 
-  _onPointerDown(e) {
-    if (this.tool === 'select') return;
-    if (e.button !== 0) return; // left button only
+  // --- Pointer Down ---
 
+  _onPointerDown(e) {
+    if (e.button !== 0) return;
     const { x, y } = this._canvasCoords(e);
+
+    // Select tool has its own handler
+    if (this.tool === 'select') {
+      this._onSelectDown(x, y, e);
+      return;
+    }
+
+    // --- Drawing tools ---
     this._drawing = true;
     this._startX = x;
     this._startY = y;
     this._currentX = x;
     this._currentY = y;
+
+    // Text tool: create input immediately, don't capture pointer
+    if (this.tool === 'text') {
+      console.log('[Text Tool] Creating text input at', x, y);
+      this._drawing = false;
+      this._createTextInput(x, y);
+      return;
+    }
+
     this.canvas.setPointerCapture(e.pointerId);
 
     if (this.tool === 'pen' || this.tool === 'highlighter') {
@@ -190,46 +526,177 @@ export class AnnotationLayer {
     if (this.tool === 'eraser') {
       this._tryErase(x, y);
     }
-
-    if (this.tool === 'text') {
-      this._drawing = false;
-      this._createTextInput(x, y);
-    }
   }
 
+  _onSelectDown(x, y, e) {
+    // 1. Check resize handles first (if something is already selected)
+    if (this._selected.size > 0) {
+      const handleInfo = this._getHandleAt(x, y);
+      if (handleInfo) {
+        const ann = this._getAnnotation(handleInfo.annId);
+        if (ann) {
+          this._dragMode = 'resize';
+          this._dragMoved = false;
+          this._resizeHandle = handleInfo.handle;
+          this._resizeAnnId = handleInfo.annId;
+          this._resizeOrigBounds = this._getBounds(ann);
+          this._resizeOrigData = structuredClone(ann.data);
+          this.canvas.setPointerCapture(e.pointerId);
+          this.canvas.style.cursor = HANDLE_CURSORS[handleInfo.handle];
+          return;
+        }
+      }
+    }
+
+    // 2. Hit test for annotations
+    const hit = this.store.hitTest(this._page, x, y);
+    if (hit) {
+      if (e.shiftKey) {
+        // Toggle in multi-selection
+        if (this._selected.has(hit.id)) {
+          this._selected.delete(hit.id);
+        } else {
+          this._selected.add(hit.id);
+        }
+      } else if (!this._selected.has(hit.id)) {
+        // Select only this annotation
+        this._selected.clear();
+        this._selected.add(hit.id);
+      }
+      // Start move drag
+      this._dragMode = 'move';
+      this._dragMoved = false;
+      this._lastDragX = x;
+      this._lastDragY = y;
+      this.canvas.setPointerCapture(e.pointerId);
+      this.canvas.style.cursor = 'move';
+    } else {
+      // Clicked empty space — deselect all
+      this._selected.clear();
+      this._dragMode = null;
+      this.canvas.style.cursor = 'default';
+    }
+
+    this.redraw();
+  }
+
+  // --- Pointer Move ---
+
   _onPointerMove(e) {
-    if (!this._drawing) return;
     const { x, y } = this._canvasCoords(e);
+
+    if (this.tool === 'select') {
+      this._onSelectMove(x, y);
+      return;
+    }
+
+    if (!this._drawing) return;
     this._currentX = x;
     this._currentY = y;
 
     if (this.tool === 'pen' || this.tool === 'highlighter') {
       this._points.push({ x, y });
-      // Live preview
       this.redraw();
       this._drawLiveStroke();
     } else if (this.tool === 'eraser') {
       this._tryErase(x, y);
     } else {
-      // Shape preview
       this.redraw();
       this._drawLiveShape();
     }
   }
 
+  _onSelectMove(x, y) {
+    if (this._dragMode === 'move') {
+      // Push undo on first actual movement
+      if (!this._dragMoved) {
+        this._dragMoved = true;
+        this.store.pushUndo();
+      }
+      const dx = x - this._lastDragX;
+      const dy = y - this._lastDragY;
+      for (const id of this._selected) {
+        const ann = this._getAnnotation(id);
+        if (ann) this._moveAnnotation(ann, dx, dy);
+      }
+      this._lastDragX = x;
+      this._lastDragY = y;
+      this.redraw();
+
+    } else if (this._dragMode === 'resize') {
+      // Push undo on first actual movement
+      if (!this._dragMoved) {
+        this._dragMoved = true;
+        this.store.pushUndo();
+      }
+      const ann = this._getAnnotation(this._resizeAnnId);
+      if (ann) {
+        const newBounds = this._computeResizedBounds(
+          this._resizeOrigBounds, this._resizeHandle, x, y,
+        );
+        this._applyResize(ann, newBounds, this._resizeOrigBounds, this._resizeOrigData);
+        this.redraw();
+      }
+
+    } else {
+      // Not dragging — update cursor based on what's under pointer
+      this._updateSelectCursor(x, y);
+    }
+  }
+
+  /** Update cursor to reflect what the pointer is hovering over. */
+  _updateSelectCursor(x, y) {
+    // Check resize handles
+    if (this._selected.size > 0) {
+      const handleInfo = this._getHandleAt(x, y);
+      if (handleInfo) {
+        this.canvas.style.cursor = HANDLE_CURSORS[handleInfo.handle];
+        return;
+      }
+    }
+    // Check annotations
+    const hit = this.store.hitTest(this._page, x, y);
+    this.canvas.style.cursor = hit ? 'move' : 'default';
+  }
+
+  // --- Pointer Up ---
+
   _onPointerUp(e) {
+    // Select tool
+    if (this.tool === 'select') {
+      if (this._dragMode) {
+        this._dragMode = null;
+        this._resizeHandle = null;
+        this._resizeOrigBounds = null;
+        this._resizeOrigData = null;
+        this._resizeAnnId = null;
+        if (this._dragMoved) {
+          this.onChanged();
+        }
+        // Restore cursor
+        if (e) {
+          const { x, y } = this._canvasCoords(e);
+          this._updateSelectCursor(x, y);
+        }
+      }
+      return;
+    }
+
+    // Drawing tools
     if (!this._drawing) return;
     this._drawing = false;
 
-    const { x, y } = this._canvasCoords(e);
-    this._currentX = x;
-    this._currentY = y;
+    if (e) {
+      const { x, y } = this._canvasCoords(e);
+      this._currentX = x;
+      this._currentY = y;
+    }
 
     if (this.tool === 'pen' || this.tool === 'highlighter') {
       if (this._points.length >= 2) {
-        this.store.add(this.page, {
+        this.store.add(this._page, {
           id: uid(),
-          page: this.page,
+          page: this._page,
           type: this.tool,
           color: this.color,
           width: this.tool === 'highlighter' ? Math.max(this.strokeWidth * 3, 12) : this.strokeWidth,
@@ -240,9 +707,9 @@ export class AnnotationLayer {
       const w = this._currentX - this._startX;
       const h = this._currentY - this._startY;
       if (Math.abs(w) > 3 || Math.abs(h) > 3) {
-        this.store.add(this.page, {
+        this.store.add(this._page, {
           id: uid(),
-          page: this.page,
+          page: this._page,
           type: 'rect',
           color: this.color,
           width: this.strokeWidth,
@@ -258,9 +725,9 @@ export class AnnotationLayer {
       const rx = Math.abs(this._currentX - this._startX) / 2;
       const ry = Math.abs(this._currentY - this._startY) / 2;
       if (rx > 3 || ry > 3) {
-        this.store.add(this.page, {
+        this.store.add(this._page, {
           id: uid(),
-          page: this.page,
+          page: this._page,
           type: 'circle',
           color: this.color,
           width: this.strokeWidth,
@@ -275,9 +742,9 @@ export class AnnotationLayer {
     } else if (this.tool === 'arrow') {
       const dist = Math.hypot(this._currentX - this._startX, this._currentY - this._startY);
       if (dist > 5) {
-        this.store.add(this.page, {
+        this.store.add(this._page, {
           id: uid(),
-          page: this.page,
+          page: this._page,
           type: 'arrow',
           color: this.color,
           width: this.strokeWidth,
@@ -296,6 +763,75 @@ export class AnnotationLayer {
     this.onChanged();
   }
 
+  // --- Double-click (text editing) ---
+
+  _onDblClick(e) {
+    if (this.tool !== 'select') return;
+    const { x, y } = this._canvasCoords(e);
+    const hit = this.store.hitTest(this._page, x, y);
+    if (hit && hit.type === 'text') {
+      this._editTextAnnotation(hit);
+    }
+  }
+
+  /** Open an inline editor for an existing text annotation. */
+  _editTextAnnotation(ann) {
+    // Remove any existing text input
+    const existing = document.querySelector('.text-annotation-input');
+    if (existing) existing.remove();
+
+    const wrapper = this.canvas.parentElement;
+    const input = document.createElement('textarea');
+    input.className = 'text-annotation-input';
+    const fontSize = ann.data.fontSize || 14;
+    input.style.left = `${ann.data.x}px`;
+    input.style.top = `${ann.data.y - fontSize}px`;
+    input.style.color = ann.color;
+    input.style.fontSize = `${fontSize}px`;
+    input.value = ann.data.content;
+    wrapper.appendChild(input);
+    input.focus();
+    input.select();
+
+    let committed = false;
+    const commit = () => {
+      if (committed) return;
+      committed = true;
+      const content = input.value.trim();
+      if (content && content !== ann.data.content) {
+        this.store.pushUndo();
+        ann.data.content = content;
+        this.redraw();
+        this.onChanged();
+      } else if (!content) {
+        // Empty text — delete the annotation
+        this.store.remove(this._page, ann.id);
+        this._selected.delete(ann.id);
+        this.redraw();
+        this.onChanged();
+      }
+      input.remove();
+    };
+
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', (e) => {
+      e.stopPropagation(); // Don't trigger global shortcuts while editing
+      if (e.key === 'Escape') {
+        committed = true;
+        input.remove();
+        this.redraw();
+      }
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        commit();
+      }
+    });
+  }
+
+  // ============================================================
+  // Drawing tools — live preview & helpers
+  // ============================================================
+
   _drawLiveStroke() {
     const ctx = this.ctx;
     ctx.save();
@@ -304,7 +840,7 @@ export class AnnotationLayer {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     if (this.tool === 'highlighter') ctx.globalAlpha = 0.35;
-    this._drawPath(ctx, this._points, 1);
+    this._drawPath(ctx, this._points);
     ctx.restore();
   }
 
@@ -352,43 +888,65 @@ export class AnnotationLayer {
   }
 
   _tryErase(x, y) {
-    const hit = this.store.hitTest(this.page, x, y);
+    const hit = this.store.hitTest(this._page, x, y);
     if (hit) {
-      this.store.remove(this.page, hit.id);
+      this.store.remove(this._page, hit.id);
       this.redraw();
       this.onChanged();
     }
   }
 
   _createTextInput(x, y) {
+    console.log('[_createTextInput] Called with', x, y);
+    
     // Remove any existing text input
     const existing = document.querySelector('.text-annotation-input');
-    if (existing) existing.remove();
+    if (existing) {
+      console.log('[_createTextInput] Removing existing input');
+      existing.remove();
+    }
 
     const wrapper = this.canvas.parentElement;
+    console.log('[_createTextInput] Wrapper element:', wrapper);
+    
     const input = document.createElement('textarea');
     input.className = 'text-annotation-input';
     input.style.left = `${x}px`;
     input.style.top = `${y}px`;
     input.style.color = this.color;
     input.style.fontSize = `${Math.max(this.strokeWidth * 4, 14)}px`;
+    
+    console.log('[_createTextInput] Created input with styles:', {
+      left: input.style.left,
+      top: input.style.top,
+      color: input.style.color,
+      fontSize: input.style.fontSize
+    });
+    
     wrapper.appendChild(input);
+    console.log('[_createTextInput] Appended input to wrapper');
+    
     input.focus();
+    console.log('[_createTextInput] Focused input, activeElement:', document.activeElement === input);
 
+    let committed = false;
     const commit = () => {
+      if (committed) return;
+      committed = true;
       const content = input.value.trim();
       if (content) {
-        this.store.add(this.page, {
+        const fontSize = Math.max(this.strokeWidth * 4, 14);
+        this.store.add(this._page, {
           id: uid(),
-          page: this.page,
+          page: this._page,
           type: 'text',
           color: this.color,
           width: this.strokeWidth,
           data: {
             x,
-            y: y + Math.max(this.strokeWidth * 4, 14),
+            y: y + fontSize,
             content,
-            fontSize: Math.max(this.strokeWidth * 4, 14),
+            fontSize,
           },
         });
         this.redraw();
@@ -399,8 +957,15 @@ export class AnnotationLayer {
 
     input.addEventListener('blur', commit);
     input.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') { input.value = ''; input.blur(); }
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); commit(); }
+      e.stopPropagation(); // Don't trigger global shortcuts while typing
+      if (e.key === 'Escape') {
+        committed = true;
+        input.remove();
+      }
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        commit();
+      }
     });
   }
 }

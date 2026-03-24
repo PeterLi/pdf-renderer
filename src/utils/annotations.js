@@ -92,6 +92,11 @@ export class AnnotationStore {
     return page;
   }
 
+  /** Public method to push an undo snapshot (e.g., before drag operations). */
+  pushUndo() {
+    this._pushUndo();
+  }
+
   get canUndo() { return this.undoStack.length > 0; }
   get canRedo() { return this.redoStack.length > 0; }
 
