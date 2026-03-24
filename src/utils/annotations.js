@@ -149,22 +149,64 @@ function hitTestAnnotation(a, x, y, tol) {
              y >= a.data.y - h - 4 && y <= a.data.y + 4;
     }
     case 'rect': {
-      const { x: rx, y: ry, w: rw, h: rh } = a.data;
-      return x >= rx - tol && x <= rx + rw + tol && y >= ry - tol && y <= ry + rh + tol;
+      const { x: rx, y: ry, w: rw, h: rh, rotation } = a.data;
+      
+      // Transform click point into rect's local space if rotated
+      let localX = x;
+      let localY = y;
+      if (rotation) {
+        const centerX = rx + rw / 2;
+        const centerY = ry + rh / 2;
+        const rad = (-rotation * Math.PI) / 180; // Inverse rotation
+        const dx = x - centerX;
+        const dy = y - centerY;
+        localX = centerX + dx * Math.cos(rad) - dy * Math.sin(rad);
+        localY = centerY + dx * Math.sin(rad) + dy * Math.cos(rad);
+      }
+      
+      return localX >= rx - tol && localX <= rx + rw + tol && 
+             localY >= ry - tol && localY <= ry + rh + tol;
     }
     case 'circle': {
-      const dx = (x - a.data.cx) / a.data.rx;
-      const dy = (y - a.data.cy) / a.data.ry;
-      return (dx * dx + dy * dy) <= 1.3; // slightly generous
+      const { cx, cy, rx, ry, rotation } = a.data;
+      
+      // Transform click point into circle's local space if rotated (for ellipse)
+      let localX = x;
+      let localY = y;
+      if (rotation) {
+        const rad = (-rotation * Math.PI) / 180; // Inverse rotation
+        const dx = x - cx;
+        const dy = y - cy;
+        localX = cx + dx * Math.cos(rad) - dy * Math.sin(rad);
+        localY = cy + dx * Math.sin(rad) + dy * Math.cos(rad);
+      }
+      
+      const dxNorm = (localX - cx) / rx;
+      const dyNorm = (localY - cy) / ry;
+      return (dxNorm * dxNorm + dyNorm * dyNorm) <= 1.3; // slightly generous
     }
     case 'arrow': {
       const { x1, y1, x2, y2 } = a.data;
       return distToSegment(x, y, x1, y1, x2, y2) < tol + a.width;
     }
     case 'stamp': {
-      const { x: sx, y: sy, width, height } = a.data;
-      return x >= sx - tol && x <= sx + width + tol && 
-             y >= sy - tol && y <= sy + height + tol;
+      const { x: sx, y: sy, width, height, rotation } = a.data;
+      
+      // Transform click point into stamp's local space if rotated
+      let localX = x;
+      let localY = y;
+      if (rotation) {
+        const centerX = sx + width / 2;
+        const centerY = sy + height / 2;
+        const rad = (-rotation * Math.PI) / 180; // Inverse rotation
+        const dx = x - centerX;
+        const dy = y - centerY;
+        localX = centerX + dx * Math.cos(rad) - dy * Math.sin(rad);
+        localY = centerY + dx * Math.sin(rad) + dy * Math.cos(rad);
+      }
+      
+      return localX >= sx - tol && localX <= sx + width + tol && 
+             localY >= sy - tol && localY <= sy + height + tol;
     }
     default: return false;
   }

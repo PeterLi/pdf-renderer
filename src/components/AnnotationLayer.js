@@ -287,11 +287,25 @@ export class AnnotationLayer {
       const ann = this._getAnnotation(id);
       if (!ann || ann.type === 'text') continue; // no resize handles for text
       const bounds = this._getBounds(ann);
+      const rotation = ann.data.rotation || 0;
+      
+      // Transform click point into annotation's local space if rotated
+      let localX = x;
+      let localY = y;
+      if (rotation) {
+        const centerX = bounds.x + bounds.w / 2;
+        const centerY = bounds.y + bounds.h / 2;
+        const rad = (-rotation * Math.PI) / 180; // Inverse rotation
+        const dx = x - centerX;
+        const dy = y - centerY;
+        localX = centerX + dx * Math.cos(rad) - dy * Math.sin(rad);
+        localY = centerY + dx * Math.sin(rad) + dy * Math.cos(rad);
+      }
       
       // Check rotation handle first (for stamp/rect/circle)
       if (ann.type === 'stamp' || ann.type === 'rect' || ann.type === 'circle') {
         const rotatePos = this._getRotationHandlePosition(bounds);
-        const dist = Math.hypot(x - rotatePos.x, y - rotatePos.y);
+        const dist = Math.hypot(localX - rotatePos.x, localY - rotatePos.y);
         if (dist <= ROTATION_HANDLE_RADIUS + 3) {
           return { handle: 'rotate', annId: id };
         }
@@ -300,7 +314,7 @@ export class AnnotationLayer {
       // Check resize handles
       const handles = this._getHandlePositions(bounds);
       for (const [name, pos] of Object.entries(handles)) {
-        if (Math.abs(x - pos.x) <= HANDLE_HIT && Math.abs(y - pos.y) <= HANDLE_HIT) {
+        if (Math.abs(localX - pos.x) <= HANDLE_HIT && Math.abs(localY - pos.y) <= HANDLE_HIT) {
           return { handle: name, annId: id };
         }
       }
@@ -346,15 +360,27 @@ export class AnnotationLayer {
         break;
 
       case 'rect': {
-        const { x, y, w, h } = ann.data;
+        const { x, y, w, h, rotation } = ann.data;
+        
+        if (rotation) {
+          const centerX = x + w / 2;
+          const centerY = y + h / 2;
+          ctx.translate(centerX, centerY);
+          ctx.rotate((rotation * Math.PI) / 180);
+          ctx.translate(-centerX, -centerY);
+        }
+        
         ctx.strokeRect(x, y, w, h);
         break;
       }
 
       case 'circle': {
-        const { cx, cy, rx, ry } = ann.data;
+        const { cx, cy, rx, ry, rotation } = ann.data;
+        
         ctx.beginPath();
-        ctx.ellipse(cx, cy, Math.abs(rx), Math.abs(ry), 0, 0, Math.PI * 2);
+        // Ellipse rotation parameter (5th arg) handles rotation natively
+        const rotationRad = rotation ? (rotation * Math.PI) / 180 : 0;
+        ctx.ellipse(cx, cy, Math.abs(rx), Math.abs(ry), rotationRad, 0, Math.PI * 2);
         ctx.stroke();
         break;
       }
@@ -474,8 +500,18 @@ export class AnnotationLayer {
       if (!ann) continue;
       const bounds = this._getBounds(ann);
       const p = SELECTION_PAD;
+      const rotation = ann.data.rotation || 0;
 
       ctx.save();
+
+      // Apply rotation transform if annotation is rotated
+      if (rotation) {
+        const centerX = bounds.x + bounds.w / 2;
+        const centerY = bounds.y + bounds.h / 2;
+        ctx.translate(centerX, centerY);
+        ctx.rotate((rotation * Math.PI) / 180);
+        ctx.translate(-centerX, -centerY);
+      }
 
       // Dashed selection outline
       ctx.strokeStyle = SELECTION_COLOR;
