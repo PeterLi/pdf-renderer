@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDF Renderer — Interact Technology</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23263B5E'/><text x='16' y='22' font-size='16' text-anchor='middle' fill='white' font-family='system-ui'>P</text></svg>" />
+  <link rel="stylesheet" href="/src/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Top Toolbar -->
+    <header id="toolbar" class="toolbar">
+      <div class="toolbar-section toolbar-left">
+        <button id="btn-sidebar" class="toolbar-btn" title="Toggle Thumbnails (T)" aria-label="Toggle thumbnails">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        </button>
+        <button id="btn-open" class="toolbar-btn" title="Open PDF (Ctrl+O)" aria-label="Open PDF file">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </button>
+        <div class="toolbar-divider"></div>
+        <span class="toolbar-filename" id="filename">No file loaded</span>
+      </div>
+
+      <div class="toolbar-section toolbar-center">
+        <button id="btn-prev" class="toolbar-btn" title="Previous Page (↑)" aria-label="Previous page" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="page-nav">
+          <input type="text" id="page-input" class="page-input" value="1" aria-label="Current page" />
+          <span class="page-separator">/</span>
+          <span id="page-count" class="page-count">0</span>
+        </div>
+        <button id="btn-next" class="toolbar-btn" title="Next Page (↓)" aria-label="Next page" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <div class="toolbar-divider"></div>
+        <button id="btn-zoom-out" class="toolbar-btn" title="Zoom Out (Ctrl+-)" aria-label="Zoom out" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="7" y1="11" x2="15" y2="11"/></svg>
+        </button>
+        <button id="zoom-level" class="toolbar-btn zoom-display" title="Click to reset zoom" aria-label="Current zoom level" disabled>100%</button>
+        <button id="btn-zoom-in" class="toolbar-btn" title="Zoom In (Ctrl++)" aria-label="Zoom in" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="11" y1="7" x2="11" y2="15"/><line x1="7" y1="11" x2="15" y2="11"/></svg>
+        </button>
+        <button id="btn-fit-width" class="toolbar-btn" title="Fit to Width (W)" aria-label="Fit to width" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+        </button>
+        <button id="btn-fit-page" class="toolbar-btn" title="Fit to Page (P)" aria-label="Fit to page" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><rect x="6" y="7" width="12" height="10" rx="1"/></svg>
+        </button>
+      </div>
+
+      <div class="toolbar-section toolbar-right">
+        <button id="btn-annotations" class="toolbar-btn" title="Annotation Tools (A)" aria-label="Toggle annotations">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+        </button>
+        <button id="btn-help" class="toolbar-btn" title="Keyboard Shortcuts (?)" aria-label="Help">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Annotation Toolbar -->
+    <div id="annotation-bar" class="annotation-bar hidden">
+      <div class="annotation-tools">
+        <button id="tool-select" class="tool-btn active" title="Select (V)" data-tool="select">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>
+          <span>Select</span>
+        </button>
+        <button id="tool-pen" class="tool-btn" title="Pen (D)" data-tool="pen">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+          <span>Pen</span>
+        </button>
+        <button id="tool-highlighter" class="tool-btn" title="Highlighter (H)" data-tool="highlighter">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          <span>Highlight</span>
+        </button>
+        <button id="tool-text" class="tool-btn" title="Text (X)" data-tool="text">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+          <span>Text</span>
+        </button>
+        <button id="tool-rect" class="tool-btn" title="Rectangle (R)" data-tool="rect">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+          <span>Rect</span>
+        </button>
+        <button id="tool-circle" class="tool-btn" title="Circle (C)" data-tool="circle">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+          <span>Circle</span>
+        </button>
+        <button id="tool-arrow" class="tool-btn" title="Arrow (L)" data-tool="arrow">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          <span>Arrow</span>
+        </button>
+        <button id="tool-eraser" class="tool-btn" title="Eraser (E)" data-tool="eraser">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16l9-9 8 8-4 4z"/><line x1="6" y1="11" x2="13" y2="18"/></svg>
+          <span>Eraser</span>
+        </button>
+
+        <div class="tool-divider"></div>
+
+        <!-- Color Picker -->
+        <div class="color-picker-group">
+          <label class="tool-label">Color</label>
+          <div class="color-swatches">
+            <button class="color-swatch active" data-color="#E53935" style="background:#E53935" title="Red"></button>
+            <button class="color-swatch" data-color="#1E88E5" style="background:#1E88E5" title="Blue"></button>
+            <button class="color-swatch" data-color="#43A047" style="background:#43A047" title="Green"></button>
+            <button class="color-swatch" data-color="#FB8C00" style="background:#FB8C00" title="Orange"></button>
+            <button class="color-swatch" data-color="#8E24AA" style="background:#8E24AA" title="Purple"></button>
+            <button class="color-swatch" data-color="#263B5E" style="background:#263B5E" title="Navy"></button>
+            <button class="color-swatch" data-color="#000000" style="background:#000000" title="Black"></button>
+            <input type="color" id="custom-color" class="custom-color-input" value="#E53935" title="Custom color" />
+          </div>
+        </div>
+
+        <!-- Stroke Width -->
+        <div class="stroke-group">
+          <label class="tool-label">Size</label>
+          <input type="range" id="stroke-width" min="1" max="20" value="3" class="stroke-slider" />
+          <span id="stroke-value" class="stroke-value">3</span>
+        </div>
+
+        <div class="tool-divider"></div>
+
+        <!-- Undo / Redo -->
+        <button id="btn-undo" class="tool-btn" title="Undo (Ctrl+Z)" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+          <span>Undo</span>
+        </button>
+        <button id="btn-redo" class="tool-btn" title="Redo (Ctrl+Shift+Z)" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.13-9.36L23 10"/></svg>
+          <span>Redo</span>
+        </button>
+
+        <div class="tool-divider"></div>
+
+        <!-- Toggle Annotations Layer -->
+        <button id="btn-toggle-layer" class="tool-btn active" title="Toggle Annotations Visibility">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span>Visible</span>
+        </button>
+
+        <!-- Clear All -->
+        <button id="btn-clear" class="tool-btn danger" title="Clear All Annotations">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <span>Clear</span>
+        </button>
+
+        <div class="tool-divider"></div>
+
+        <!-- Export / Import -->
+        <button id="btn-export-json" class="tool-btn" title="Export Annotations (JSON)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Export</span>
+        </button>
+        <button id="btn-import-json" class="tool-btn" title="Import Annotations (JSON)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>Import</span>
+        </button>
+        <button id="btn-save-pdf" class="tool-btn primary" title="Save Annotated PDF">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          <span>Save PDF</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div id="main-content" class="main-content">
+      <!-- Thumbnail Sidebar -->
+      <aside id="sidebar" class="sidebar hidden">
+        <div class="sidebar-header">
+          <span>Pages</span>
+          <button id="btn-close-sidebar" class="sidebar-close" aria-label="Close sidebar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div id="thumbnail-list" class="thumbnail-list"></div>
+      </aside>
+
+      <!-- PDF Viewport -->
+      <div id="viewport" class="viewport">
+        <!-- Landing Page -->
+        <div id="landing" class="landing">
+          <div class="landing-content">
+            <div class="landing-icon">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            </div>
+            <h1>PDF Renderer</h1>
+            <p class="landing-subtitle">Beautiful document viewing with powerful annotations</p>
+            <div class="landing-actions">
+              <button id="btn-open-landing" class="landing-btn primary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Open PDF File
+              </button>
+              <button id="btn-demo" class="landing-btn secondary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Load Demo
+              </button>
+            </div>
+            <div class="landing-hint">
+              <p>Drag & drop a PDF file here, or use <kbd>Ctrl</kbd>+<kbd>O</kbd> to open</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- PDF Page Container -->
+        <div id="pdf-container" class="pdf-container hidden">
+          <div id="page-wrapper" class="page-wrapper">
+            <canvas id="pdf-canvas"></canvas>
+            <canvas id="annotation-canvas" class="annotation-canvas"></canvas>
+            <!-- Text annotation inputs rendered dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Help Overlay -->
+    <div id="help-overlay" class="overlay hidden">
+      <div class="overlay-content help-content">
+        <div class="overlay-header">
+          <h2>Keyboard Shortcuts</h2>
+          <button id="btn-close-help" class="overlay-close" aria-label="Close help">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="shortcut-grid">
+          <div class="shortcut-section">
+            <h3>Navigation</h3>
+            <div class="shortcut-row"><kbd>↑</kbd> / <kbd>Page Up</kbd><span>Previous page</span></div>
+            <div class="shortcut-row"><kbd>↓</kbd> / <kbd>Page Down</kbd><span>Next page</span></div>
+            <div class="shortcut-row"><kbd>Home</kbd><span>First page</span></div>
+            <div class="shortcut-row"><kbd>End</kbd><span>Last page</span></div>
+          </div>
+          <div class="shortcut-section">
+            <h3>Zoom</h3>
+            <div class="shortcut-row"><kbd>Ctrl</kbd>+<kbd>+</kbd><span>Zoom in</span></div>
+            <div class="shortcut-row"><kbd>Ctrl</kbd>+<kbd>-</kbd><span>Zoom out</span></div>
+            <div class="shortcut-row"><kbd>Ctrl</kbd>+<kbd>0</kbd><span>Reset zoom</span></div>
+            <div class="shortcut-row"><kbd>W</kbd><span>Fit to width</span></div>
+            <div class="shortcut-row"><kbd>P</kbd><span>Fit to page</span></div>
+          </div>
+          <div class="shortcut-section">
+            <h3>Tools</h3>
+            <div class="shortcut-row"><kbd>A</kbd><span>Toggle annotation bar</span></div>
+            <div class="shortcut-row"><kbd>V</kbd><span>Select tool</span></div>
+            <div class="shortcut-row"><kbd>D</kbd><span>Pen tool</span></div>
+            <div class="shortcut-row"><kbd>H</kbd><span>Highlighter</span></div>
+            <div class="shortcut-row"><kbd>X</kbd><span>Text tool</span></div>
+            <div class="shortcut-row"><kbd>R</kbd><span>Rectangle</span></div>
+            <div class="shortcut-row"><kbd>C</kbd><span>Circle</span></div>
+            <div class="shortcut-row"><kbd>L</kbd><span>Arrow</span></div>
+            <div class="shortcut-row"><kbd>E</kbd><span>Eraser</span></div>
+          </div>
+          <div class="shortcut-section">
+            <h3>General</h3>
+            <div class="shortcut-row"><kbd>Ctrl</kbd>+<kbd>O</kbd><span>Open file</span></div>
+            <div class="shortcut-row"><kbd>Ctrl</kbd>+<kbd>Z</kbd><span>Undo</span></div>
+            <div class="shortcut-row"><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd><span>Redo</span></div>
+            <div class="shortcut-row"><kbd>T</kbd><span>Toggle thumbnails</span></div>
+            <div class="shortcut-row"><kbd>?</kbd><span>Show this help</span></div>
+            <div class="shortcut-row"><kbd>Esc</kbd><span>Close overlay / deselect</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden file inputs -->
+    <input type="file" id="file-input" accept=".pdf" hidden />
+    <input type="file" id="json-input" accept=".json" hidden />
+
+    <!-- Toast notifications -->
+    <div id="toast-container" class="toast-container"></div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
