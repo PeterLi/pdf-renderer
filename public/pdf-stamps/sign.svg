@@ -13,13 +13,13 @@
   <path d="M 8 12 L 200 12 L 228 40 L 200 68 L 8 68 Z" 
         fill="none" stroke="#F9A825" stroke-width="3"/>
   
-  <!-- Text: SIGN HERE -->
-  <text x="88" y="43" font-family="Arial, sans-serif" font-size="28" 
+  <!-- Text: SIGN HERE (moved right for more left padding) -->
+  <text x="70" y="43" font-family="Arial, sans-serif" font-size="28" 
         font-weight="bold" fill="#212121" text-anchor="middle" 
         dominant-baseline="middle">SIGN HERE</text>
   
-  <!-- Larger, clearer pen icon right after text -->
-  <g transform="translate(166, 40)">
+  <!-- Pen icon positioned halfway between text end and arrow -->
+  <g transform="translate(155, 40)">
     <!-- Pen tip/nib -->
     <path d="M -4 -12 L 4 -12 L 5 -4 L -5 -4 Z" fill="#1565C0"/>
     <!-- Pen body/barrel -->
