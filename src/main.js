@@ -7,9 +7,9 @@ console.log('[main.js] Script loaded');
 import PDFRenderer from './PDFRenderer.js';
 console.log('[main.js] PDFRenderer imported:', typeof PDFRenderer);
 
-// Wait for DOM to be ready
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('[main.js] DOM ready! Initializing viewer...');
+// Initialize viewer (runs immediately since DOM is ready for type="module" scripts)
+function init() {
+  console.log('[main.js] Initializing viewer...');
   
   // Check for PDF URL in query parameters
   const params = new URLSearchParams(window.location.search);
@@ -37,4 +37,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Expose for debugging
   window.pdfRenderer = viewer;
   console.log('[main.js] Viewer exposed as window.pdfRenderer');
-});
+}
+
+// Type="module" scripts are deferred by default, so DOM is already ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
