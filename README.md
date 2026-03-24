@@ -23,30 +23,25 @@ http://localhost:5175/?pdfUrl=https://example.com/doc.pdf
 
 ### Use in Your Project
 
-**1. Copy the library files:**
-- `src/PDFRenderer.js` - Main library
-- `src/utils/` - Helper utilities  
-- `src/components/` - UI components
-- `src/styles.css` - Styling
-- `public/pdf.worker.min.mjs` - PDF.js worker
+**Copy the working code directly:**
 
-**2. Copy the HTML structure from `index.html`**
+1. Copy these files to your project:
+   - `index.html` - Full UI structure
+   - `src/main.js` - Complete viewer code
+   - `src/utils/` - PDF utilities
+   - `src/components/` - Annotation & form layers
+   - `src/styles.css` - Styling
+   - `public/pdf.worker.min.mjs` - PDF.js worker
+   - `public/sample.pdf` - Demo PDF
 
-**3. Initialize like this:**
-```javascript
-import PDFRenderer from './src/PDFRenderer.js';
+2. Customize the HTML/CSS to match your design
 
-document.addEventListener('DOMContentLoaded', () => {
-  const viewer = new PDFRenderer({
-    container: '#app',
-    pdfUrl: null,  // or auto-load a PDF
-    showOpenButton: true,
-    showDemoButton: true
-  });
-});
-```
+3. The code works out of the box with query parameter support:
+   - `?pdfUrl=document.pdf`
+   - `?pdf=document.pdf`
+   - `?url=https://example.com/doc.pdf`
 
-**See `examples/README.md` for detailed usage guide!**
+**That's it!** Everything is self-contained and ready to use.
 
 ### Programmatic API
 

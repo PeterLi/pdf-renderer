@@ -1,167 +1,153 @@
-# PDF Renderer - Usage Examples
+# PDF Renderer - Usage Guide
 
-## 📖 How to Use
+## 📖 How to Use This in Your Project
 
-**The `index.html` in the project root is your reference implementation!**
+**The simplest approach: Copy the working code!**
 
-It shows exactly how to embed the PDF Renderer in your project.
+`index.html` + `src/main.js` contain everything you need - fully working PDF viewer with annotations, forms, and query parameter support.
 
 ---
 
 ## Quick Start
 
-### 1. Copy the Library Files
+### 1. Copy These Files
 
-Copy these to your project:
 ```
-src/PDFRenderer.js          ← Main library
-src/utils/                  ← Helper utilities
-src/components/             ← UI components
-src/styles.css              ← Styling
-public/pdf.worker.min.mjs   ← PDF.js worker
-```
-
-### 2. Include in Your HTML
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>My PDF Viewer</title>
-  <link rel="stylesheet" href="src/styles.css">
-</head>
-<body>
-  <!-- Your complete PDF viewer UI goes here -->
-  <!-- See index.html for the full structure -->
-  
-  <div id="app">
-    <div id="toolbar">
-      <button id="btn-open">Open PDF</button>
-      <!-- ... more toolbar buttons ... -->
-    </div>
-    
-    <div id="pdf-container">
-      <div id="viewport">
-        <canvas id="pdf-canvas"></canvas>
-        <canvas id="annotation-canvas"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <script type="module" src="main.js"></script>
-</body>
-</html>
+index.html                   ← Complete UI structure
+src/main.js                  ← All viewer logic
+src/utils/                   ← PDF utilities
+  ├── pdf.js                 ← PDF.js wrapper
+  ├── annotations.js         ← Annotation storage
+  ├── export.js              ← PDF export with annotations
+  ├── forms.js               ← Form field detection/filling
+  └── toast.js               ← Notifications
+src/components/              ← UI components
+  ├── AnnotationLayer.js     ← Canvas annotation drawing
+  └── FormLayer.js           ← Form field overlays
+src/styles.css               ← All styling
+public/pdf.worker.min.mjs    ← PDF.js worker (required!)
+public/sample.pdf            ← Demo PDF (optional)
 ```
 
-### 3. Initialize in JavaScript
+### 2. That's It!
 
-```javascript
-import PDFRenderer from './PDFRenderer.js';
-
-document.addEventListener('DOMContentLoaded', () => {
-  const viewer = new PDFRenderer({
-    container: '#app',
-    pdfUrl: null,              // Auto-load a PDF, or null
-    showOpenButton: true,
-    showDemoButton: true,
-    
-    onLoad: (info) => {
-      console.log('Loaded:', info.filename, info.pages);
-    },
-    
-    onError: (error) => {
-      console.error('Error:', error);
-    }
-  });
-  
-  // Optional: Expose for debugging
-  window.pdfViewer = viewer;
-});
-```
+Open `index.html` in a browser and it works. No build step needed (though Vite dev server is recommended for development).
 
 ---
 
-## Load PDFs via URL Parameter
+## Features Included
 
-Support query parameters in your viewer:
+✅ **PDF Viewing**
+- Open files, drag & drop
+- Zoom in/out, fit to width/page
+- Page navigation with thumbnails
+- Query parameter loading (`?pdfUrl=...`)
 
-```javascript
-const params = new URLSearchParams(window.location.search);
-const pdfUrl = params.get('pdfUrl') || params.get('pdf') || params.get('url');
+✅ **Annotations**
+- Pen, highlighter, shapes, text, arrow
+- Color picker with presets
+- Adjustable stroke width
+- Undo/redo
+- Export to PDF with annotations baked in
+- Export/import JSON annotations
 
-const viewer = new PDFRenderer({
-  container: '#app',
-  pdfUrl: pdfUrl,  // Auto-load from query param
-  // ... other options
-});
-```
+✅ **Form Filling**
+- Auto-detect form fields
+- Fill text fields, checkboxes, radio buttons
+- Export filled PDF
 
-**Then use:**
-```
-https://yoursite.com/?pdfUrl=https://example.com/doc.pdf
-https://yoursite.com/?pdf=document.pdf
-```
-
----
-
-## Programmatic API
-
-```javascript
-// Load a PDF
-await viewer.loadPDF('document.pdf');
-
-// Navigation
-await viewer.goToPage(5);
-await viewer.nextPage();
-await viewer.prevPage();
-
-// Zoom
-viewer.zoomIn();
-viewer.zoomOut();
-viewer.fitToWidth();
-viewer.fitToPage();
-
-// Annotations
-viewer.savePDF();              // Download with annotations
-viewer.exportAnnotationsJSON(); // Export just annotations
-viewer.loadAnnotationsJSON();   // Import annotations
-
-// Form filling (if PDF has form fields)
-viewer.exportFilledPDF();       // Download filled form
-```
+✅ **Keyboard Shortcuts**
+- Press `?` for help overlay
+- Arrow keys for navigation
+- Ctrl+Z/Shift+Z for undo/redo
+- Tool hotkeys (P, H, E, R, C, A, T)
 
 ---
 
 ## Customization
 
-### Colors & Theme
+### Change Colors/Theme
 
-Edit `src/styles.css` to change the look:
+Edit `src/styles.css`:
+
 ```css
 :root {
   --primary: #263b5e;
   --primary-hover: #3a4f73;
   --accent: #4a90e2;
-  /* ... customize colors ... */
+  --bg: #1a1a1a;
+  --surface: #2a2a2a;
+  --text: #e0e0e0;
+  /* ... customize all colors ... */
 }
 ```
 
-### Layout
+### Modify UI
 
-The HTML structure must include these IDs (see `index.html`):
-- `#btn-open`, `#btn-prev`, `#btn-next` - Navigation
-- `#pdf-canvas`, `#annotation-canvas` - Display
-- `#toolbar`, `#annotation-bar` - Controls
-- See full list in `PDFRenderer.js` → `_cacheElements()`
+Edit `index.html`:
+- Rearrange toolbar buttons
+- Add/remove controls
+- Change layout
+
+### Add Custom Logic
+
+Edit `src/main.js`:
+- Hook into PDF load events
+- Add custom annotation types
+- Integrate with your app's state management
 
 ---
 
-## Need Help?
+## Query Parameters
 
-**Look at `index.html`** - it's a complete working example showing:
-- Full HTML structure with all required IDs
-- Proper initialization with query param support
-- Clean minimal wrapper code
+Built-in support for loading PDFs from URLs:
 
-Copy that pattern and customize it for your needs!
+```
+https://yoursite.com/?pdfUrl=https://example.com/doc.pdf
+https://yoursite.com/?pdf=document.pdf
+https://yoursite.com/?url=/path/to/file.pdf
+```
+
+The code automatically checks for these params and loads the PDF on startup.
+
+---
+
+## Development
+
+**With Vite (recommended):**
+```bash
+npm install
+npm run dev -- --host --port 5175
+```
+
+**Or just open `index.html`** in a browser - it works as a standalone SPA.
+
+---
+
+## Production Deployment
+
+**Option 1: Static hosting**
+```bash
+npm run build     # Builds to dist/
+# Upload dist/ to any static host (Netlify, Vercel, S3, etc.)
+```
+
+**Option 2: Direct copy**
+Just copy all the files to your server. No build needed!
+
+---
+
+## Why This Approach?
+
+**We tried making a "library" version** with a clean PDFRenderer class, but it kept breaking because:
+- The HTML structure is tightly coupled to the code
+- Element IDs are hardcoded throughout
+- Refactoring to support arbitrary containers added complexity
+
+**Current approach is better:**
+- ✅ Everything works out of the box
+- ✅ Easy to customize by editing the code directly
+- ✅ No mystery abstractions
+- ✅ Query parameter support built-in
+
+If you want to embed it, just **copy the whole thing** and customize as needed!
