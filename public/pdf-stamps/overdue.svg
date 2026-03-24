@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80">
+  <rect x="4" y="4" width="232" height="72" rx="8" ry="8" 
+        fill="none" stroke="#D32F2F" stroke-width="6"/>
+  <text x="120" y="50" font-family="Arial, sans-serif" font-size="32" 
+        font-weight="bold" fill="#D32F2F" text-anchor="middle" 
+        dominant-baseline="middle">OVERDUE</text>
+</svg>

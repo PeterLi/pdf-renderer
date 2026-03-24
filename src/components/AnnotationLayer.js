@@ -35,6 +35,8 @@ const STAMP_ASPECT_RATIOS = {
   draft: 200 / 80,         // 2.5:1
   final: 200 / 80,         // 2.5:1
   copy: 180 / 80,          // 2.25:1
+  overdue: 240 / 80,       // 3:1
+  void: 180 / 80,          // 2.25:1
 };
 const STAMP_DEFAULT_HEIGHT = 60; // Fixed height, width calculated from aspect ratio
 
@@ -404,8 +406,8 @@ export class AnnotationLayer {
       }
 
       case 'stamp': {
-        const { x, y, width, height, stamp, rotation } = ann.data;
-        this._drawStamp(ctx, stamp, x, y, width, height, rotation || 0);
+        const { x, y, width, height, stamp, rotation, customText, customColor } = ann.data;
+        this._drawStamp(ctx, stamp, x, y, width, height, rotation || 0, customText, customColor);
         break;
       }
     }
@@ -449,7 +451,42 @@ export class AnnotationLayer {
     });
   }
 
-  _drawStamp(ctx, stampName, x, y, width, height, rotation) {
+  _drawStamp(ctx, stampName, x, y, width, height, rotation, customText, customColor) {
+    // Handle custom stamps
+    if (stampName === 'custom' && customText) {
+      ctx.save();
+      
+      // Apply rotation if specified
+      if (rotation) {
+        const centerX = x + width / 2;
+        const centerY = y + height / 2;
+        ctx.translate(centerX, centerY);
+        ctx.rotate((rotation * Math.PI) / 180);
+        ctx.translate(-centerX, -centerY);
+      }
+      
+      // Draw rounded rectangle
+      const borderRadius = 8;
+      const strokeWidth = 4;
+      
+      ctx.strokeStyle = customColor;
+      ctx.lineWidth = strokeWidth;
+      ctx.beginPath();
+      ctx.roundRect(x, y, width, height, borderRadius);
+      ctx.stroke();
+      
+      // Draw text
+      ctx.fillStyle = customColor;
+      ctx.font = `bold ${Math.min(height * 0.5, 32)}px Arial, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(customText, x + width / 2, y + height / 2);
+      
+      ctx.restore();
+      return;
+    }
+    
+    // Handle pre-made stamps (SVG)
     const img = this._stampCache.get(stampName);
     
     if (!img) {
@@ -1272,10 +1309,46 @@ export class AnnotationLayer {
 
     console.log('[Stamp] Placing stamp:', selectedStamp, 'at', x, y);
 
-    // Calculate width based on aspect ratio to preserve proportions
-    const aspectRatio = STAMP_ASPECT_RATIOS[selectedStamp] || 2.5;
-    const height = STAMP_DEFAULT_HEIGHT;
-    const width = height * aspectRatio;
+    // Handle custom stamps
+    let stampData;
+    if (selectedStamp === 'custom') {
+      const customText = viewer?.customStampText || 'CUSTOM';
+      const customColor = viewer?.customStampColor || '#E53935';
+      
+      // Calculate width based on text length
+      const textLength = customText.length;
+      const charWidth = 18; // Approximate width per character
+      const padding = 40;
+      const height = STAMP_DEFAULT_HEIGHT;
+      const width = Math.max(textLength * charWidth + padding, 120);
+      
+      stampData = {
+        x: x - (width / 2),
+        y: y - (height / 2),
+        width: width,
+        height: height,
+        stamp: 'custom',
+        customText: customText,
+        customColor: customColor,
+        rotation: 0,
+      };
+      
+      console.log('[Custom Stamp] Text:', customText, 'Color:', customColor);
+    } else {
+      // Regular pre-made stamp
+      const aspectRatio = STAMP_ASPECT_RATIOS[selectedStamp] || 2.5;
+      const height = STAMP_DEFAULT_HEIGHT;
+      const width = height * aspectRatio;
+      
+      stampData = {
+        x: x - (width / 2),
+        y: y - (height / 2),
+        width: width,
+        height: height,
+        stamp: selectedStamp,
+        rotation: 0,
+      };
+    }
 
     // Create stamp annotation
     const stampId = uid();
@@ -1283,16 +1356,9 @@ export class AnnotationLayer {
       id: stampId,
       page: this._page,
       type: 'stamp',
-      color: this.color, // Not really used for stamps but keep for consistency
+      color: this.color,
       width: 1,
-      data: {
-        x: x - (width / 2), // Center the stamp horizontally
-        y: y - (height / 2), // Center the stamp vertically
-        width: width,
-        height: height,
-        stamp: selectedStamp,
-        rotation: 0, // Support rotation
-      },
+      data: stampData,
     });
 
     // Auto-switch to select tool and select the stamp for immediate resize/rotate

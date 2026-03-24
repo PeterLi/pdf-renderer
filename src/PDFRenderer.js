@@ -213,15 +213,30 @@ class PDFRenderer {
 
     // Stamp dropdown options
     this.selectedStamp = null;
+    this.customStampText = null;
+    this.customStampColor = null;
     this.$$('.stamp-option').forEach(option => {
       option.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.selectedStamp = option.dataset.stamp;
-        console.log('[Stamp] Selected stamp:', this.selectedStamp);
-        this._setActiveTool('stamp');
-        // Hide dropdown after selection
-        const dropdown = this.$('#stamp-dropdown');
-        if (dropdown) dropdown.classList.add('hidden');
+        const stampType = option.dataset.stamp;
+        
+        if (stampType === 'custom') {
+          // Show custom stamp modal
+          this._showCustomStampModal();
+          // Hide dropdown
+          const dropdown = this.$('#stamp-dropdown');
+          if (dropdown) dropdown.classList.add('hidden');
+        } else {
+          // Regular pre-made stamp
+          this.selectedStamp = stampType;
+          this.customStampText = null;
+          this.customStampColor = null;
+          console.log('[Stamp] Selected stamp:', this.selectedStamp);
+          this._setActiveTool('stamp');
+          // Hide dropdown after selection
+          const dropdown = this.$('#stamp-dropdown');
+          if (dropdown) dropdown.classList.add('hidden');
+        }
         
         // Expose to window for AnnotationLayer
         window.pdfViewer = this;
@@ -560,6 +575,79 @@ class PDFRenderer {
     });
     if (this.annotationLayer) this.annotationLayer.color = color;
     this.els.customColor.value = color;
+  }
+
+  _showCustomStampModal() {
+    const modal = this.$('#custom-stamp-modal');
+    const textInput = this.$('#custom-stamp-text');
+    const colorInput = this.$('#custom-stamp-color');
+    const createBtn = this.$('#custom-stamp-create');
+    const cancelBtn = this.$('#custom-stamp-cancel');
+    
+    if (!modal) return;
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    
+    // Focus text input
+    setTimeout(() => textInput.focus(), 100);
+    
+    // Auto-uppercase as user types
+    const uppercaseHandler = () => {
+      textInput.value = textInput.value.toUpperCase();
+    };
+    textInput.addEventListener('input', uppercaseHandler);
+    
+    // Handle create button
+    const createHandler = () => {
+      const text = textInput.value.trim();
+      if (!text) {
+        alert('Please enter stamp text');
+        return;
+      }
+      
+      this.selectedStamp = 'custom';
+      this.customStampText = text.toUpperCase();
+      this.customStampColor = colorInput.value;
+      
+      console.log('[Custom Stamp] Created:', this.customStampText, this.customStampColor);
+      
+      // Switch to stamp tool
+      this._setActiveTool('stamp');
+      
+      // Close modal
+      modal.classList.add('hidden');
+      cleanup();
+    };
+    
+    // Handle cancel button
+    const cancelHandler = () => {
+      modal.classList.add('hidden');
+      cleanup();
+    };
+    
+    // Handle enter key
+    const keyHandler = (e) => {
+      if (e.key === 'Enter') {
+        createHandler();
+      } else if (e.key === 'Escape') {
+        cancelHandler();
+      }
+    };
+    
+    // Cleanup function
+    const cleanup = () => {
+      textInput.removeEventListener('input', uppercaseHandler);
+      createBtn.removeEventListener('click', createHandler);
+      cancelBtn.removeEventListener('click', cancelHandler);
+      textInput.removeEventListener('keydown', keyHandler);
+      textInput.value = '';
+      colorInput.value = '#E53935';
+    };
+    
+    createBtn.addEventListener('click', createHandler);
+    cancelBtn.addEventListener('click', cancelHandler);
+    textInput.addEventListener('keydown', keyHandler);
   }
 
   // ============================================================

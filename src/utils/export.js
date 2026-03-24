@@ -141,13 +141,9 @@ export async function exportAnnotatedPDF(originalPdfBytes, store, canvasScale = 
 
         case 'stamp': {
           try {
-            const { x, y, width, height, stamp, rotation } = ann.data;
+            const { x, y, width, height, stamp, rotation, customText, customColor } = ann.data;
             
-            // Load SVG and convert to PNG via canvas
-            const svgUrl = `/pdf-stamps/${stamp}.svg`;
-            const img = await loadImage(svgUrl);
-            
-            // Create canvas to rasterize SVG (with extra space for rotation)
+            // Create canvas to rasterize stamp (with extra space for rotation)
             const maxDim = Math.max(width, height);
             const canvasSize = rotation ? maxDim * 2 : maxDim;
             const canvas = document.createElement('canvas');
@@ -162,7 +158,30 @@ export async function exportAnnotatedPDF(originalPdfBytes, store, canvasScale = 
             if (rotation) {
               ctx.rotate((rotation * Math.PI) / 180);
             }
-            ctx.drawImage(img, -width / 2, -height / 2, width, height);
+            
+            // Draw custom or pre-made stamp
+            if (stamp === 'custom' && customText) {
+              // Draw custom stamp
+              const borderRadius = 8;
+              const strokeWidth = 4;
+              
+              ctx.strokeStyle = customColor;
+              ctx.lineWidth = strokeWidth;
+              ctx.beginPath();
+              ctx.roundRect(-width / 2, -height / 2, width, height, borderRadius);
+              ctx.stroke();
+              
+              ctx.fillStyle = customColor;
+              ctx.font = `bold ${Math.min(height * 0.5, 32)}px Arial, sans-serif`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(customText, 0, 0);
+            } else {
+              // Load and draw pre-made SVG stamp
+              const svgUrl = `/pdf-stamps/${stamp}.svg`;
+              const img = await loadImage(svgUrl);
+              ctx.drawImage(img, -width / 2, -height / 2, width, height);
+            }
             
             ctx.restore();
             

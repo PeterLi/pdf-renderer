@@ -131,6 +131,15 @@
               <button class="stamp-option" data-stamp="copy" title="COPY">
                 <img src="/pdf-stamps/copy.svg" alt="COPY">
               </button>
+              <button class="stamp-option" data-stamp="overdue" title="OVERDUE">
+                <img src="/pdf-stamps/overdue.svg" alt="OVERDUE">
+              </button>
+              <button class="stamp-option" data-stamp="void" title="VOID">
+                <img src="/pdf-stamps/void.svg" alt="VOID">
+              </button>
+              <button class="stamp-option stamp-custom" data-stamp="custom" title="Custom Stamp">
+                <span style="font-size: 10px; font-weight: bold; color: #4C8BF5;">Custom...</span>
+              </button>
             </div>
           </div>
         </div>
@@ -325,6 +334,25 @@
     <!-- Hidden file inputs -->
     <input type="file" id="file-input" accept=".pdf" hidden />
     <input type="file" id="json-input" accept=".json" hidden />
+
+    <!-- Custom Stamp Modal -->
+    <div id="custom-stamp-modal" class="modal hidden">
+      <div class="modal-content">
+        <h3>Create Custom Stamp</h3>
+        <div class="form-group">
+          <label for="custom-stamp-text">Stamp Text</label>
+          <input type="text" id="custom-stamp-text" placeholder="e.g. SIGNED" maxlength="20" />
+        </div>
+        <div class="form-group">
+          <label for="custom-stamp-color">Stamp Color</label>
+          <input type="color" id="custom-stamp-color" value="#E53935" />
+        </div>
+        <div class="modal-actions">
+          <button id="custom-stamp-cancel" class="btn btn-secondary">Cancel</button>
+          <button id="custom-stamp-create" class="btn btn-primary">Create Stamp</button>
+        </div>
+      </div>
+    </div>
 
     <!-- Toast notifications -->
     <div id="toast-container" class="toast-container"></div>
