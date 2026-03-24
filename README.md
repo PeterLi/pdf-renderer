@@ -60,7 +60,7 @@
 ### Installation
 
 ```bash
-cd ~/Documents/Interact\ Technology/pdf-renderer
+cd ~/Documents/Projects/pdf-renderer
 npm install
 ```
 
@@ -343,8 +343,7 @@ git log --oneline -10               # View history
 
 ## 📄 License
 
-Created by Claude Code (Anthropic) + Yoyo  
-Built for Interact Technology  
+Created by Claude Code (Anthropic) + Yoyo + Peter Li  
 March 24, 2026
 
 ---

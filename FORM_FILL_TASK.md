@@ -23,7 +23,7 @@
 
 ## Inspiration from pdf-form-tool
 
-**Project:** `~/Documents/Interact Technology/pdf-form-tool/`
+**Project:** `~/Documents/Projects/pdf-form-tool/`
 
 **Key files to reference:**
 - `src/main.js` - Form field detection and rendering

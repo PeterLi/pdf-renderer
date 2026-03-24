@@ -2,7 +2,7 @@
 
 ## Project: Beautiful PDF Renderer with Annotations
 
-**Location:** ~/Documents/Interact Technology/pdf-renderer/
+**Location:** ~/Documents/Projects/pdf-renderer/
 
 ### Core Requirements
 

@@ -209,7 +209,7 @@ PDF coords = Canvas coords ÷ scale
 
 **Primary Developer:** Claude Code (Anthropic)  
 **Debugging & Fixes:** Yoyo (OpenClaw assistant)  
-**For:** Interact Technology  
+**Author:** Peter Li  
 **Date:** March 24, 2026
 
 **Built using:**

@@ -1,6 +1,6 @@
 /**
  * PDF Renderer — Main Application
- * Interact Technology
+ * Peter Li
  */
 import { loadPDF, renderPage, renderThumbnail } from './utils/pdf.js';
 import { AnnotationStore } from './utils/annotations.js';

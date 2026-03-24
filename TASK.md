@@ -1,7 +1,7 @@
 # Task: Implement Advanced Selection Tool + Fix Text Tool
 
 **Project:** PDF Renderer  
-**Location:** ~/Documents/Interact Technology/pdf-renderer/
+**Location:** ~/Documents/Projects/pdf-renderer/
 
 ---
 
