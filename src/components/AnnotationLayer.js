@@ -1275,8 +1275,9 @@ export class AnnotationLayer {
     const width = height * aspectRatio;
 
     // Create stamp annotation
+    const stampId = uid();
     this.store.add(this._page, {
-      id: uid(),
+      id: stampId,
       page: this._page,
       type: 'stamp',
       color: this.color, // Not really used for stamps but keep for consistency
@@ -1290,6 +1291,20 @@ export class AnnotationLayer {
         rotation: 0, // Support rotation
       },
     });
+
+    // Auto-switch to select tool and select the stamp for immediate resize/rotate
+    // Call PDFRenderer's _setActiveTool to update both UI and layer
+    if (viewer && viewer._setActiveTool) {
+      viewer._setActiveTool('select');
+    } else {
+      // Fallback: just update the layer
+      this.setTool('select');
+    }
+    
+    this._selected.clear();
+    this._selected.add(stampId);
+    
+    console.log('[Stamp] Auto-selected stamp for immediate editing');
 
     this.redraw();
     this.onChanged();
