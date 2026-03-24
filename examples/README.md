@@ -1,39 +1,14 @@
-# PDF Renderer - Embedding Examples
+# PDF Renderer - Examples
 
-This folder contains examples of how to embed the PDF Renderer library in your projects.
+**The main `index.html` is your best example!**
 
----
-
-## Examples
-
-### 1. `embed-simple.html`
-
-**Full-featured embedding example with custom controls.**
-
-- Shows complete HTML structure
-- Demonstrates programmatic API
-- Custom control buttons
-- Load PDFs from URLs
-- Query parameter support
-
-**Try it:**
-```bash
-# From project root
-open examples/embed-simple.html
-
-# Or with a PDF URL
-open "examples/embed-simple.html?pdfUrl=https://example.com/doc.pdf"
-```
-
-**Key features:**
-- Load remote PDFs
-- Custom navigation buttons
-- URL input field
-- Event callbacks
+It's a fully working demo that shows exactly how to use the PDF renderer.
 
 ---
 
 ## Quick Start
+
+Just look at `../index.html` - that's your reference implementation.
 
 ### Minimal Example
 

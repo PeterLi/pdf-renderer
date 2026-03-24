@@ -10,29 +10,29 @@
 
 ---
 
-## 📦 Quick Start - Embed in Your Project
+## 📦 Quick Start
 
-### Basic Usage
+### Try the Demo
 
+**index.html is your working example!** Just open it and use it.
+
+**Load PDFs via URL:**
+```
+http://localhost:5175/?pdfUrl=https://example.com/doc.pdf
+```
+
+### Embed in Your Project
+
+Copy the code from `index.html` - it shows exactly how to use it.
+
+**Or use the library:**
 ```javascript
 import PDFRenderer from './src/PDFRenderer.js';
 
-// Create viewer instance
 const viewer = new PDFRenderer({
   container: '#pdf-container',
-  pdfUrl: 'document.pdf',          // Optional: auto-load PDF
-  showOpenButton: true,             // Optional: show file picker
-  showDemoButton: true,             // Optional: show demo button
-  onLoad: (info) => {              // Optional: callback
-    console.log('Loaded:', info);
-  }
+  pdfUrl: 'document.pdf'
 });
-```
-
-### Load PDF via Query Parameter
-
-```
-https://your-site.com/?pdfUrl=https://example.com/doc.pdf
 ```
 
 ### Programmatic API
