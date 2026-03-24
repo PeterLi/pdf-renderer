@@ -822,14 +822,39 @@ select.form-field-input {
 
 .stamp-dropdown {
   position: fixed;
-  margin-top: 8px;
+  margin-top: 12px;
   background: var(--surface);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  padding: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  padding: 8px;
   z-index: 10000;
-  min-width: 360px;
+  min-width: 200px;
+  max-width: 260px;
+}
+
+.stamp-dropdown::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 20px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid rgba(255, 255, 255, 0.15);
+}
+
+.stamp-dropdown::after {
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: 21px;
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-bottom: 7px solid var(--surface);
 }
 
 .stamp-dropdown.hidden {
@@ -838,28 +863,28 @@ select.form-field-input {
 
 .stamp-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
 }
 
 .stamp-option {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  padding: 8px;
+  border-radius: 4px;
+  padding: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 50px;
+  min-height: 32px;
 }
 
 .stamp-option:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: var(--accent);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(76, 139, 245, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(76, 139, 245, 0.3);
 }
 
 .stamp-option:active {
@@ -869,7 +894,7 @@ select.form-field-input {
 .stamp-option img {
   width: 100%;
   height: auto;
-  max-height: 40px;
+  max-height: 24px;
   object-fit: contain;
   pointer-events: none;
 }
@@ -882,10 +907,10 @@ select.form-field-input {
   :root { --sidebar-w: 140px; }
   
   .stamp-dropdown {
-    min-width: 280px;
+    max-width: 200px;
   }
   
   .stamp-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
   }
 }
