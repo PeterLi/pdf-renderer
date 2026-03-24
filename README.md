@@ -4,7 +4,7 @@
 
 **Status:** ✅ **Working!** All core features functional.
 
-**Last Updated:** March 24, 2026, 9:50 PM AEDT
+**Last Updated:** March 24, 2026, 11:44 PM AEDT
 
 ---
 
@@ -16,6 +16,7 @@
 - ✅ **Page navigation** - Prev/next, jump to page
 - ✅ **Thumbnail sidebar** - Quick page preview
 - ✅ **Keyboard shortcuts** - Full keyboard support (press `?` for help)
+- ✅ **Color accuracy** - sRGB color management matches Adobe Acrobat rendering
 
 ### Annotation Tools
 - ✅ **Pen** - Freehand drawing
