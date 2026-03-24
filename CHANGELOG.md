@@ -228,3 +228,141 @@ PDF coords = Canvas coords ÷ scale
 **Features working:** 20+  
 
 **Result:** Production-ready PDF annotation tool! 🎉
+
+---
+
+## Phase 4: Advanced Selection Tool (Claude Code - 21:50-22:03)
+
+### Features Built
+- ✅ Click to select annotation (blue outline + handles)
+- ✅ Drag to move selected annotation
+- ✅ Resize handles (8 handles: corners + edges)
+- ✅ Type-aware resize (rect/circle/arrow handled differently)
+- ✅ Multi-select with Shift+click
+- ✅ Double-click text to edit
+- ✅ Delete key removes selected
+- ✅ Escape to deselect
+- ✅ Undo/redo integration
+
+**Implementation:**
+- Hit testing for click detection
+- Selection rendering with outline + handles
+- `_moveAnnotation()` - type-aware translation
+- `_computeResizedBounds()` / `_applyResize()` - type-aware scaling
+- Bounds normalization (handles dragging past opposite edge)
+
+**Status:** ✅ Working perfectly (Peter: "looks great... the advanced select tool works great")
+
+---
+
+## Phase 5: Text Tool Fix (Yoyo - 22:10-22:25)
+
+### Issue #4: Text Tool Not Showing Input
+
+**Symptoms:**
+- Text tool button existed but clicking PDF did nothing
+- Occasionally worked once, then stopped
+- Logs showed input was being created, focused, and immediately removed
+
+**Root Cause Discovery:**
+
+1. **First hypothesis:** Annotation canvas covering input
+   - ✅ Fixed by adding `pointer-events: none` to canvas while input active
+   - Input still didn't appear
+
+2. **Second hypothesis:** Browser caching old code
+   - ✅ Restarted Vite dev server
+   - Input still disappeared immediately
+
+3. **Real issue found:** Race condition with blur event
+   - Logs showed: "Disabled canvas pointer events" → "Re-enabled canvas pointer events" (instant!)
+   - Input was being created and **immediately removed** before user could see it
+   - `blur` event fired right after `focus()` was called
+   - Likely due to focus() being called while input still positioning/rendering
+
+**Solution:**
+```javascript
+// Delay blur listener by 100ms to let focus settle
+let blurEnabled = false;
+setTimeout(() => {
+  blurEnabled = true;
+}, 100);
+
+input.addEventListener('blur', () => {
+  if (blurEnabled) commit();
+});
+```
+
+**Why this works:**
+- Input gets time to properly receive and settle focus
+- 100ms delay is imperceptible to users
+- Prevents blur from triggering during focus settling
+- Race condition eliminated
+
+**Git commits:**
+- `91741c9` - Debug: Add extensive logging to text tool
+- `f99d3d2` - Fix: Text tool now visible - disable canvas pointer events while typing
+- `fbc1603` - Fix: Delay blur listener to prevent immediate text input closure
+
+**Status:** ✅ **WORKING!** Text input now appears and stays visible until user commits/cancels
+
+---
+
+## Key Lessons Learned
+
+### Text Input Focus Race Condition
+**Problem:** Calling `input.focus()` immediately after appending to DOM can trigger a blur event before focus properly settles, causing the input to disappear instantly.
+
+**Solution:** Always delay blur event listeners by 100-200ms when programmatically focusing inputs. The delay is imperceptible but prevents race conditions.
+
+**Code pattern:**
+```javascript
+const input = document.createElement('textarea');
+wrapper.appendChild(input);
+input.focus();
+
+// Don't do this:
+// input.addEventListener('blur', handleBlur);  // ❌ Fires immediately!
+
+// Do this instead:
+let blurEnabled = false;
+setTimeout(() => { blurEnabled = true; }, 100);
+input.addEventListener('blur', () => {
+  if (blurEnabled) handleBlur();
+});
+```
+
+### Annotation Canvas Pointer Events
+When creating interactive overlays on top of canvas elements, disable canvas pointer events while the overlay is active:
+```javascript
+canvas.style.pointerEvents = 'none';  // While input active
+canvas.style.pointerEvents = 'auto';  // When input removed
+```
+
+---
+
+## Summary
+
+**Total dev time:** ~1 hour 15 minutes
+- Initial build: 15 min (Claude Code)
+- Selection tool: 13 min (Claude Code)
+- Bug fixes: ~45 min (Yoyo debugging)
+
+**Major bugs fixed:** 4
+1. PDF.js worker configuration (downgrade to v4.0.379)
+2. ArrayBuffer detachment (separate copies)
+3. Annotation scaling in exported PDF
+4. Text tool blur race condition
+
+**Status:** Production-ready PDF annotation tool with full editing capabilities! 🎉
+
+**Final features:**
+- ✅ All annotation tools working (pen, highlighter, text, shapes, arrow, eraser)
+- ✅ Advanced selection tool (move, resize, edit)
+- ✅ Undo/Redo
+- ✅ Export annotated PDFs
+- ✅ Import/export annotations as JSON
+- ✅ Beautiful UI with keyboard shortcuts
+- ✅ Multi-page PDF support
+- ✅ Zoom and navigation
+

@@ -967,7 +967,18 @@ export class AnnotationLayer {
     };
 
     // CRITICAL FIX: Delay blur listener to prevent immediate closure
-    // The input needs time to actually receive focus before blur can trigger
+    // 
+    // Problem: When the text input is created and focused, a blur event fires
+    // immediately (likely due to focus() being called while the input is still
+    // being positioned/rendered). This causes the input to be removed before
+    // the user can even see it or type anything.
+    //
+    // Solution: Add a 100ms delay before enabling the blur listener. This gives
+    // the input time to properly receive and settle focus before blur can trigger.
+    // The delay is imperceptible to users but prevents the race condition.
+    //
+    // Discovered: March 24, 2026 - Text tool was creating inputs that immediately
+    // disappeared. Logs showed commit() being called instantly after focus().
     let blurEnabled = false;
     setTimeout(() => {
       blurEnabled = true;
@@ -979,7 +990,7 @@ export class AnnotationLayer {
         console.log('[Text blur] Blur event fired');
         commit();
       } else {
-        console.log('[Text blur] Blur event ignored (too soon)');
+        console.log('[Text blur] Blur event ignored (too soon - focus settling)');
       }
     });
     input.addEventListener('keydown', (e) => {

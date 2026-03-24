@@ -214,9 +214,26 @@ pdf-renderer/
 **Status:** ✅ Fixed  
 **Solution:** Scale coordinates by current zoom level when exporting
 
+### Issue: Text tool input not appearing
+**Status:** ✅ Fixed (March 24, 2026)  
+**Root cause:** Race condition - blur event fired immediately after focus()  
+**Solution:** Delay blur listener by 100ms to let focus settle
+
+**Technical details:**
+When the text input was created and focused programmatically, a `blur` event would fire instantly (before focus properly settled), causing the input to be removed before the user could see it. Fixed by adding a 100ms delay before enabling the blur listener.
+
+```javascript
+// Don't enable blur immediately
+let blurEnabled = false;
+setTimeout(() => { blurEnabled = true; }, 100);
+input.addEventListener('blur', () => {
+  if (blurEnabled) commit();
+});
+```
+
 ### Issue: Select tool doesn't work
-**Status:** ⚠️ Not yet implemented  
-**Workaround:** Use eraser to remove unwanted annotations
+**Status:** ✅ Fixed (March 24, 2026)  
+**Features:** Click to select, drag to move, resize handles, multi-select (Shift+click), double-click text to edit, Delete key to remove
 
 ---
 
