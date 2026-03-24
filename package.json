@@ -8,12 +8,17 @@
     "build": "vite build",
     "preview": "vite preview"
   },
-  "keywords": ["pdf", "renderer", "annotations", "viewer"],
+  "keywords": [
+    "pdf",
+    "renderer",
+    "annotations",
+    "viewer"
+  ],
   "author": "Peter Li",
   "license": "MIT",
   "dependencies": {
     "pdf-lib": "^1.17.1",
-    "pdfjs-dist": "^5.5.207",
+    "pdfjs-dist": "^4.0.379",
     "vite": "^8.0.2"
   }
 }
