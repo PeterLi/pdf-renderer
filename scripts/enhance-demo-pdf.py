@@ -755,40 +755,40 @@ Q
     content10 += _card(40, 578, 530, 140,
                        'Submit Form',
                        'this.submitForm(url) sends form\ndata to a server endpoint')
-    content10 += _label(field_x + 10, 646, 'Submit URL (leave blank for default)')
-    content10 += _hint(340, 646, '(click green button below to submit)')
+    content10 += _label(field_x + 10, 646, 'Submit URL:')
+    content10 += _hint(field_x + 90, 646, '(leave blank for default \\267 green button submits)')
 
     # === CARD 2: Mail Form ===
     content10 += _card(40, 458, 530, 120,
                        'Mail Form',
                        'this.mailForm(ui, to, cc, bcc,\nsubject, message)')
-    content10 += _label(field_x + 10, 526, 'To Email')
-    content10 += _hint(140, 526, '(enter details, click blue button below)')
-    content10 += _label(col2_x + 10, 526, 'Subject')
+    content10 += _label(field_x + 10, 526, 'To Email:')
+    content10 += _label(col2_x + 10, 526, 'Subject:')
+    content10 += _hint(col2_x + 80, 526, '(blue button sends mail)')
 
     # === CARD 3: Export Data ===
     content10 += _card(40, 338, 530, 120,
                        'Export Data',
                        'this.exportAsText(), exportAsFDF()\nexport form data in various formats')
-    content10 += _label(field_x + 10, 432, 'Export Result (auto-populated)')
-    content10 += _hint(250, 432, '(click purple button below to export)')
+    content10 += _label(field_x + 10, 432, 'Export Result:')
+    content10 += _hint(field_x + 110, 432, '(auto-populated \\267 purple button exports)')
 
     # === CARD 4: Print ===
     content10 += _card(40, 218, 530, 120,
                        'Print Document',
                        'this.print(ui, start, end, silent,\nshrinkToFit, printAsImage)')
-    content10 += _label(field_x + 10, 286, 'Start Page')
-    content10 += _label(field_x + 125, 286, 'End Page')
-    content10 += _hint(field_x + 220, 286, '(click brown button below to print)')
-    content10 += _label(col2_x + 10, 286, 'Print Status')
+    content10 += _label(field_x + 10, 286, 'Start Page:')
+    content10 += _label(field_x + 125, 286, 'End Page:')
+    content10 += _label(col2_x + 10, 286, 'Print Status:')
+    content10 += _hint(col2_x + 100, 286, '(brown button prints)')
 
     # === CARD 5: Dirty Flag & Calculations ===
     content10 += _card(40, 108, 530, 120,
                        'Dirty Flag & Calculations',
                        'this.dirty tracks modifications,\nthis.calculateNow() triggers recalc')
-    content10 += _label(field_x + 10, 176, 'Document Modified?')
-    content10 += _label(col2_x + 10, 176, 'Calculation Status')
-    content10 += _hint(col2_x + 150, 176, '(click button below to recalculate)')
+    content10 += _label(field_x + 10, 176, 'Modified Status:')
+    content10 += _label(col2_x + 10, 176, 'Calc Status:')
+    content10 += _hint(col2_x + 90, 176, '(button triggers recalculate)')
 
     # === FOOTER ===
     content10 += b"""
@@ -803,10 +803,10 @@ BT
 (Document Methods:) Tj
 /Helvetica 9 Tf
 0.5 0.55 0.6 rg
-150 0 Td
-(this.submitForm\\(\\), mailForm\\(\\), exportAsText\\(\\), exportAsFDF\\(\\), importAnFDF\\(\\),) Tj
+140 0 Td
+(submitForm\\(\\), mailForm\\(\\), exportAsText\\(\\), exportAsFDF\\(\\), importAnFDF\\(\\)) Tj
 0 -14 Td
-(this.print\\(\\), calculateNow\\(\\), this.dirty, this.pageNum) Tj
+(print\\(\\), calculateNow\\(\\), dirty, pageNum) Tj
 ET
 Q
 """
