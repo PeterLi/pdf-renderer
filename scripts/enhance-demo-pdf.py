@@ -65,37 +65,54 @@ def add_js_test_page(pdf):
     """Add page 7 with JavaScript function tests"""
     page = pdf.add_blank_page(page_size=(612, 792))
     
-    # Field configurations
+    # Field configurations: (name, label, width, y_pos, js_actions, description, example)
     fields_config = [
-        ('zipcode_test', 'ZIP Code:', 150, {'/F': 'AFSpecial_Format(0);', '/K': 'AFSpecial_Keystroke(0);'}),
-        ('ssn_test', 'SSN:', 150, {'/F': 'AFSpecial_Format(3);', '/K': 'AFSpecial_Keystroke(3);'}),
-        ('date_mmddyy', 'Date (mm/dd/yy):', 150, {'/F': 'AFDate_Format(2);', '/K': 'AFDate_Keystroke(2);'}),
-        ('date_iso', 'Date (yyyy-mm-dd):', 150, {'/F': 'AFDate_Format(8);', '/K': 'AFDate_Keystroke(8);'}),
-        ('time_test', 'Time (HH:MM):', 100, {'/F': 'AFTime_Format(0);', '/K': 'AFTime_Keystroke(0);'}),
-        ('percent_test', 'Percentage (0.25):', 150, {'/F': 'AFPercent_Format(2, 0);'}),
-        ('age_test', 'Age (1-100):', 100, {'/V': 'AFRange_Validate(true, 1, true, 100);', '/K': 'AFNumber_Keystroke(0, 0, 0, 0, "", true);'}),
-        ('price_test', 'Price (currency):', 150, {'/F': 'AFNumber_Format(2, 0, 0, 0, "$", true);', '/K': 'AFNumber_Keystroke(2, 0, 0, 0, "$", true);'}),
-    ]
-    
-    # Descriptions
-    field_info = [
-        ('ZIP Code:', 'Try: 12345 -> Validates 5 digits only', 680),
-        ('SSN:', 'Try: 123456789 -> Formats to 123-45-6789', 640),
-        ('Date (mm/dd/yy):', 'Try: 03/15/2024 -> Formats to 03/15/24', 600),
-        ('Date (yyyy-mm-dd):', 'Try: 03/15/2024 -> Formats to 2024-03-15', 560),
-        ('Time (HH:MM):', 'Try: 14:30 -> Validates time format', 520),
-        ('Percentage (0.25):', 'Try: 0.25 -> Formats to 25.00%', 480),
-        ('Age (1-100):', 'Try: 150 -> Rejects! Must be 1-100', 440),
-        ('Price (currency):', 'Try: 1234.56 -> Formats to $1,234.56', 400),
+        ('zipcode_test', 'ZIP Code', 120, 660, 
+         {'/F': 'AFSpecial_Format(0);', '/K': 'AFSpecial_Keystroke(0);'},
+         'US ZIP code formatting - 5 digits only',
+         'Type: 12345'),
+        
+        ('ssn_test', 'Social Security Number', 150, 600,
+         {'/F': 'AFSpecial_Format(3);', '/K': 'AFSpecial_Keystroke(3);'},
+         'SSN formatting with dashes (xxx-xx-xxxx)',
+         'Type: 123456789 -> 123-45-6789'),
+        
+        ('date_mmddyy', 'Date (Short Format)', 130, 540,
+         {'/F': 'AFDate_Format(2);', '/K': 'AFDate_Keystroke(2);'},
+         'Date in mm/dd/yy format',
+         'Type: 03/15/2024 -> 03/15/24'),
+        
+        ('date_iso', 'Date (ISO Format)', 140, 480,
+         {'/F': 'AFDate_Format(8);', '/K': 'AFDate_Keystroke(8);'},
+         'Date in ISO yyyy-mm-dd format',
+         'Type: 03/15/2024 -> 2024-03-15'),
+        
+        ('time_test', 'Time (24-hour)', 100, 420,
+         {'/F': 'AFTime_Format(0);', '/K': 'AFTime_Keystroke(0);'},
+         'Time in 24-hour HH:MM format',
+         'Type: 14:30'),
+        
+        ('percent_test', 'Percentage', 120, 360,
+         {'/F': 'AFPercent_Format(2, 0);'},
+         'Converts decimal to percentage (0.25 -> 25.00%)',
+         'Type: 0.25 -> 25.00%'),
+        
+        ('age_test', 'Age', 80, 300,
+         {'/V': 'AFRange_Validate(true, 1, true, 100);', '/K': 'AFNumber_Keystroke(0, 0, 0, 0, "", true);'},
+         'Number validation: must be between 1 and 100',
+         'Type: 150 -> Rejects!'),
+        
+        ('price_test', 'Price', 140, 240,
+         {'/F': 'AFNumber_Format(2, 0, 0, 0, "$", true);', '/K': 'AFNumber_Keystroke(2, 0, 0, 0, "$", true);'},
+         'Currency formatting with thousand separators',
+         'Type: 1234.56 -> $1,234.56'),
     ]
     
     # Create fields
     fields = []
-    y_pos = 680
-    for name, label, width, actions in fields_config:
+    for name, label, width, y_pos, actions, description, example in fields_config:
         field = create_text_field(pdf, page, name, 60, y_pos, width, 25, actions)
         fields.append(field)
-        y_pos -= 40
     
     # Add fields to page and form
     if '/Annots' not in page:
@@ -105,31 +122,116 @@ def add_js_test_page(pdf):
         page['/Annots'].append(pdf.make_indirect(field))
         pdf.Root['/AcroForm']['/Fields'].append(pdf.make_indirect(field))
     
-    # Create content stream
-    content = b"BT\n/Helvetica-Bold 18 Tf\n60 732 Td\n(JavaScript Function Tests) Tj\nET\n"
-    content += b"BT\n/Helvetica 10 Tf\n60 715 Td\n(Enable JS: ON button, then tab out of fields to test) Tj\nET\n"
-    content += b"BT\n/Helvetica-Bold 11 Tf\n"
+    # Create beautiful content stream with boxes and detailed info
+    content = b"""
+q
+% Header background
+0.15 0.23 0.37 rg
+0 732 612 60 re f
+
+% Header text
+BT
+/Helvetica-Bold 22 Tf
+1 1 1 rg
+60 760 Td
+(JavaScript Function Tests) Tj
+ET
+
+BT
+/Helvetica 11 Tf
+0.9 0.9 0.9 rg
+60 740 Td
+(Enable Form Mode + JS: ON, then tab out of fields to see live formatting!) Tj
+ET
+Q
+
+"""
     
-    for label, description, y in field_info:
-        content += f"60 {y+5} Td ({label}) Tj\n".encode('latin-1')
-        content += b"/Helvetica-Oblique 9 Tf\n"
-        content += f"280 0 Td ({description}) Tj\n".encode('latin-1')
-        content += b"/Helvetica-Bold 11 Tf\n"
-        content += b"-280 0 Td\n"
-    
-    content += b"ET\n"
-    
-    # Footer
-    content += b"""
+    # Add field boxes and labels
+    for name, label, width, y_pos, actions, description, example in fields_config:
+        # Light background box for each field group
+        content += f"""
+q
+0.97 0.98 0.99 rg
+50 {y_pos - 10} 512 50 re f
+0.85 0.88 0.92 RG
+0.5 w
+50 {y_pos - 10} 512 50 re S
+Q
+
+""".encode('latin-1')
+        
+        # Label (bold)
+        content += f"""
+BT
+/Helvetica-Bold 11 Tf
+0.1 0.1 0.2 rg
+60 {y_pos + 30} Td
+({label}) Tj
+ET
+
+""".encode('latin-1')
+        
+        # Description (smaller, gray)
+        content += f"""
+BT
+/Helvetica 9 Tf
+0.4 0.4 0.5 rg
+60 {y_pos + 17} Td
+({description}) Tj
+ET
+
+""".encode('latin-1')
+        
+        # Example (italic, blue-ish)
+        content += f"""
 BT
 /Helvetica-Oblique 9 Tf
-/DeviceRGB cs
-0.5 0.5 0.5 sc
-60 100 Td
-(Functions tested: AFSpecial_Format, AFDate_Format, AFTime_Format, AFPercent_Format,) Tj
-0 -12 Td
-(AFNumber_Format, AFRange_Validate, AFNumber_Keystroke, AFSpecial_Keystroke) Tj
+0.2 0.4 0.7 rg
+220 {y_pos + 5} Td
+({example}) Tj
 ET
+
+""".encode('latin-1')
+        
+        # Field border box (so you can see it even without form mode)
+        content += f"""
+q
+0.3 0.5 0.8 RG
+1 w
+60 {y_pos} {width} 25 re S
+Q
+
+""".encode('latin-1')
+    
+    # Footer with function reference
+    content += b"""
+q
+0.96 0.97 0.98 rg
+0 0 612 120 re f
+
+BT
+/Helvetica-Bold 10 Tf
+0.2 0.2 0.3 rg
+60 95 Td
+(Acrobat JavaScript Functions Tested:) Tj
+ET
+
+BT
+/Helvetica 9 Tf
+0.4 0.4 0.5 rg
+60 80 Td
+(AFSpecial_Format, AFSpecial_Keystroke - Phone, ZIP, SSN formatting) Tj
+0 -12 Td
+(AFDate_Format, AFDate_Keystroke - Date parsing and formatting) Tj
+0 -12 Td
+(AFTime_Format, AFTime_Keystroke - Time validation) Tj
+0 -12 Td
+(AFPercent_Format, AFNumber_Format - Percentage and currency formatting) Tj
+0 -12 Td
+(AFRange_Validate, AFNumber_Keystroke - Number validation and constraints) Tj
+ET
+Q
 """
     
     page.Contents = pdf.make_stream(content)
