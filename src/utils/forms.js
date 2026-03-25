@@ -1,18 +1,126 @@
 /**
  * PDF Form Detection & Export Utilities
  * Detects AcroForm fields and exports filled PDFs using pdf-lib.
+ * Enhanced with field metadata extraction for validation and JS support.
  */
 import { PDFDocument } from 'pdf-lib';
+import { parseFieldFlags, buildValidationRules } from './formValidation.js';
+import { parseJavaScriptActions, parseFormatFunction, parseRangeValidation } from './formJavaScript.js';
+
+/**
+ * @typedef {Object} EnhancedFieldMeta
+ * @property {string} fieldName
+ * @property {string} fieldType
+ * @property {number} rawFlags - Raw PDF field flags integer
+ * @property {Object} parsedFlags - Structured flags from parseFieldFlags
+ * @property {number|null} maxLength - Maximum text length (Tx fields)
+ * @property {string} tooltip - Field tooltip / alternate name
+ * @property {string} displayName - Human-readable display name
+ * @property {Object[]} actions - Parsed JavaScript actions
+ * @property {string|null} formatAction - Format action code (if any)
+ * @property {string|null} validationPattern - Regex pattern from validation action
+ * @property {string|null} validationMessage - Custom validation message
+ * @property {number|undefined} rangeMin - Minimum numeric value
+ * @property {number|undefined} rangeMax - Maximum numeric value
+ * @property {Object|null} formatInfo - Parsed format function metadata
+ * @property {import('./formValidation.js').ValidationRule[]} validationRules - Computed validation rules
+ */
+
+/**
+ * Extract enhanced metadata from a PDF.js widget annotation.
+ *
+ * @param {Object} widget - PDF.js annotation object
+ * @returns {EnhancedFieldMeta}
+ */
+export function extractEnhancedFieldMeta(widget) {
+  const fieldName = widget.fieldName || '';
+  const fieldType = widget.fieldType || '';
+  const rawFlags = widget.fieldFlags || 0;
+  const parsedFlags = parseFieldFlags(rawFlags);
+
+  // MaxLength for text fields
+  const maxLength = widget.maxLen > 0 ? widget.maxLen : null;
+
+  // Tooltip / alternate name
+  const tooltip = widget.alternativeText || widget.TU || '';
+
+  // Display name: prefer tooltip, fall back to cleaned field name
+  const displayName = tooltip || fieldName.replace(/[._-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+  // Parse JavaScript actions
+  const actions = parseJavaScriptActions(widget);
+
+  // Extract format action
+  const formatActionObj = actions.find(a => a.trigger === 'Format');
+  const formatAction = formatActionObj?.code || null;
+
+  // Parse format info
+  const formatInfo = formatAction ? parseFormatFunction(formatAction) : null;
+
+  // Extract validation pattern from Validate action
+  let validationPattern = null;
+  let validationMessage = null;
+  const validateAction = actions.find(a => a.trigger === 'Validate');
+  if (validateAction) {
+    // Try to extract regex from AFRegex_Validate or custom validate
+    const regexMatch = validateAction.code.match(/AFRegex_Validate\("([^"]+)"\)/);
+    if (regexMatch) {
+      validationPattern = regexMatch[1];
+      validationMessage = 'Invalid format';
+    }
+
+    // Try to extract range from AFRange_Validate
+    const range = parseRangeValidation(validateAction.code);
+    if (range) {
+      validationPattern = null; // Range, not pattern
+    }
+  }
+
+  // Range validation
+  let rangeMin, rangeMax;
+  if (validateAction) {
+    const range = parseRangeValidation(validateAction.code);
+    if (range) {
+      rangeMin = range.min;
+      rangeMax = range.max;
+    }
+  }
+
+  const meta = {
+    fieldName,
+    fieldType,
+    rawFlags,
+    parsedFlags,
+    maxLength,
+    tooltip,
+    displayName,
+    actions,
+    formatAction,
+    validationPattern,
+    validationMessage,
+    rangeMin,
+    rangeMax,
+    formatInfo,
+    validationRules: [],
+  };
+
+  // Build validation rules from metadata
+  meta.validationRules = buildValidationRules(meta);
+
+  return meta;
+}
 
 /**
  * Detect form fields in a PDF using PDF.js annotations.
- * Returns per-page widget annotations with field metadata.
+ * Returns per-page widget annotations with enhanced field metadata.
  *
  * @param {import('pdfjs-dist').PDFDocumentProxy} pdfJsDoc - PDF.js document
- * @returns {Promise<{ hasForm: boolean, fieldsByPage: Map<number, Array>, fieldCount: number }>}
+ * @returns {Promise<{ hasForm: boolean, fieldsByPage: Map<number, Array>, fieldCount: number, enhancedMeta: Map<string, EnhancedFieldMeta> }>}
  */
 export async function detectFormFields(pdfJsDoc) {
   const fieldsByPage = new Map();
+  /** @type {Map<string, EnhancedFieldMeta>} */
+  const enhancedMeta = new Map();
   let fieldCount = 0;
 
   for (let pageNum = 1; pageNum <= pdfJsDoc.numPages; pageNum++) {
@@ -23,6 +131,13 @@ export async function detectFormFields(pdfJsDoc) {
     if (widgets.length > 0) {
       fieldsByPage.set(pageNum, widgets);
       fieldCount += widgets.length;
+
+      // Extract enhanced metadata for each widget
+      for (const widget of widgets) {
+        if (widget.fieldName && !enhancedMeta.has(widget.fieldName)) {
+          enhancedMeta.set(widget.fieldName, extractEnhancedFieldMeta(widget));
+        }
+      }
     }
 
     page.cleanup();
@@ -32,6 +147,7 @@ export async function detectFormFields(pdfJsDoc) {
     hasForm: fieldCount > 0,
     fieldsByPage,
     fieldCount,
+    enhancedMeta,
   };
 }
 

@@ -27,6 +27,11 @@ class PDFRenderer {
       pdfUrl: options.pdfUrl || null,
       onLoad: options.onLoad || null,
       onError: options.onError || null,
+      // Form validation & JavaScript config
+      allowFormJavaScript: options.allowFormJavaScript ?? false,
+      validateOnBlur: options.validateOnBlur ?? true,
+      validateOnSubmit: options.validateOnSubmit ?? true,
+      showValidationErrors: options.showValidationErrors ?? true,
     };
 
     // State
@@ -46,6 +51,8 @@ class PDFRenderer {
     this.formFieldsByPage = new Map();
     this.formFieldCount = 0;
     this.hasForm = false;
+    /** @type {Map<string, import('./utils/forms.js').EnhancedFieldMeta>} */
+    this.enhancedMeta = new Map();
 
     // Initialize
     console.log('[PDFRenderer] Caching DOM elements...');
@@ -121,6 +128,7 @@ class PDFRenderer {
       formBar:        $('#form-bar'),
       formFieldCount: $('#form-field-count'),
       btnClearForm:   $('#btn-clear-form'),
+      btnValidateForm:$('#btn-validate-form'),
       btnExportFilled:$('#btn-export-filled'),
 
       fileInput:      $('#file-input'),
@@ -169,6 +177,9 @@ class PDFRenderer {
     // Form mode
     els.btnFormMode.addEventListener('click', () => this._toggleFormMode());
     els.btnClearForm.addEventListener('click', () => this._clearFormFields());
+    if (els.btnValidateForm) {
+      els.btnValidateForm.addEventListener('click', () => this._validateForm());
+    }
     els.btnExportFilled.addEventListener('click', () => this._exportFilledPDF());
 
     // Tool buttons (only ones with data-tool attribute)
@@ -659,6 +670,7 @@ class PDFRenderer {
     this.formFieldCount = 0;
     this.hasForm = false;
     this.formMode = false;
+    this.enhancedMeta = new Map();
 
     if (this.formLayer) {
       this.formLayer.destroy();
@@ -676,12 +688,19 @@ class PDFRenderer {
       this.formFieldsByPage = result.fieldsByPage;
       this.formFieldCount = result.fieldCount;
       this.hasForm = result.hasForm;
+      this.enhancedMeta = result.enhancedMeta || new Map();
 
       if (this.hasForm) {
         this.els.btnFormMode.classList.remove('hidden');
         const existingValues = await readFieldValues(this.pdfBytes);
-        this.formLayer = new FormLayer(this.els.pageWrapper, () => {});
+        this.formLayer = new FormLayer(this.els.pageWrapper, () => {}, {
+          allowFormJavaScript: this.config.allowFormJavaScript,
+          validateOnBlur: this.config.validateOnBlur,
+          validateOnSubmit: this.config.validateOnSubmit,
+          showValidationErrors: this.config.showValidationErrors,
+        });
         this.formLayer.setValues(existingValues);
+        this.formLayer.setEnhancedMeta(this.enhancedMeta);
       }
     } catch (err) {
       console.warn('Form detection failed:', err);
@@ -727,8 +746,21 @@ class PDFRenderer {
   async _clearFormFields() {
     if (!this.formLayer) return;
     this.formLayer.values.clear();
+    this.formLayer.clearErrors();
     await this._renderFormFields();
     showToast('Form fields cleared', 'info');
+  }
+
+  _validateForm() {
+    if (!this.formLayer) return;
+    this.formLayer.snapshotValues();
+    const result = this.formLayer.validateAll();
+    if (result.valid) {
+      showToast('All fields are valid!', 'success');
+    } else {
+      const count = result.errors.size;
+      showToast(`${count} field${count !== 1 ? 's' : ''} with errors`, 'error');
+    }
   }
 
   async _exportFilledPDF() {
@@ -737,6 +769,17 @@ class PDFRenderer {
       return;
     }
     this.formLayer.snapshotValues();
+
+    // Validate before export if configured
+    if (this.config.validateOnSubmit) {
+      const validation = this.formLayer.validateAll();
+      if (!validation.valid) {
+        const count = validation.errors.size;
+        showToast(`Cannot export: ${count} field${count !== 1 ? 's' : ''} with errors. Fix errors or clear validation.`, 'error');
+        return;
+      }
+    }
+
     try {
       const bytes = await exportFilledPDF(this.pdfBytes, this.formLayer.values);
       const blob = new Blob([bytes], { type: 'application/pdf' });
