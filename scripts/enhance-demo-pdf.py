@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Enhance sample.pdf with JavaScript actions and test page.
-Takes sample.pdf → creates sample-enhanced.pdf
+Takes sample.pdf -> creates sample-enhanced.pdf
 
 Usage:
   python3 scripts/enhance-demo-pdf.py
@@ -34,9 +34,9 @@ def add_phone_js_action(pdf):
             '/S': Name('/JavaScript'),
             '/JS': 'AFSpecial_Format(2);'
         })
-        print('  ✓ Added phone formatting (AFSpecial_Format)')
+        print('  + Phone formatting (AFSpecial_Format)')
     else:
-        print('  ⚠ Phone field not found')
+        print('  ! Phone field not found')
 
 def create_text_field(pdf, page, name, x, y, width, height, js_actions=None):
     """Create a text field annotation"""
@@ -62,260 +62,171 @@ def create_text_field(pdf, page, name, x, y, width, height, js_actions=None):
     return field
 
 def add_js_test_page(pdf):
-    """Add page 7 with JavaScript function tests"""
+    """Add page 7 with JavaScript function tests - clean, wide layout"""
     page = pdf.add_blank_page(page_size=(612, 792))
     
-    # Field configurations: (name, icon, label, width, y_pos, js_actions, description, example)
-    fields_config = [
-        ('zipcode_test', '[ZIP]', 'ZIP Code', 110, 650, 
+    # Simplified config: name, label, y_pos, js_actions, example_text
+    # All fields are 250px wide for consistency
+    field_width = 250
+    field_x = 70
+    
+    fields = [
+        ('test_zip', 'ZIP Code', 620,
          {'/F': 'AFSpecial_Format(0);', '/K': 'AFSpecial_Keystroke(0);'},
-         'US postal code - automatically validates 5 digits',
-         'Try: 12345'),
+         'Type 12345'),
         
-        ('ssn_test', '[SSN]', 'Social Security Number', 140, 585,
+        ('test_ssn', 'SSN', 555,
          {'/F': 'AFSpecial_Format(3);', '/K': 'AFSpecial_Keystroke(3);'},
-         'Auto-formats with dashes as you type',
-         'Try: 123456789  =  123-45-6789'),
+         'Type 123456789 -> 123-45-6789'),
         
-        ('date_mmddyy', '[DATE]', 'Date - Short Format', 120, 520,
+        ('test_date1', 'Date (mm/dd/yy)', 490,
          {'/F': 'AFDate_Format(2);', '/K': 'AFDate_Keystroke(2);'},
-         'Converts to mm/dd/yy format',
-         'Try: 03/15/2024  =  03/15/24'),
+         'Type 03/15/2024 -> 03/15/24'),
         
-        ('date_iso', '[DATE]', 'Date - ISO Format', 130, 455,
+        ('test_date2', 'Date (ISO)', 425,
          {'/F': 'AFDate_Format(8);', '/K': 'AFDate_Keystroke(8);'},
-         'Converts to ISO yyyy-mm-dd format',
-         'Try: 03/15/2024  =  2024-03-15'),
+         'Type 03/15/2024 -> 2024-03-15'),
         
-        ('time_test', '[TIME]', 'Time (24-hour)', 90, 390,
+        ('test_time', 'Time (24h)', 360,
          {'/F': 'AFTime_Format(0);', '/K': 'AFTime_Keystroke(0);'},
-         'Validates HH:MM format',
-         'Try: 14:30'),
+         'Type 14:30'),
         
-        ('percent_test', '[%]', 'Percentage', 110, 325,
+        ('test_pct', 'Percentage', 295,
          {'/F': 'AFPercent_Format(2, 0);'},
-         'Converts decimal to percent with 2 decimals',
-         'Try: 0.25  =  25.00%'),
+         'Type 0.25 -> 25.00%'),
         
-        ('age_test', '[#]', 'Age Validation', 70, 260,
+        ('test_age', 'Age (1-100)', 230,
          {'/V': 'AFRange_Validate(true, 1, true, 100);', '/K': 'AFNumber_Keystroke(0, 0, 0, 0, "", true);'},
-         'Must be between 1-100, rejects invalid',
-         'Try: 150  =  ERROR!'),
+         'Type 150 -> REJECTED'),
         
-        ('price_test', '[$]', 'Currency', 130, 195,
+        ('test_price', 'Currency', 165,
          {'/F': 'AFNumber_Format(2, 0, 0, 0, "$", true);', '/K': 'AFNumber_Keystroke(2, 0, 0, 0, "$", true);'},
-         'Formats with $, commas, and 2 decimals',
-         'Try: 1234.56  =  $1,234.56'),
+         'Type 1234.56 -> $1,234.56'),
     ]
     
-    # Create fields
-    fields = []
-    for name, icon, label, width, y_pos, actions, description, example in fields_config:
-        field = create_text_field(pdf, page, name, 70, y_pos, width, 28, actions)
-        fields.append(field)
+    # Create form fields
+    created_fields = []
+    for name, label, y_pos, actions, example in fields:
+        field = create_text_field(pdf, page, name, field_x, y_pos, field_width, 28, actions)
+        created_fields.append(field)
     
     # Add fields to page and form
     if '/Annots' not in page:
         page['/Annots'] = []
     
-    for field in fields:
+    for field in created_fields:
         page['/Annots'].append(pdf.make_indirect(field))
         pdf.Root['/AcroForm']['/Fields'].append(pdf.make_indirect(field))
     
-    # Create beautiful content stream with boxes and detailed info
+    # Build content stream
     content = b"""
 q
-% Header background - gradient effect with darker blue
-0.11 0.18 0.30 rg
+% Dark blue header
+0.15 0.23 0.37 rg
 0 720 612 72 re f
 
-% Header text
 BT
-/Helvetica-Bold 24 Tf
+/Helvetica-Bold 22 Tf
 1 1 1 rg
-50 762 Td
+50 755 Td
 (JavaScript Function Tests) Tj
 ET
 
 BT
 /Helvetica 10 Tf
-0.85 0.90 0.95 rg
-50 740 Td
-(Enable Form Mode + JS: ON button, then tab out of fields to see live formatting magic!) Tj
-ET
-Q
-
-% Instruction box
-q
-0.95 0.97 1.0 rg
-40 695 532 20 re f
-0.60 0.70 0.85 RG
-0.5 w
-40 695 532 20 re S
-
-BT
-/Helvetica-Bold 9 Tf
-0.2 0.3 0.5 rg
-50 701 Td
-(INSTRUCTIONS: ) Tj
-/Helvetica 9 Tf
-0.3 0.4 0.5 rg
-(Click in a field below, type the example value, then press TAB to see formatting.) Tj
+0.8 0.85 0.9 rg
+50 735 Td
+(Enable Form Mode + JS: ON, then TAB out of fields to trigger formatting) Tj
 ET
 Q
 
 """
     
-    # Add field boxes and labels
-    for name, icon, label, width, y_pos, actions, description, example in fields_config:
-        # Card-style background box for each field
+    # Add labels and examples for each field (to the RIGHT of the field box)
+    for name, label, y_pos, actions, example in fields:
+        # Gray row background
         content += f"""
 q
-% Card shadow
-0.90 0.92 0.94 rg
-42 {y_pos - 8} 530 58 re f
-
-% Card background
-0.98 0.99 1.0 rg
-40 {y_pos - 6} 530 58 re f
-
-% Card border
-0.80 0.85 0.90 RG
-0.5 w
-40 {y_pos - 6} 530 58 re S
+0.97 0.98 0.99 rg
+40 {y_pos - 8} 532 44 re f
+0.88 0.90 0.92 RG
+0.3 w
+40 {y_pos - 8} 532 44 re S
 Q
-
 """.encode('latin-1')
         
-        # Icon badge
+        # Label above field
         content += f"""
-q
-0.25 0.45 0.75 rg
-50 {y_pos + 33} 45 16 re f
-BT
-/Helvetica-Bold 8 Tf
-1 1 1 rg
-53 {y_pos + 37} Td
-({icon}) Tj
-ET
-Q
-
-""".encode('latin-1')
-        
-        # Label (bold, larger)
-        content += f"""
-BT
-/Helvetica-Bold 12 Tf
-0.15 0.20 0.30 rg
-105 {y_pos + 35} Td
-({label}) Tj
-ET
-
-""".encode('latin-1')
-        
-        # Description (smaller, medium gray)
-        content += f"""
-BT
-/Helvetica 8.5 Tf
-0.45 0.50 0.55 rg
-105 {y_pos + 20} Td
-({description}) Tj
-ET
-
-""".encode('latin-1')
-        
-        # Example (monospace-ish, blue)
-        content += f"""
-BT
-/Courier 9 Tf
-0.15 0.35 0.65 rg
-280 {y_pos + 8} Td
-({example}) Tj
-ET
-
-""".encode('latin-1')
-        
-        # Field border box (visible, rounded corners effect)
-        content += f"""
-q
-0.30 0.50 0.80 RG
-1.5 w
-70 {y_pos} {width} 28 re S
-Q
-
-""".encode('latin-1')
-    
-    # Footer with function reference
-    content += b"""
-q
-% Footer gradient
-0.11 0.18 0.30 rg
-0 0 612 100 re f
-
-% Decorative line
-0.40 0.50 0.70 RG
-2 w
-40 95 532 0 m S
-
 BT
 /Helvetica-Bold 11 Tf
-0.85 0.90 0.95 rg
-50 75 Td
-(Acrobat JavaScript API Functions Demonstrated:) Tj
+0.2 0.3 0.4 rg
+{field_x} {y_pos + 30} Td
+({label}) Tj
 ET
+""".encode('latin-1')
+        
+        # Example text to the right of field
+        content += f"""
+BT
+/Helvetica 9 Tf
+0.3 0.5 0.7 rg
+{field_x + field_width + 20} {y_pos + 8} Td
+({example}) Tj
+ET
+""".encode('latin-1')
+        
+        # Visible field border
+        content += f"""
+q
+0.4 0.6 0.9 RG
+1.5 w
+{field_x} {y_pos} {field_width} 28 re S
+Q
+""".encode('latin-1')
+    
+    # Footer
+    content += b"""
+q
+0.95 0.96 0.97 rg
+0 0 612 80 re f
 
 BT
-/Courier 8 Tf
-0.70 0.80 0.90 rg
-50 58 Td
-(AFSpecial_Format & AFSpecial_Keystroke) Tj
-/Helvetica 8 Tf
-(  -  Phone, ZIP, SSN auto-formatting) Tj
-0 -11 Td
-/Courier 8 Tf
-(AFDate_Format & AFDate_Keystroke) Tj
-/Helvetica 8 Tf
-(  -  Date parsing and format conversion) Tj
-0 -11 Td
-/Courier 8 Tf
-(AFTime_Format & AFTime_Keystroke) Tj
-/Helvetica 8 Tf
-(  -  Time validation and formatting) Tj
-0 -11 Td
-/Courier 8 Tf
+/Helvetica-Bold 10 Tf
+0.3 0.35 0.4 rg
+50 55 Td
+(Acrobat JavaScript Functions:) Tj
+/Helvetica 9 Tf
+0.5 0.55 0.6 rg
+210 0 Td
+(AFSpecial_Format, AFDate_Format, AFTime_Format,) Tj
+0 -14 Td
 (AFPercent_Format, AFNumber_Format, AFRange_Validate) Tj
-/Helvetica 8 Tf
-(  -  Math, currency, validation) Tj
 ET
 Q
 """
     
     page.Contents = pdf.make_stream(content)
-    print('  ✓ Added page 7 with JavaScript test fields')
+    print('  + Page 7 with 8 JavaScript test fields')
 
 def main():
     input_pdf = Path('public/sample.pdf')
     output_pdf = Path('public/sample-enhanced.pdf')
     
     if not input_pdf.exists():
-        print(f'❌ Input PDF not found: {input_pdf}')
-        print(f'   Run: node scripts/generate-demo-pdf.js first')
+        print(f'Error: {input_pdf} not found')
+        print('Run: node scripts/generate-demo-pdf.js first')
         sys.exit(1)
     
-    print(f'📄 Enhancing {input_pdf}...')
+    print(f'Enhancing {input_pdf}...')
     pdf = pikepdf.Pdf.open(input_pdf)
     
-    print('\n🔧 Adding JavaScript actions:')
+    print('Adding:')
     add_phone_js_action(pdf)
     add_js_test_page(pdf)
     
-    print(f'\n💾 Saving to {output_pdf}...')
+    print(f'Saving to {output_pdf}...')
     pdf.save(output_pdf)
-    
-    print('\n✅ Done! Enhanced PDF ready.')
-    print(f'   Pages 1-6: Original demo (with phone JS)')
-    print(f'   Page 7: JavaScript function tests')
-    print(f'\n🧪 Test: Load in PDF renderer with JS: ON')
+    print('Done!')
 
 if __name__ == '__main__':
     main()

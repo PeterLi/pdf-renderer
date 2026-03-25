@@ -306,12 +306,13 @@ export class FormLayer {
       const pdfFontSize = widget.defaultAppearanceData?.fontSize;
       const fontSize = pdfFontSize && pdfFontSize > 0
         ? pdfFontSize * this._scale
-        : Math.max(8, height * 0.6);
+        : Math.max(10, Math.min(height * 0.5, 16)); // Better default sizing
       el.style.fontSize = `${fontSize}px`;
       
-      // Line height only for non-selects
-      if (el.tagName !== 'SELECT') {
-        el.style.lineHeight = `${height}px`;
+      // Line height: slightly less than field height for better vertical alignment
+      if (el.tagName !== 'SELECT' && el.tagName !== 'TEXTAREA') {
+        el.style.lineHeight = `${height - 4}px`;
+        el.style.paddingTop = '2px';
       }
     }
 
