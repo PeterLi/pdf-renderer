@@ -41,6 +41,7 @@ export function classifyAction(jsCode) {
     /^AFSpecial_Keystroke\(/,
     /^AFPercent_Format\(/,
     /^AFPercent_Keystroke\(/,
+    /^AFRange_Validate\(/,
   ];
 
   if (safePatterns.some(p => p.test(code))) return SafetyLevel.SAFE;
@@ -365,12 +366,97 @@ function createSandboxScope(context) {
     event.value = str;
   };
 
-  // AFDate_Format (runtime)
-  const AFDate_Format = () => {
-    // Passthrough — the value is already formatted or will be displayed as-is
+  // ---- Date formatting helpers ----
+
+  // Predefined Acrobat date format codes
+  const _dateFormatCodes = {
+    0: 'm/d',
+    1: 'm/d/yy',
+    2: 'mm/dd/yy',
+    3: 'mm/dd/yyyy',
+    4: 'd-mmm',
+    5: 'd-mmm-yy',
+    6: 'dd-mmm-yy',
+    7: 'yy-mm-dd',
+    8: 'yyyy-mm-dd',
+    9: 'd-mmm-yyyy',
+    10: 'm/d/yy h:MM tt',
+    11: 'm/d/yy HH:MM',
   };
 
-  const AFDate_FormatEx = AFDate_Format;
+  /**
+   * Apply an Acrobat date format string to a Date object.
+   * Supports: yyyy, yy, mmmm, mmm, mm, m, dd, d, HH, h, MM, ss, tt
+   */
+  const _formatDate = (date, fmt) => {
+    const months = ['January','February','March','April','May','June',
+      'July','August','September','October','November','December'];
+    const monthsShort = ['Jan','Feb','Mar','Apr','May','Jun',
+      'Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    const hours24 = date.getHours();
+    const hours12 = hours24 % 12 || 12;
+    const ampm = hours24 < 12 ? 'am' : 'pm';
+    const pad = (n) => String(n).padStart(2, '0');
+
+    // Replace tokens from longest to shortest to avoid partial matches
+    let result = fmt;
+    result = result.replace(/yyyy/g, String(date.getFullYear()));
+    result = result.replace(/yy/g, String(date.getFullYear()).slice(-2));
+    result = result.replace(/mmmm/g, months[date.getMonth()]);
+    result = result.replace(/mmm/g, monthsShort[date.getMonth()]);
+    result = result.replace(/mm/g, pad(date.getMonth() + 1));
+    result = result.replace(/m/g, String(date.getMonth() + 1));
+    result = result.replace(/dd/g, pad(date.getDate()));
+    result = result.replace(/d/g, String(date.getDate()));
+    result = result.replace(/HH/g, pad(hours24));
+    result = result.replace(/h/g, String(hours12));
+    result = result.replace(/MM/g, pad(date.getMinutes()));
+    result = result.replace(/ss/g, pad(date.getSeconds()));
+    result = result.replace(/tt/g, ampm);
+
+    return result;
+  };
+
+  /**
+   * Try to parse a value as a Date. Handles numeric strings (timestamps),
+   * ISO strings, and common date formats.
+   */
+  const _parseDate = (val) => {
+    if (!val && val !== 0) return null;
+    const s = String(val).trim();
+    if (!s) return null;
+
+    // Numeric — treat as milliseconds timestamp
+    const num = Number(s);
+    if (!isNaN(num) && isFinite(num)) {
+      const d = new Date(num);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    // Try native parse (handles ISO 8601 and common formats)
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
+  };
+
+  // AFDate_Format — format using predefined Acrobat format code index
+  const AFDate_Format = (cFormat) => {
+    const fmt = typeof cFormat === 'number' ? (_dateFormatCodes[cFormat] || 'mm/dd/yyyy') : String(cFormat);
+    const date = _parseDate(event.value);
+    if (date) {
+      event.value = _formatDate(date, fmt);
+    }
+    // If we can't parse, leave event.value as-is
+  };
+
+  // AFDate_FormatEx — format using a custom Acrobat format string
+  const AFDate_FormatEx = (cFormat) => {
+    const fmt = String(cFormat || 'mm/dd/yyyy');
+    const date = _parseDate(event.value);
+    if (date) {
+      event.value = _formatDate(date, fmt);
+    }
+  };
 
   const AFSpecial_Format = (psf) => {
     console.log('[AFSpecial_Format] Called with psf:', psf, 'event.value:', event.value);
@@ -419,14 +505,147 @@ function createSandboxScope(context) {
     }
   };
 
-  const AFNumber_Keystroke = () => {};
-  const AFDate_Keystroke = () => {};
-  const AFTime_Format = () => {};
-  const AFTime_Keystroke = () => {};
-  const AFSpecial_Keystroke = () => {};
-  const AFPercent_Format = () => {};
-  const AFPercent_Keystroke = () => {};
-  const AFRange_Validate = () => {};
+  // AFNumber_Keystroke — validate numeric keystrokes
+  // Rejects non-numeric characters (allows digits, minus, decimal, separators)
+  const AFNumber_Keystroke = (nDec, sepStyle /*, negStyle, currStyle, strCurrency, bPrepend */) => {
+    if (event.willCommit) {
+      // On commit, just check if it's a valid number
+      const val = String(event.value).replace(/[$,\s]/g, '');
+      if (val !== '' && isNaN(parseFloat(val))) {
+        event.rc = false;
+      }
+      return;
+    }
+
+    // During keystroke, allow digits, minus (at start), and one decimal separator
+    const decSep = (sepStyle === 0 || sepStyle === 2) ? '.' : ',';
+    const ch = event.change || '';
+
+    // Allow empty change (delete/backspace)
+    if (!ch) return;
+
+    // Allow digits
+    if (/^\d$/.test(ch)) return;
+
+    // Allow minus sign only at position 0
+    if (ch === '-' && event.selStart === 0) return;
+
+    // Allow decimal separator if decimals are allowed and not already present
+    if (nDec > 0 && ch === decSep) {
+      const currentVal = String(event.value);
+      if (!currentVal.includes(decSep)) return;
+    }
+
+    // Reject everything else
+    event.rc = false;
+  };
+
+  // AFDate_Keystroke — validate date input on commit
+  const AFDate_Keystroke = (cFormat) => {
+    if (!event.willCommit) return; // Allow free typing during keystroke
+
+    const val = String(event.value).trim();
+    if (!val) return; // Allow empty
+
+    // Try to parse the date — if it fails, reject
+    const date = _parseDate(val);
+    if (!date) {
+      event.rc = false;
+    }
+  };
+
+  // AFTime_Format — format time values
+  // psf: 0='HH:MM', 1='h:MM tt', 2='HH:MM:ss', 3='h:MM:ss tt'
+  const AFTime_Format = (psf) => {
+    const timeFormats = {
+      0: 'HH:MM',
+      1: 'h:MM tt',
+      2: 'HH:MM:ss',
+      3: 'h:MM:ss tt',
+    };
+    const fmt = timeFormats[psf] || 'HH:MM';
+    const date = _parseDate(event.value);
+    if (date) {
+      event.value = _formatDate(date, fmt);
+    }
+  };
+
+  // AFTime_Keystroke — validate time input on commit
+  const AFTime_Keystroke = (psf) => {
+    if (!event.willCommit) return;
+    const val = String(event.value).trim();
+    if (!val) return;
+    // Basic time validation: accept if parseable as date/time
+    if (!_parseDate(val)) {
+      event.rc = false;
+    }
+  };
+
+  // AFSpecial_Keystroke — validate phone/zip/ssn input
+  // psf: 0=zipcode(5 digits), 1=zip+4(9 digits), 2=phone(10 digits), 3=ssn(9 digits)
+  const AFSpecial_Keystroke = (psf) => {
+    if (event.willCommit) {
+      // On commit, validate the full value has the right number of digits
+      const digits = String(event.value).replace(/\D/g, '');
+      const requiredLengths = { 0: 5, 1: 9, 2: 10, 3: 9 };
+      const required = requiredLengths[psf];
+      if (required && digits.length !== required && digits.length > 0) {
+        event.rc = false;
+      }
+      return;
+    }
+
+    // During keystroke, only allow digits
+    const ch = event.change || '';
+    if (ch && !/^\d$/.test(ch)) {
+      event.rc = false;
+    }
+  };
+
+  // AFPercent_Format — format value as percentage
+  // Multiplies by 100 and appends '%'
+  const AFPercent_Format = (nDec, sepStyle) => {
+    let val = parseFloat(String(event.value).replace(/[%,]/g, ''));
+    if (isNaN(val)) val = 0;
+
+    // Acrobat multiplies the raw value by 100 for display
+    val = val * 100;
+
+    const sep = (sepStyle === 0 || sepStyle === 2) ? ',' : '.';
+    const decSep = (sepStyle === 0 || sepStyle === 2) ? '.' : ',';
+
+    let str = val.toFixed(nDec);
+    const parts = str.split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, sep);
+    str = parts.join(decSep);
+
+    event.value = str + '%';
+  };
+
+  // AFPercent_Keystroke — validate percentage input (same rules as number)
+  const AFPercent_Keystroke = (nDec, sepStyle) => {
+    AFNumber_Keystroke(nDec, sepStyle);
+  };
+
+  // AFRange_Validate — validate that a numeric value is within a range
+  const AFRange_Validate = (bGreaterThan, nGreaterThan, bLessThan, nLessThan) => {
+    const val = parseFloat(String(event.value).replace(/[$,%\s]/g, ''));
+
+    if (isNaN(val)) {
+      // Allow empty/non-numeric — other validators handle required fields
+      return;
+    }
+
+    if (bGreaterThan && val < nGreaterThan) {
+      event.rc = false;
+      return;
+    }
+
+    if (bLessThan && val > nLessThan) {
+      event.rc = false;
+      return;
+    }
+  };
 
   // Build scope (filter out 'undefined' - can't be a parameter name in strict mode)
   const allowedGlobalsFiltered = { ...ALLOWED_GLOBALS };
