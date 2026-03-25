@@ -632,14 +632,19 @@ export class FormLayer {
   }
 
   /**
-   * Run Focus actions on initial page render to apply styling immediately.
-   * This ensures that fields styled by Focus scripts (text color, readonly, etc.)
-   * appear correctly without requiring user interaction.
+   * Run Focus actions on initial page render to apply ONLY permanent styling.
+   * Permanent properties (textColor, textFont, textSize, alignment, readonly, display)
+   * are applied immediately so fields look correct without user interaction.
+   * Interactive properties (fillColor, borderColor) are NOT applied here — they only
+   * take effect when the user actually focuses the field.
    */
   _runInitialActions() {
     if (!this._overlay) return;
 
     console.log('[FormLayer] Running initial actions for all fields');
+
+    // Properties that are permanent/static and should apply on load
+    const PERMANENT_PROPS = ['textColor', 'textFont', 'textSize', 'alignment', 'readonly', 'display', 'required', 'multiline', 'password', 'charLimit', 'comb'];
 
     // Collect all field metadata from Focus actions first
     const combinedFieldMeta = new Map();
@@ -651,7 +656,7 @@ export class FormLayer {
       const actions = this._fieldActions.get(fieldName);
       if (!actions) return;
 
-      // Run Focus actions to apply initial styling
+      // Run Focus actions to extract initial styling
       const focusAction = actions.find(a => a.trigger === 'Focus');
       if (focusAction) {
         if (focusAction.safety === SafetyLevel.UNSAFE && !this._config.allowFormJavaScript) {
@@ -674,10 +679,20 @@ export class FormLayer {
               this._values.set(fieldName, newValue);
             }
           }
-          // Merge field metadata
+          // Merge field metadata — but only permanent properties
           if (result.fieldMeta) {
             for (const [name, meta] of result.fieldMeta) {
-              combinedFieldMeta.set(name, meta);
+              const filteredMeta = {};
+              let hasPermanent = false;
+              for (const prop of PERMANENT_PROPS) {
+                if (meta[prop] !== undefined) {
+                  filteredMeta[prop] = meta[prop];
+                  hasPermanent = true;
+                }
+              }
+              if (hasPermanent) {
+                combinedFieldMeta.set(name, filteredMeta);
+              }
             }
           }
           if (result.logs?.length) {
@@ -687,7 +702,7 @@ export class FormLayer {
       }
     });
 
-    // Apply all collected field metadata at once
+    // Apply only permanent field metadata at once
     if (combinedFieldMeta.size > 0) {
       this._applyFieldMeta(combinedFieldMeta);
     }
