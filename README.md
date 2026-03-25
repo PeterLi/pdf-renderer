@@ -162,6 +162,33 @@ npm run build    # Build to dist/
 npm run preview  # Preview production build
 ```
 
+### Regenerating Demo PDFs
+
+The demo PDF (`sample-enhanced.pdf`) can be fully regenerated from scripts:
+
+```bash
+# Full regeneration from scratch
+node scripts/generate-demo-pdf.js && python3 scripts/enhance-demo-pdf.py
+
+# Or step-by-step:
+node scripts/generate-demo-pdf.js      # Creates sample.pdf (pages 1-6)
+python3 scripts/enhance-demo-pdf.py    # Creates sample-enhanced.pdf (adds JS + page 7)
+```
+
+**What's included:**
+- **Pages 1-3:** PDF viewer & annotation features
+- **Pages 4-6:** Form fields (text, checkboxes, radio, dropdowns)
+- **Page 7:** JavaScript function tests (phone, ZIP, SSN, date, time, percentage, range validation, currency)
+
+**Python virtual environment required:**
+```bash
+python3 -m venv venv
+source venv/bin/activate  # or venv\Scripts\activate on Windows
+pip install pikepdf
+```
+
+See `scripts/README.md` for detailed documentation.
+
 ---
 
 ## 📖 Usage
