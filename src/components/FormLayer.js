@@ -450,8 +450,8 @@ export class FormLayer {
     errorEl.className = 'form-field-error';
     errorEl.textContent = errors[0]; // Show first error
     errorEl.style.left = `${left}px`;
-    errorEl.style.top = `${top + height + 2}px`;
-    errorEl.style.maxWidth = `${Math.max(width, 150)}px`;
+    errorEl.style.top = `${top + height + 4}px`;
+    // No maxWidth - let CSS handle it (allows 350px)
 
     this._overlay.appendChild(errorEl);
     this._errorElements.set(fieldName, errorEl);
