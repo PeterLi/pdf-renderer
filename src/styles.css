@@ -818,6 +818,16 @@ select.form-field-input {
   padding-right: 16px;
 }
 
+/* Hide placeholder option when value is selected */
+select.form-field-input option[value=""] {
+  color: #999;
+  font-style: italic;
+}
+
+select.form-field-input:not([value=""]) option[value=""] {
+  display: none;
+}
+
 /* ---------- Form Validation States ---------- */
 .form-field-input.field-error {
   border-color: var(--danger) !important;

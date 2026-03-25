@@ -249,7 +249,9 @@ export class FormLayer {
       el = document.createElement('select');
       const blank = document.createElement('option');
       blank.value = '';
-      blank.textContent = '';
+      blank.textContent = ''; // Empty placeholder
+      blank.disabled = true; // Can't re-select blank
+      blank.hidden = true; // Hide from dropdown list
       el.appendChild(blank);
       if (widget.options) {
         for (const opt of widget.options) {
@@ -300,13 +302,17 @@ export class FormLayer {
     el.style.height = `${height}px`;
 
     // Font size: scale with field height
-    if (el.type !== 'checkbox' && el.type !== 'radio' && el.tagName !== 'SELECT') {
+    if (el.type !== 'checkbox' && el.type !== 'radio') {
       const pdfFontSize = widget.defaultAppearanceData?.fontSize;
       const fontSize = pdfFontSize && pdfFontSize > 0
         ? pdfFontSize * this._scale
         : Math.max(8, height * 0.6);
       el.style.fontSize = `${fontSize}px`;
-      el.style.lineHeight = `${height}px`;
+      
+      // Line height only for non-selects
+      if (el.tagName !== 'SELECT') {
+        el.style.lineHeight = `${height}px`;
+      }
     }
 
     // Set current value
