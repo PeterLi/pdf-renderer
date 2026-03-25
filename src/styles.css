@@ -786,8 +786,10 @@ textarea.form-field-input {
 textarea.form-field-input {
   overflow-y: auto;
   vertical-align: top;
-  padding: 3px 3px 3px 3px; /* Override base padding, ensure top-aligned */
+  padding: 3px !important; /* Override base padding, ensure top-aligned */
   display: block; /* Prevent inline-block centering */
+  line-height: 1.4; /* Prevent vertical centering from line-height */
+  align-items: flex-start; /* Flex alignment to top */
 }
 
 /* Checkbox & radio styling */

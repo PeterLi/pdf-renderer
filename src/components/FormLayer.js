@@ -336,21 +336,35 @@ export class FormLayer {
       this._onChange?.();
     });
 
+    // Check if field has format actions
+    const hasFormatAction = this._fieldActions.has(fieldName) && 
+      this._fieldActions.get(fieldName).some(a => a.trigger === 'Format');
+    
+    // Check if field has validation
+    const hasValidation = meta?.validationRules?.length > 0;
+
     // Validate on blur
-    if (this._config.validateOnBlur && meta?.validationRules?.length > 0 && !flags.readOnly) {
-      el.addEventListener('blur', () => {
-        this._validateAndShowError(fieldName, el, left, top, width, height);
+    if ((this._config.validateOnBlur && hasValidation) || hasFormatAction) {
+      if (!flags.readOnly) {
+        el.addEventListener('blur', () => {
+          // Run validation if configured
+          if (this._config.validateOnBlur && hasValidation) {
+            this._validateAndShowError(fieldName, el, left, top, width, height);
+          }
 
-        // Run format action on blur if JS enabled
-        if (this._config.allowFormJavaScript) {
-          this._runFormatAction(fieldName, el);
+          // Run format action if available
+          if (hasFormatAction) {
+            this._runFormatAction(fieldName, el);
+          }
+        });
+
+        // Clear error on focus (only if validation exists)
+        if (hasValidation) {
+          el.addEventListener('focus', () => {
+            this._clearFieldError(fieldName, el);
+          });
         }
-      });
-
-      // Clear error on focus
-      el.addEventListener('focus', () => {
-        this._clearFieldError(fieldName, el);
-      });
+      }
     }
 
     // Show existing errors (from prior validation)
