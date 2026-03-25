@@ -784,12 +784,12 @@ textarea.form-field-input {
   resize: none;
 }
 textarea.form-field-input {
-  overflow-y: auto;
-  vertical-align: top;
-  padding: 3px !important; /* Override base padding, ensure top-aligned */
-  display: block; /* Prevent inline-block centering */
-  line-height: 1.4; /* Prevent vertical centering from line-height */
-  align-items: flex-start; /* Flex alignment to top */
+  overflow-y: auto !important;
+  vertical-align: top !important;
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
+  padding-left: 3px !important;
+  padding-right: 3px !important;
 }
 
 /* Checkbox & radio styling */

@@ -84,12 +84,15 @@ export class FormLayer {
 
     // Build field actions map and calculation order
     this._fieldActions.clear();
+    console.log('[FormLayer] Loading field metadata, total fields:', meta.size);
     for (const [fieldName, fieldMeta] of meta) {
       if (fieldMeta.actions && fieldMeta.actions.length > 0) {
+        console.log('[FormLayer] Field', fieldName, 'has', fieldMeta.actions.length, 'actions:', fieldMeta.actions);
         this._fieldActions.set(fieldName, fieldMeta.actions);
       }
     }
     this._calculations = getCalculationOrder(this._fieldActions);
+    console.log('[FormLayer] Total fields with actions:', this._fieldActions.size);
   }
 
   /** Show/hide the form overlay */
@@ -486,23 +489,39 @@ export class FormLayer {
    * @param {HTMLElement} el
    */
   _runFormatAction(fieldName, el) {
+    console.log('[FormLayer] _runFormatAction called for:', fieldName, 'value:', el.value);
     const actions = this._fieldActions.get(fieldName);
-    if (!actions) return;
+    if (!actions) {
+      console.log('[FormLayer] No actions found for field:', fieldName);
+      return;
+    }
 
     const formatAction = actions.find(a => a.trigger === 'Format');
-    if (!formatAction) return;
+    if (!formatAction) {
+      console.log('[FormLayer] No format action found for field:', fieldName);
+      return;
+    }
+
+    console.log('[FormLayer] Format action:', formatAction);
 
     // Safe format actions always run; unsafe only if explicitly allowed
-    if (formatAction.safety === SafetyLevel.UNSAFE && !this._config.allowFormJavaScript) return;
+    if (formatAction.safety === SafetyLevel.UNSAFE && !this._config.allowFormJavaScript) {
+      console.log('[FormLayer] Format action is UNSAFE and JS is disabled');
+      return;
+    }
 
+    console.log('[FormLayer] Executing format action:', formatAction.code);
     const result = executeSandboxed(formatAction.code, {
       fieldValues: this._values,
       currentFieldName: fieldName,
       currentValue: el.value,
     });
 
+    console.log('[FormLayer] Format result:', result);
+
     if (result.success && result.event) {
       const formatted = String(result.event.value ?? el.value);
+      console.log('[FormLayer] Formatted value:', formatted);
       if (formatted !== el.value) {
         el.value = formatted;
         this._values.set(fieldName, formatted);
