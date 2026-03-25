@@ -661,33 +661,37 @@ async function generateDemoPDF() {
   });
 
   // Price x Quantity = Total
-  y -= 40;
+  y -= 45;
   page9.drawText('Order Calculator:', { x: 60, y, size: 14, font: helveticaBold, color: rgb(0.15, 0.23, 0.37) });
+  page9.drawText('(Price x Quantity with tax)', { x: 220, y, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
 
-  y -= 35;
+  y -= 40;
   page9.drawText('Price ($):', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  page9.drawText('(Focus: blue text)', { x: 370, y: y + 5, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
   const priceField = form.createTextField('calcPrice');
-  priceField.addToPage(page9, { x: 180, y, width: 120, height: 25 });
+  priceField.addToPage(page9, { x: 160, y, width: 180, height: 25 });
   priceField.setFontSize(12);
   priceField.setText('25.00');
   addJSAction(priceField, 'Fo',
     'var f = this.getField("calcPrice"); f.textColor = color.blue;'
   );
 
-  y -= 35;
+  y -= 40;
   page9.drawText('Quantity:', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  page9.drawText('(Focus: blue text)', { x: 370, y: y + 5, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
   const qtyField = form.createTextField('calcQty');
-  qtyField.addToPage(page9, { x: 180, y, width: 120, height: 25 });
+  qtyField.addToPage(page9, { x: 160, y, width: 180, height: 25 });
   qtyField.setFontSize(12);
   qtyField.setText('4');
   addJSAction(qtyField, 'Fo',
     'var f = this.getField("calcQty"); f.textColor = color.blue;'
   );
 
-  y -= 35;
+  y -= 40;
   page9.drawText('Total:', { x: 60, y: y + 5, size: 11, font: helveticaBold, color: rgb(0, 0, 0) });
+  page9.drawText('(Calculated: Price x Qty)', { x: 370, y: y + 5, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
   const totalField = form.createTextField('calcTotal');
-  totalField.addToPage(page9, { x: 180, y, width: 120, height: 25 });
+  totalField.addToPage(page9, { x: 160, y, width: 180, height: 25 });
   totalField.setFontSize(12);
   addJSAction(totalField, 'C',
     'var price = this.getField("calcPrice").value; var qty = this.getField("calcQty").value; var p = parseFloat(price) || 0; var q = parseFloat(qty) || 0; event.value = (p * q).toFixed(2);'
@@ -697,20 +701,22 @@ async function generateDemoPDF() {
   );
 
   // Tax and Grand Total
-  y -= 45;
+  y -= 50;
   page9.drawText('Tax Rate (%):', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  page9.drawText('(Focus: blue text)', { x: 370, y: y + 5, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
   const taxRateField = form.createTextField('calcTaxRate');
-  taxRateField.addToPage(page9, { x: 180, y, width: 120, height: 25 });
+  taxRateField.addToPage(page9, { x: 160, y, width: 180, height: 25 });
   taxRateField.setFontSize(12);
   taxRateField.setText('8.5');
   addJSAction(taxRateField, 'Fo',
     'var f = this.getField("calcTaxRate"); f.textColor = color.blue;'
   );
 
-  y -= 35;
+  y -= 40;
   page9.drawText('Tax Amount:', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  page9.drawText('(Calculated: Total x Rate)', { x: 370, y: y + 5, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
   const taxAmtField = form.createTextField('calcTaxAmt');
-  taxAmtField.addToPage(page9, { x: 180, y, width: 120, height: 25 });
+  taxAmtField.addToPage(page9, { x: 160, y, width: 180, height: 25 });
   taxAmtField.setFontSize(12);
   addJSAction(taxAmtField, 'C',
     'var total = parseFloat(this.getField("calcTotal").value) || 0; var rate = parseFloat(this.getField("calcTaxRate").value) || 0; event.value = (total * rate / 100).toFixed(2);'
@@ -719,10 +725,11 @@ async function generateDemoPDF() {
     'var f = this.getField("calcTaxAmt"); f.readonly = true; f.fillColor = color.ltGray; f.textColor = color.dkGray;'
   );
 
-  y -= 35;
+  y -= 45;
   page9.drawText('Grand Total:', { x: 60, y: y + 5, size: 11, font: helveticaBold, color: rgb(0.15, 0.23, 0.37) });
+  page9.drawText('(Calculated: Total + Tax)', { x: 370, y: y + 5, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
   const grandTotalField = form.createTextField('calcGrandTotal');
-  grandTotalField.addToPage(page9, { x: 180, y, width: 120, height: 28 });
+  grandTotalField.addToPage(page9, { x: 160, y, width: 180, height: 28 });
   grandTotalField.setFontSize(14);
   addJSAction(grandTotalField, 'C',
     'var total = parseFloat(this.getField("calcTotal").value) || 0; var tax = parseFloat(this.getField("calcTaxAmt").value) || 0; event.value = "$" + (total + tax).toFixed(2);'
@@ -732,26 +739,28 @@ async function generateDemoPDF() {
   );
 
   // Sum example
-  y -= 55;
+  y -= 60;
   page9.drawText('Sum Calculator:', { x: 60, y, size: 14, font: helveticaBold, color: rgb(0.15, 0.23, 0.37) });
+  page9.drawText('(Uses AFSimple_Calculate)', { x: 220, y, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
 
-  y -= 35;
+  y -= 40;
   page9.drawText('Value A:', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
   const valA = form.createTextField('calcA');
-  valA.addToPage(page9, { x: 180, y, width: 100, height: 25 });
+  valA.addToPage(page9, { x: 160, y, width: 120, height: 25 });
   valA.setFontSize(12);
   valA.setText('10');
 
-  page9.drawText('Value B:', { x: 310, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  page9.drawText('Value B:', { x: 320, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
   const valB = form.createTextField('calcB');
-  valB.addToPage(page9, { x: 400, y, width: 100, height: 25 });
+  valB.addToPage(page9, { x: 400, y, width: 120, height: 25 });
   valB.setFontSize(12);
   valB.setText('20');
 
-  y -= 35;
+  y -= 40;
   page9.drawText('Sum (A+B):', { x: 60, y: y + 5, size: 11, font: helveticaBold, color: rgb(0, 0, 0) });
+  page9.drawText('(Calculated: auto-sum)', { x: 370, y: y + 5, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
   const sumField = form.createTextField('calcSum');
-  sumField.addToPage(page9, { x: 180, y, width: 100, height: 25 });
+  sumField.addToPage(page9, { x: 160, y, width: 120, height: 25 });
   sumField.setFontSize(12);
   addJSAction(sumField, 'C',
     'AFSimple_Calculate("SUM", ["calcA", "calcB"]);'
@@ -789,13 +798,17 @@ async function generateDemoPDF() {
     color: rgb(0.2, 0.2, 0.2),
   });
 
+  // Format Fields section
+  y -= 45;
+  page10.drawText('Format Fields:', { x: 60, y, size: 14, font: helveticaBold, color: rgb(0.15, 0.23, 0.37) });
+  page10.drawText('(Auto-format on blur)', { x: 220, y, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
+
   // Currency format
   y -= 40;
-  page10.drawText('Currency Field:', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
-  page10.drawText('(Format: $X,XXX.XX on blur)', { x: 370, y: y + 5, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
-  y -= 30;
+  page10.drawText('Currency:', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  page10.drawText('(Format: $X,XXX.XX)', { x: 370, y: y + 5, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
   const currencyField = form.createTextField('fmtCurrency');
-  currencyField.addToPage(page10, { x: 60, y, width: 200, height: 25 });
+  currencyField.addToPage(page10, { x: 160, y, width: 180, height: 25 });
   currencyField.setFontSize(12);
   currencyField.setText('1234.5');
   addJSAction(currencyField, 'F',
@@ -806,12 +819,11 @@ async function generateDemoPDF() {
   );
 
   // Date format
-  y -= 50;
-  page10.drawText('Date Field:', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
-  page10.drawText('(Format: mm/dd/yyyy on blur)', { x: 370, y: y + 5, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
-  y -= 30;
+  y -= 40;
+  page10.drawText('Date:', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  page10.drawText('(Format: mm/dd/yyyy)', { x: 370, y: y + 5, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
   const dateField = form.createTextField('fmtDate');
-  dateField.addToPage(page10, { x: 60, y, width: 200, height: 25 });
+  dateField.addToPage(page10, { x: 160, y, width: 180, height: 25 });
   dateField.setFontSize(12);
   addJSAction(dateField, 'F',
     'AFDate_Format(3);'
@@ -821,24 +833,26 @@ async function generateDemoPDF() {
   );
 
   // Phone format
-  y -= 50;
-  page10.drawText('Phone Field:', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
-  page10.drawText('(Format: (xxx) xxx-xxxx on blur)', { x: 370, y: y + 5, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
-  y -= 30;
+  y -= 40;
+  page10.drawText('Phone:', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  page10.drawText('(Format: (xxx) xxx-xxxx)', { x: 370, y: y + 5, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
   const phoneFmtField = form.createTextField('fmtPhone');
-  phoneFmtField.addToPage(page10, { x: 60, y, width: 200, height: 25 });
+  phoneFmtField.addToPage(page10, { x: 160, y, width: 180, height: 25 });
   phoneFmtField.setFontSize(12);
   addJSAction(phoneFmtField, 'F',
     'AFSpecial_Format(2);'
   );
 
-  // Combined: Focus colors + Blur uppercase + Format
-  y -= 50;
-  page10.drawText('Combined Triggers:', { x: 60, y: y + 5, size: 11, font: helveticaBold, color: rgb(0.15, 0.23, 0.37) });
+  // Combined Triggers section
+  y -= 60;
+  page10.drawText('Combined Triggers:', { x: 60, y, size: 14, font: helveticaBold, color: rgb(0.15, 0.23, 0.37) });
+  page10.drawText('(Multiple actions per field)', { x: 240, y, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
+
+  y -= 40;
+  page10.drawText('Uppercase:', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
   page10.drawText('(Focus: blue bg, Blur: uppercase)', { x: 370, y: y + 5, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
-  y -= 30;
   const combinedField = form.createTextField('jsCombined');
-  combinedField.addToPage(page10, { x: 60, y, width: 300, height: 25 });
+  combinedField.addToPage(page10, { x: 160, y, width: 180, height: 25 });
   combinedField.setFontSize(12);
   addJSAction(combinedField, 'Fo',
     'var f = this.getField("jsCombined"); f.fillColor = ["RGB", 0.9, 0.95, 1]; f.borderColor = color.blue;'
@@ -848,12 +862,11 @@ async function generateDemoPDF() {
   );
 
   // Status display field
-  y -= 55;
-  page10.drawText('Status Display:', { x: 60, y: y + 5, size: 11, font: helveticaBold, color: rgb(0.15, 0.23, 0.37) });
-  page10.drawText('(Focus: sets styled readonly status)', { x: 370, y: y + 5, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
-  y -= 30;
+  y -= 45;
+  page10.drawText('Status:', { x: 60, y: y + 5, size: 11, font: helveticaBold, color: rgb(0, 0, 0) });
+  page10.drawText('(Focus: styled readonly status)', { x: 370, y: y + 5, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
   const statusField = form.createTextField('jsStatus');
-  statusField.addToPage(page10, { x: 60, y, width: 300, height: 30 });
+  statusField.addToPage(page10, { x: 160, y, width: 180, height: 28 });
   statusField.setFontSize(14);
   statusField.setText('JavaScript Active');
   addJSAction(statusField, 'Fo',
