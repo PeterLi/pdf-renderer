@@ -2,7 +2,7 @@
 
 **Goal:** Implement ALL Acrobat JavaScript functions with visual demos
 
-**Status:** 🚀 Phase 2 - Advanced Form Functions (14/800+ done)
+**Status:** 🚀 Phase 3 - Field Object API Complete (38/800+ done)
 
 ---
 
@@ -45,37 +45,43 @@
 
 ---
 
-## 🎨 Phase 3: Field Object API
+## ✅ Phase 3: Field Object API (DONE)
 
 ### Field Properties:
-- [ ] `field.value` - Get/set field values
-- [ ] `field.display` - Show/hide fields (0=visible, 1=hidden, 2=noPrint, 3=noView)
-- [ ] `field.readonly` - Make fields read-only
-- [ ] `field.required` - Mark as required
-- [ ] `field.borderColor` - Set border color
-- [ ] `field.fillColor` - Set background color
-- [ ] `field.textColor` - Set text color
-- [ ] `field.textSize` - Set font size
-- [ ] `field.textFont` - Set font family
-- [ ] `field.alignment` - Text alignment (left/center/right)
-- [ ] `field.multiline` - Multi-line text
-- [ ] `field.password` - Password field
-- [ ] `field.fileSelect` - File selection
-- [ ] `field.charLimit` - Character limit
-- [ ] `field.comb` - Comb formatting
-- [ ] `field.doNotScroll` - Disable scrolling
-- [ ] `field.doNotSpellCheck` - Disable spell check
+- [x] `field.value` - Get/set field values with cross-field support
+- [x] `field.display` - Show/hide fields (0=visible, 1=hidden, 2=noPrint, 3=noView)
+- [x] `field.readonly` - Make fields read-only
+- [x] `field.required` - Mark as required
+- [x] `field.borderColor` - Set border color (Acrobat color arrays)
+- [x] `field.fillColor` - Set background color
+- [x] `field.textColor` - Set text color
+- [x] `field.textSize` - Set font size
+- [x] `field.textFont` - Set font family
+- [x] `field.alignment` - Text alignment (left/center/right)
+- [x] `field.multiline` - Multi-line text
+- [x] `field.password` - Password field
+- [x] `field.fileSelect` - File selection
+- [x] `field.charLimit` - Character limit
+- [x] `field.comb` - Comb formatting
+- [x] `field.doNotScroll` - Disable scrolling
+- [x] `field.doNotSpellCheck` - Disable spell check
 
 ### Field Methods:
-- [ ] `field.setFocus()` - Focus field
-- [ ] `field.setAction(cTrigger, cScript)` - Set JavaScript action
-- [ ] `field.clearItems()` - Clear dropdown items
-- [ ] `field.insertItemAt(cName, cExport, nIdx)` - Add dropdown item
-- [ ] `field.deleteItemAt(nIdx)` - Remove dropdown item
-- [ ] `field.getItemAt(nIdx)` - Get dropdown item
-- [ ] `field.setItems(aItems)` - Set all items
+- [x] `field.setFocus()` - Focus field (records request for host)
+- [x] `field.setAction(cTrigger, cScript)` - Set JavaScript action (10 trigger types)
+- [x] `field.clearItems()` - Clear dropdown items
+- [x] `field.insertItemAt(cName, cExport, nIdx)` - Add dropdown item at index
+- [x] `field.deleteItemAt(nIdx)` - Remove dropdown item
+- [x] `field.getItemAt(nIdx, bExportValue)` - Get dropdown item label or export value
+- [x] `field.setItems(aItems)` - Set all items (arrays or strings)
 
-**Demo Goal:** Page 9 - Dynamic field manipulation
+### Bonus:
+- [x] `color` object — Named constants (black, white, red, green, blue, cyan, magenta, yellow, etc.)
+- [x] `display` constants — visible(0), hidden(1), noPrint(2), noView(3)
+- [x] `field.numItems` - Item count for choice fields
+- [x] `fieldMeta` — Persistent metadata store returned from sandbox execution
+
+**Demo:** Page 8 - 5 cards, 11 interactive fields showing dynamic field manipulation
 
 ---
 
@@ -206,11 +212,12 @@
 
 ## 📈 Progress Tracking
 
-**Functions Implemented:** 14 / ~800
-**Demo Pages:** 1 / 13+
-**Phase:** 2 / 8
+**Functions Implemented:** 38 / ~800
+**Demo Pages:** 2 / 13+
+**Phase:** 3 / 8
+**Tests:** 81 passing (vitest)
 
-**Next Up:** Phase 3 - Field Object API
+**Next Up:** Phase 4 - Document Object API
 
 ---
 

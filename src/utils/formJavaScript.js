@@ -300,13 +300,212 @@ function createSandboxScope(context) {
     willCommit: true,
   };
 
+  // ---- Field Object API (Phase 3) ----
+  // Stores field metadata beyond just values
+  const fieldMeta = context.fieldMeta || new Map();
+
+  /** Get or initialize metadata for a field */
+  const _getFieldMeta = (name) => {
+    if (!fieldMeta.has(name)) {
+      fieldMeta.set(name, {
+        display: 0,        // 0=visible, 1=hidden, 2=noPrint, 3=noView
+        readonly: false,
+        required: false,
+        borderColor: ['G', 0],         // Acrobat color array [colorspace, ...values]
+        fillColor: ['T'],              // 'T' = transparent
+        textColor: ['G', 0],
+        textSize: 0,                   // 0 = auto
+        textFont: 'Helvetica',
+        alignment: 'left',
+        multiline: false,
+        password: false,
+        fileSelect: false,
+        charLimit: 0,                  // 0 = no limit
+        comb: false,
+        doNotScroll: false,
+        doNotSpellCheck: false,
+        items: [],                     // For choice fields: [{label, value}]
+        actions: {},                   // {trigger: cScript}
+      });
+    }
+    return fieldMeta.get(name);
+  };
+
+  /**
+   * Create a Field object proxy with full Acrobat Field API.
+   * Supports get/set of properties and all field methods.
+   */
+  const _createFieldObject = (name) => {
+    const meta = _getFieldMeta(name);
+
+    const fieldObj = {
+      // ---- Identity ----
+      get name() { return name; },
+      get type() { return meta._type || 'text'; },
+
+      // ---- Value ----
+      get value() { return context.fieldValues.get(name) || ''; },
+      set value(v) { context.fieldValues.set(name, String(v)); },
+      get valueAsString() { return String(context.fieldValues.get(name) || ''); },
+
+      // ---- Display ----
+      get display() { return meta.display; },
+      set display(v) {
+        const n = parseInt(v);
+        if (n >= 0 && n <= 3) meta.display = n;
+      },
+
+      // ---- Readonly ----
+      get readonly() { return meta.readonly; },
+      set readonly(v) { meta.readonly = !!v; },
+
+      // ---- Required ----
+      get required() { return meta.required; },
+      set required(v) { meta.required = !!v; },
+
+      // ---- Colors (Acrobat color arrays: ['G', gray], ['RGB', r, g, b], ['T'] for transparent) ----
+      get borderColor() { return meta.borderColor; },
+      set borderColor(v) { if (Array.isArray(v)) meta.borderColor = v; },
+
+      get fillColor() { return meta.fillColor; },
+      set fillColor(v) { if (Array.isArray(v)) meta.fillColor = v; },
+
+      get textColor() { return meta.textColor; },
+      set textColor(v) { if (Array.isArray(v)) meta.textColor = v; },
+
+      // ---- Text properties ----
+      get textSize() { return meta.textSize; },
+      set textSize(v) {
+        const n = parseFloat(v);
+        if (!isNaN(n) && n >= 0) meta.textSize = n;
+      },
+
+      get textFont() { return meta.textFont; },
+      set textFont(v) { if (typeof v === 'string' || (v && v.name)) meta.textFont = typeof v === 'string' ? v : v.name; },
+
+      get alignment() { return meta.alignment; },
+      set alignment(v) {
+        const valid = ['left', 'center', 'right'];
+        if (valid.includes(v)) meta.alignment = v;
+      },
+
+      // ---- Boolean flags ----
+      get multiline() { return meta.multiline; },
+      set multiline(v) { meta.multiline = !!v; },
+
+      get password() { return meta.password; },
+      set password(v) { meta.password = !!v; },
+
+      get fileSelect() { return meta.fileSelect; },
+      set fileSelect(v) { meta.fileSelect = !!v; },
+
+      get comb() { return meta.comb; },
+      set comb(v) { meta.comb = !!v; },
+
+      get doNotScroll() { return meta.doNotScroll; },
+      set doNotScroll(v) { meta.doNotScroll = !!v; },
+
+      get doNotSpellCheck() { return meta.doNotSpellCheck; },
+      set doNotSpellCheck(v) { meta.doNotSpellCheck = !!v; },
+
+      // ---- Character limit ----
+      get charLimit() { return meta.charLimit; },
+      set charLimit(v) {
+        const n = parseInt(v);
+        if (!isNaN(n) && n >= 0) meta.charLimit = n;
+      },
+
+      // ---- Methods ----
+
+      /** Focus this field */
+      setFocus() {
+        // In sandbox, record the focus request for the host to act on
+        context._focusRequest = name;
+      },
+
+      /** Set a JavaScript action for a trigger */
+      setAction(cTrigger, cScript) {
+        const validTriggers = [
+          'MouseUp', 'MouseDown', 'MouseEnter', 'MouseExit',
+          'OnFocus', 'OnBlur', 'Keystroke', 'Validate',
+          'Calculate', 'Format',
+        ];
+        if (validTriggers.includes(cTrigger)) {
+          meta.actions[cTrigger] = String(cScript);
+        }
+      },
+
+      /** Clear all items from a choice field (dropdown/listbox) */
+      clearItems() {
+        meta.items = [];
+      },
+
+      /**
+       * Insert an item into a choice field at the given index.
+       * @param {string} cName - Display label
+       * @param {string} [cExport] - Export value (defaults to cName)
+       * @param {number} [nIdx] - Index to insert at (defaults to end)
+       */
+      insertItemAt(cName, cExport, nIdx) {
+        const item = { label: String(cName), value: cExport !== undefined ? String(cExport) : String(cName) };
+        const idx = (nIdx !== undefined && nIdx >= 0 && nIdx <= meta.items.length)
+          ? nIdx
+          : meta.items.length;
+        meta.items.splice(idx, 0, item);
+      },
+
+      /**
+       * Delete item at the given index.
+       * @param {number} nIdx - Index to delete
+       */
+      deleteItemAt(nIdx) {
+        const idx = parseInt(nIdx);
+        if (!isNaN(idx) && idx >= 0 && idx < meta.items.length) {
+          meta.items.splice(idx, 1);
+        }
+      },
+
+      /**
+       * Get the item at the given index.
+       * @param {number} nIdx - Index
+       * @param {boolean} [bExportValue=false] - If true, return export value
+       * @returns {string} The item label or export value
+       */
+      getItemAt(nIdx, bExportValue) {
+        const idx = parseInt(nIdx);
+        if (isNaN(idx) || idx < 0 || idx >= meta.items.length) return '';
+        return bExportValue ? meta.items[idx].value : meta.items[idx].label;
+      },
+
+      /**
+       * Set all items for a choice field.
+       * @param {Array} aItems - Array of [label, value] pairs or strings
+       */
+      setItems(aItems) {
+        if (!Array.isArray(aItems)) return;
+        meta.items = aItems.map(item => {
+          if (Array.isArray(item)) {
+            return { label: String(item[0] || ''), value: String(item[1] !== undefined ? item[1] : item[0] || '') };
+          }
+          return { label: String(item), value: String(item) };
+        });
+      },
+
+      /** Number of items in a choice field */
+      get numItems() { return meta.items.length; },
+
+      /** Legacy setter compatibility */
+      setValue(v) { context.fieldValues.set(name, String(v)); },
+    };
+
+    return fieldObj;
+  };
+
   // Field proxy for this.getField() / doc.getField()
-  const getField = (name) => ({
-    name,
-    value: context.fieldValues.get(name) || '',
-    valueAsString: context.fieldValues.get(name) || '',
-    setValue(v) { context.fieldValues.set(name, String(v)); },
-  });
+  const getField = (name) => {
+    if (!name || typeof name !== 'string') return null;
+    return _createFieldObject(name);
+  };
 
   // app object (Acrobat JS API subset)
   const app = {
@@ -820,15 +1019,39 @@ function createSandboxScope(context) {
     },
   };
 
+  // color object — Acrobat named color constants
+  const color = {
+    transparent: ['T'],
+    black: ['G', 0],
+    white: ['G', 1],
+    red: ['RGB', 1, 0, 0],
+    green: ['RGB', 0, 1, 0],
+    blue: ['RGB', 0, 0, 1],
+    cyan: ['CMYK', 1, 0, 0, 0],
+    magenta: ['CMYK', 0, 1, 0, 0],
+    yellow: ['CMYK', 0, 0, 1, 0],
+    dkGray: ['G', 0.25],
+    gray: ['G', 0.5],
+    ltGray: ['G', 0.75],
+  };
+
+  // display constants (matches Acrobat)
+  const displayVisible = 0;
+  const displayHidden = 1;
+  const displayNoPrint = 2;
+  const displayNoView = 3;
+
   // Build scope (filter out 'undefined' - can't be a parameter name in strict mode)
   const allowedGlobalsFiltered = { ...ALLOWED_GLOBALS };
   delete allowedGlobalsFiltered.undefined;
-  
+
   const scope = {
     ...allowedGlobalsFiltered,
     event,
     app,
     console,
+    color,
+    display: { visible: 0, hidden: 1, noPrint: 2, noView: 3 },
     getField,
     AFSimple_Calculate,
     AFNumber_Format,
@@ -869,6 +1092,8 @@ export function executeSandboxed(code, context, options = {}) {
 
   context.logs = logs;
   context.alerts = alerts;
+  // Initialize fieldMeta map if not provided (stores field properties set via Field API)
+  if (!context.fieldMeta) context.fieldMeta = new Map();
 
   try {
     const scope = createSandboxScope(context);
@@ -924,6 +1149,8 @@ export function executeSandboxed(code, context, options = {}) {
       event: resultEvent || scope.event,
       logs,
       alerts,
+      fieldMeta: context.fieldMeta,
+      focusRequest: context._focusRequest || null,
     };
   } catch (err) {
     console.error('[formJavaScript] Execution error:', err);
