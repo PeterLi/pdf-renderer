@@ -7,11 +7,12 @@ import { describe, it, expect } from 'vitest';
 import { executeSandboxed, classifyAction, parseFormatFunction, parseRangeValidation } from '../src/utils/formJavaScript.js';
 
 // Helper: run JS in sandbox and return the result
-function run(code, value = '', fieldValues = new Map()) {
+function run(code, value = '', fieldValues = new Map(), extraContext = {}) {
   return executeSandboxed(code, {
     fieldValues,
     currentFieldName: 'testField',
     currentValue: value,
+    ...extraContext,
   });
 }
 
@@ -687,6 +688,353 @@ describe('Phase 3: Field Object API', () => {
         ].join(",");
       `, '');
       expect(result.event.value).toBe('0,1,2,3');
+    });
+  });
+});
+
+// ============================================================
+// Phase 4: Document Object API
+// ============================================================
+
+describe('Phase 4: Document Object API', () => {
+
+  describe('Document Properties', () => {
+    describe('this.numPages', () => {
+      it('returns configured page count', () => {
+        const result = run('event.value = String(this.numPages);', '', new Map(), { numPages: 5 });
+        expect(result.event.value).toBe('5');
+      });
+
+      it('defaults to 1', () => {
+        const result = run('event.value = String(this.numPages);', '');
+        expect(result.event.value).toBe('1');
+      });
+
+      it('is accessible via doc object', () => {
+        const result = run('event.value = String(doc.numPages);', '', new Map(), { numPages: 10 });
+        expect(result.event.value).toBe('10');
+      });
+
+      it('is accessible as top-level variable', () => {
+        const result = run('event.value = String(numPages);', '', new Map(), { numPages: 3 });
+        expect(result.event.value).toBe('3');
+      });
+    });
+
+    describe('this.pageNum', () => {
+      it('returns current page number', () => {
+        const result = run('event.value = String(this.pageNum);', '', new Map(), { pageNum: 2 });
+        expect(result.event.value).toBe('2');
+      });
+
+      it('can be set to navigate pages', () => {
+        const result = run(`
+          this.pageNum = 3;
+          event.value = String(this.pageNum);
+        `, '', new Map(), { numPages: 5, pageNum: 0 });
+        expect(result.event.value).toBe('3');
+      });
+
+      it('rejects out-of-range page numbers', () => {
+        const result = run(`
+          this.pageNum = 10;
+          event.value = String(this.pageNum);
+        `, '', new Map(), { numPages: 5, pageNum: 0 });
+        expect(result.event.value).toBe('0');
+      });
+    });
+
+    describe('this.path', () => {
+      it('returns document path', () => {
+        const result = run('event.value = this.path;', '', new Map(), { path: '/C/Documents/form.pdf' });
+        expect(result.event.value).toBe('/C/Documents/form.pdf');
+      });
+    });
+
+    describe('this.URL', () => {
+      it('returns document URL', () => {
+        const result = run('event.value = this.URL;', '', new Map(), { url: 'https://example.com/form.pdf' });
+        expect(result.event.value).toBe('https://example.com/form.pdf');
+      });
+    });
+
+    describe('this.documentFileName', () => {
+      it('returns file name from path', () => {
+        const result = run('event.value = this.documentFileName;', '', new Map(), { path: '/C/Documents/form.pdf' });
+        expect(result.event.value).toBe('form.pdf');
+      });
+
+      it('uses explicit documentFileName', () => {
+        const result = run('event.value = this.documentFileName;', '', new Map(), { documentFileName: 'my-form.pdf' });
+        expect(result.event.value).toBe('my-form.pdf');
+      });
+    });
+
+    describe('this.filesize', () => {
+      it('returns file size in bytes', () => {
+        const result = run('event.value = String(this.filesize);', '', new Map(), { filesize: 1048576 });
+        expect(result.event.value).toBe('1048576');
+      });
+    });
+
+    describe('this.info', () => {
+      it('returns document metadata', () => {
+        const info = { Title: 'Test Form', Author: 'Test Author' };
+        const result = run('event.value = this.info.Title + " by " + this.info.Author;', '', new Map(), { info });
+        expect(result.event.value).toBe('Test Form by Test Author');
+      });
+
+      it('has default info object', () => {
+        const result = run('event.value = this.info.Creator;', '');
+        expect(result.event.value).toBe('PDF Renderer');
+      });
+    });
+
+    describe('this.dirty', () => {
+      it('defaults to false', () => {
+        const result = run('event.value = String(this.dirty);', '');
+        expect(result.event.value).toBe('false');
+      });
+
+      it('can be set to true', () => {
+        const result = run(`
+          this.dirty = true;
+          event.value = String(this.dirty);
+        `, '');
+        expect(result.event.value).toBe('true');
+        expect(result.dirty).toBe(true);
+      });
+    });
+  });
+
+  describe('Document Methods', () => {
+    describe('this.getField()', () => {
+      it('returns field object via this', () => {
+        const fields = new Map([['myField', 'hello']]);
+        const result = run('var f = this.getField("myField"); event.value = f.value;', '', fields);
+        expect(result.event.value).toBe('hello');
+      });
+    });
+
+    describe('this.getNthFieldName()', () => {
+      it('returns field name by index (sorted)', () => {
+        const fields = new Map([['zebra', '1'], ['alpha', '2'], ['middle', '3']]);
+        const result = run(`
+          event.value = this.getNthFieldName(0) + "," + this.getNthFieldName(1) + "," + this.getNthFieldName(2);
+        `, '', fields);
+        expect(result.event.value).toBe('alpha,middle,zebra');
+      });
+
+      it('returns empty string for invalid index', () => {
+        const fields = new Map([['a', '1']]);
+        const result = run('event.value = this.getNthFieldName(5);', '', fields);
+        expect(result.event.value).toBe('');
+      });
+
+      it('is accessible as top-level function', () => {
+        const fields = new Map([['field1', 'a'], ['field2', 'b']]);
+        const result = run('event.value = getNthFieldName(0);', '', fields);
+        expect(result.event.value).toBe('field1');
+      });
+    });
+
+    describe('this.numFields', () => {
+      it('returns total number of fields', () => {
+        const fields = new Map([['a', '1'], ['b', '2'], ['c', '3']]);
+        const result = run('event.value = String(this.numFields);', '', fields);
+        expect(result.event.value).toBe('3');
+      });
+    });
+
+    describe('this.resetForm()', () => {
+      it('resets all fields when called without arguments', () => {
+        const fields = new Map([['name', 'John'], ['email', 'john@test.com'], ['age', '30']]);
+        run('this.resetForm();', '', fields);
+        expect(fields.get('name')).toBe('');
+        expect(fields.get('email')).toBe('');
+        expect(fields.get('age')).toBe('');
+      });
+
+      it('resets only specified fields', () => {
+        const fields = new Map([['name', 'John'], ['email', 'john@test.com'], ['age', '30']]);
+        run('this.resetForm(["name", "email"]);', '', fields);
+        expect(fields.get('name')).toBe('');
+        expect(fields.get('email')).toBe('');
+        expect(fields.get('age')).toBe('30');
+      });
+
+      it('sets dirty flag after reset', () => {
+        const fields = new Map([['name', 'John']]);
+        const result = run('this.resetForm(); event.value = String(this.dirty);', '', fields);
+        expect(result.event.value).toBe('true');
+      });
+    });
+
+    describe('this.submitForm()', () => {
+      it('records submit request', () => {
+        const result = run('this.submitForm("https://example.com/submit");', '');
+        expect(result.docRequests).toHaveLength(1);
+        expect(result.docRequests[0].type).toBe('submitForm');
+        expect(result.docRequests[0].url).toBe('https://example.com/submit');
+      });
+    });
+
+    describe('this.mailForm()', () => {
+      it('records mail request with all fields', () => {
+        const result = run(`
+          this.mailForm(true, "user@test.com", "cc@test.com", "", "Form Data", "Please review");
+        `, '');
+        expect(result.docRequests).toHaveLength(1);
+        expect(result.docRequests[0].type).toBe('mailForm');
+        expect(result.docRequests[0].to).toBe('user@test.com');
+        expect(result.docRequests[0].subject).toBe('Form Data');
+      });
+    });
+
+    describe('this.exportAsText()', () => {
+      it('exports field data as tab-separated text', () => {
+        const fields = new Map([['name', 'John'], ['age', '30']]);
+        const result = run('event.value = this.exportAsText("/tmp/data.txt");', '', fields);
+        expect(result.event.value).toContain('name');
+        expect(result.event.value).toContain('John');
+        expect(result.docRequests[0].type).toBe('exportAsText');
+      });
+    });
+
+    describe('this.exportAsFDF()', () => {
+      it('exports field data as FDF object', () => {
+        const fields = new Map([['name', 'John'], ['age', '30']]);
+        const result = run('var fdf = this.exportAsFDF("/tmp/data.fdf"); event.value = "ok";', '', fields);
+        expect(result.docRequests[0].type).toBe('exportAsFDF');
+        expect(result.docRequests[0].data.name).toBe('John');
+      });
+    });
+
+    describe('this.importAnFDF()', () => {
+      it('records import request', () => {
+        const result = run('this.importAnFDF("/tmp/data.fdf");', '');
+        expect(result.docRequests[0].type).toBe('importAnFDF');
+        expect(result.docRequests[0].path).toBe('/tmp/data.fdf');
+      });
+    });
+
+    describe('this.calculateNow()', () => {
+      it('records calculation request', () => {
+        const fields = new Map([['total', '0']]);
+        const result = run(`
+          var f = this.getField("total");
+          f.setAction("Calculate", "event.value = '100';");
+          this.calculateNow();
+          event.value = "triggered";
+        `, '', fields);
+        expect(result.success).toBe(true);
+        expect(result.docRequests.some(r => r.type === 'calculateNow')).toBe(true);
+      });
+    });
+
+    describe('this.print()', () => {
+      it('records print request with defaults', () => {
+        const result = run('this.print();', '', new Map(), { numPages: 5 });
+        expect(result.docRequests[0].type).toBe('print');
+        expect(result.docRequests[0].startPage).toBe(0);
+        expect(result.docRequests[0].endPage).toBe(4);
+      });
+
+      it('records print request with page range', () => {
+        const result = run('this.print(true, 2, 5);', '', new Map(), { numPages: 10 });
+        expect(result.docRequests[0].startPage).toBe(2);
+        expect(result.docRequests[0].endPage).toBe(5);
+      });
+    });
+
+    describe('this.addField()', () => {
+      it('adds a new text field', () => {
+        const fields = new Map();
+        const result = run(`
+          var f = this.addField("newField", "text", 0, [100, 700, 300, 680]);
+          f.value = "Hello";
+          event.value = f.value + "," + f.name;
+        `, '', fields);
+        expect(result.event.value).toBe('Hello,newField');
+        expect(fields.get('newField')).toBe('Hello');
+        expect(result.docRequests[0].type).toBe('addField');
+        expect(result.docRequests[0].fieldType).toBe('text');
+      });
+
+      it('returns null for empty name', () => {
+        const result = run('event.value = String(this.addField("", "text") === null);', '');
+        expect(result.event.value).toBe('true');
+      });
+
+      it('sets dirty flag', () => {
+        const result = run(`
+          this.addField("newField", "text", 0);
+          event.value = String(this.dirty);
+        `, '');
+        expect(result.event.value).toBe('true');
+      });
+    });
+
+    describe('this.removeField()', () => {
+      it('removes a field', () => {
+        const fields = new Map([['removeMe', 'value'], ['keepMe', 'keep']]);
+        run('this.removeField("removeMe");', '', fields);
+        expect(fields.has('removeMe')).toBe(false);
+        expect(fields.has('keepMe')).toBe(true);
+      });
+
+      it('records remove request', () => {
+        const fields = new Map([['target', 'val']]);
+        const result = run('this.removeField("target");', '', fields);
+        expect(result.docRequests[0].type).toBe('removeField');
+        expect(result.docRequests[0].name).toBe('target');
+      });
+    });
+  });
+
+  describe('Document Cross-feature Tests', () => {
+    it('iterates all fields using numFields and getNthFieldName', () => {
+      const fields = new Map([['a', '1'], ['b', '2'], ['c', '3']]);
+      const result = run(`
+        var names = [];
+        for (var i = 0; i < this.numFields; i++) {
+          names.push(this.getNthFieldName(i));
+        }
+        event.value = names.join(",");
+      `, '', fields);
+      expect(result.event.value).toBe('a,b,c');
+    });
+
+    it('adds field then reads it back', () => {
+      const fields = new Map();
+      const result = run(`
+        this.addField("dynamic", "text", 0, [0, 0, 100, 20]);
+        var f = this.getField("dynamic");
+        f.value = "dynamic value";
+        f.readonly = true;
+        event.value = f.value + "," + String(f.readonly);
+      `, '', fields);
+      expect(result.event.value).toBe('dynamic value,true');
+    });
+
+    it('resets form then verifies fields are empty', () => {
+      const fields = new Map([['x', '10'], ['y', '20']]);
+      const result = run(`
+        this.resetForm();
+        event.value = this.getField("x").value + "," + this.getField("y").value;
+      `, '', fields);
+      expect(result.event.value).toBe(',');
+    });
+
+    it('doc object has same getField as top-level', () => {
+      const fields = new Map([['test', 'val']]);
+      const result = run(`
+        var f1 = getField("test");
+        var f2 = doc.getField("test");
+        var f3 = this.getField("test");
+        event.value = f1.value + "," + f2.value + "," + f3.value;
+      `, '', fields);
+      expect(result.event.value).toBe('val,val,val');
     });
   });
 });

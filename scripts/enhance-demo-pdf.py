@@ -483,23 +483,345 @@ ET
 """.encode('latin-1')
 
 
+def add_document_api_demo_pages(pdf):
+    """Add pages 9-10 with Document Object API demos - professional card layout"""
+
+    # ============================================================
+    # PAGE 9: Document Properties & Field Enumeration
+    # ============================================================
+    page9 = pdf.add_blank_page(page_size=(612, 792))
+    created_fields_9 = []
+    field_x = 50
+    col2_x = 320
+
+    # --- Fields for Page 9 ---
+    demo_fields_9 = [
+        # Card 1: Document Info display
+        ('doc_info_display', field_x + 10, 618, 510, 24, {
+            '/Fo': 'var f = getField("doc_info_display"); f.readonly = true; f.fillColor = ["RGB", 0.96, 0.98, 1]; f.textSize = 10; f.value = "Pages: " + this.numPages + " | File: " + this.documentFileName + " | Size: " + this.filesize + " bytes";'
+        }),
+
+        # Card 2: Field enumeration
+        ('doc_field_count', field_x + 10, 498, 220, 24, {
+            '/Fo': 'var f = getField("doc_field_count"); f.readonly = true; f.fillColor = ["RGB", 0.96, 1, 0.96]; f.textSize = 12; f.alignment = "center"; f.value = this.numFields + " fields";'
+        }),
+        ('doc_field_list', col2_x + 10, 498, 220, 24, {
+            '/Fo': 'var f = getField("doc_field_list"); f.readonly = true; f.fillColor = ["RGB", 1, 0.98, 0.96]; f.textSize = 9; var names = []; for (var i = 0; i < Math.min(this.numFields, 5); i++) { names.push(this.getNthFieldName(i)); } f.value = names.join(", ") + (this.numFields > 5 ? "..." : "");'
+        }),
+
+        # Card 3: Add/Remove fields demo
+        ('doc_new_name', field_x + 10, 368, 220, 24, {}),
+        ('doc_add_result', col2_x + 10, 368, 220, 24, {
+            '/Fo': 'var f = getField("doc_add_result"); f.readonly = true; f.fillColor = ["RGB", 0.96, 0.96, 1];'
+        }),
+
+        # Card 4: Reset form demo
+        ('doc_reset_field1', field_x + 10, 248, 150, 24, {}),
+        ('doc_reset_field2', field_x + 175, 248, 150, 24, {}),
+        ('doc_reset_status', col2_x + 10, 248, 220, 24, {
+            '/Fo': 'var f = getField("doc_reset_status"); f.readonly = true; f.fillColor = ["RGB", 1, 0.96, 0.96]; f.alignment = "center";'
+        }),
+    ]
+
+    for name, x, y, w, h, actions in demo_fields_9:
+        field = create_text_field(pdf, page9, name, x, y, w, h, actions)
+        created_fields_9.append(field)
+
+    # Button-like field: Add Field
+    add_btn = create_text_field(pdf, page9, 'doc_add_btn', field_x + 10, 340, 220, 24, {
+        '/Fo': 'var f = getField("doc_add_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.55]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Click to Add Field";',
+        '/Bl': 'var nameF = getField("doc_new_name"); var name = nameF.value; if (name) { this.addField(name, "text", 0, [0,0,100,20]); getField("doc_add_result").value = "Added: " + name; } else { getField("doc_add_result").value = "Enter a name first!"; }'
+    })
+    created_fields_9.append(add_btn)
+
+    # Button-like field: Reset Form
+    reset_btn = create_text_field(pdf, page9, 'doc_reset_btn', col2_x + 10, 220, 220, 24, {
+        '/Fo': 'var f = getField("doc_reset_btn"); f.fillColor = ["RGB", 0.8, 0.2, 0.2]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Reset These Fields";',
+        '/Bl': 'this.resetForm(["doc_reset_field1", "doc_reset_field2"]); getField("doc_reset_status").value = "Fields reset!";'
+    })
+    created_fields_9.append(reset_btn)
+
+    # Add fields to page
+    if '/Annots' not in page9:
+        page9['/Annots'] = []
+    for field in created_fields_9:
+        ref = pdf.make_indirect(field)
+        page9['/Annots'].append(ref)
+        pdf.Root['/AcroForm']['/Fields'].append(ref)
+
+    # Build content stream for Page 9
+    content9 = b""
+
+    # === HEADER ===
+    content9 += b"""
+q
+% Deep blue header
+0.12 0.18 0.33 rg
+0 720 612 72 re f
+
+BT
+/Helvetica-Bold 22 Tf
+1 1 1 rg
+50 755 Td
+(Document Object API Demo) Tj
+ET
+
+BT
+/Helvetica 10 Tf
+0.7 0.78 0.92 rg
+50 735 Td
+(Phase 4: Document properties, field enumeration, and document operations) Tj
+ET
+Q
+"""
+
+    # === CARD 1: Document Properties ===
+    content9 += _card(40, 598, 530, 120,
+                      'Document Properties',
+                      'this.numPages, this.documentFileName,\nthis.filesize, this.info, this.path')
+    content9 += _label(field_x + 10, 646, 'Document Info (auto-populated on focus)')
+
+    # === CARD 2: Field Enumeration ===
+    content9 += _card(40, 478, 252, 120,
+                      'Field Count',
+                      'this.numFields returns\ntotal form field count')
+    content9 += _card(308, 478, 262, 120,
+                      'Field Names',
+                      'this.getNthFieldName(n)\niterates sorted field names')
+    content9 += _label(field_x + 10, 526, 'Total Fields')
+    content9 += _label(col2_x + 10, 526, 'First 5 Field Names')
+
+    # === CARD 3: Add Field ===
+    content9 += _card(40, 328, 530, 120,
+                      'Dynamic Field Creation',
+                      'this.addField(name, type, page, coords) creates fields at runtime')
+    content9 += _label(field_x + 10, 396, 'New Field Name')
+    content9 += _label(col2_x + 10, 396, 'Result')
+    content9 += _label(field_x + 10, 366, 'Click to trigger addField:')
+
+    # === CARD 4: Reset Form ===
+    content9 += _card(40, 208, 530, 120,
+                      'Reset Form',
+                      'this.resetForm(fields) clears specified fields to defaults')
+    content9 += _label(field_x + 10, 276, 'Field 1')
+    content9 += _label(field_x + 175, 276, 'Field 2')
+    content9 += _label(col2_x + 10, 276, 'Reset Status')
+    content9 += _label(col2_x + 10, 246, 'Click to reset fields above:')
+
+    # === FOOTER ===
+    content9 += b"""
+q
+0.94 0.95 0.97 rg
+0 0 612 80 re f
+
+BT
+/Helvetica-Bold 10 Tf
+0.3 0.35 0.4 rg
+50 55 Td
+(Document Properties:) Tj
+/Helvetica 9 Tf
+0.5 0.55 0.6 rg
+150 0 Td
+(this.numPages, pageNum, path, URL, documentFileName, filesize, info, dirty) Tj
+0 -14 Td
+(this.getField\\(\\), getNthFieldName\\(\\), numFields, addField\\(\\), removeField\\(\\), resetForm\\(\\)) Tj
+ET
+Q
+"""
+
+    page9.Contents = pdf.make_stream(content9)
+    print('  + Page 9 with Document Properties & Field Enumeration (4 cards, 10 fields)')
+
+    # ============================================================
+    # PAGE 10: Document Operations (submit, mail, print, export)
+    # ============================================================
+    page10 = pdf.add_blank_page(page_size=(612, 792))
+    created_fields_10 = []
+
+    demo_fields_10 = [
+        # Card 1: Submit Form
+        ('doc_submit_url', field_x + 10, 618, 510, 24, {}),
+
+        # Card 2: Mail Form
+        ('doc_mail_to', field_x + 10, 498, 220, 24, {}),
+        ('doc_mail_subject', col2_x + 10, 498, 220, 24, {}),
+
+        # Card 3: Export Data
+        ('doc_export_result', field_x + 10, 378, 510, 50, {
+            '/Fo': 'var f = getField("doc_export_result"); f.readonly = true; f.multiline = true; f.fillColor = ["RGB", 0.97, 0.97, 1]; f.textSize = 9;'
+        }),
+
+        # Card 4: Print
+        ('doc_print_start', field_x + 10, 258, 100, 24, {}),
+        ('doc_print_end', field_x + 125, 258, 100, 24, {}),
+        ('doc_print_status', col2_x + 10, 258, 220, 24, {
+            '/Fo': 'var f = getField("doc_print_status"); f.readonly = true; f.fillColor = ["RGB", 0.96, 1, 0.96]; f.alignment = "center";'
+        }),
+
+        # Card 5: Dirty flag & calculateNow
+        ('doc_dirty_display', field_x + 10, 148, 220, 24, {
+            '/Fo': 'var f = getField("doc_dirty_display"); f.readonly = true; f.alignment = "center"; f.fillColor = this.dirty ? ["RGB", 1, 0.9, 0.9] : ["RGB", 0.9, 1, 0.9]; f.value = "dirty = " + String(this.dirty);'
+        }),
+        ('doc_calc_status', col2_x + 10, 148, 220, 24, {
+            '/Fo': 'var f = getField("doc_calc_status"); f.readonly = true; f.fillColor = ["RGB", 0.96, 0.96, 1]; f.alignment = "center";'
+        }),
+    ]
+
+    for name, x, y, w, h, actions in demo_fields_10:
+        field = create_text_field(pdf, page10, name, x, y, w, h, actions)
+        created_fields_10.append(field)
+
+    # Submit button
+    submit_btn = create_text_field(pdf, page10, 'doc_submit_btn', field_x + 10, 590, 510, 24, {
+        '/Fo': 'var f = getField("doc_submit_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.13]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Submit Form";',
+        '/Bl': 'var url = getField("doc_submit_url").value || "https://httpbin.org/post"; this.submitForm(url); app.alert("Form submitted to: " + url);'
+    })
+    created_fields_10.append(submit_btn)
+
+    # Mail button
+    mail_btn = create_text_field(pdf, page10, 'doc_mail_btn', field_x + 10, 470, 510, 24, {
+        '/Fo': 'var f = getField("doc_mail_btn"); f.fillColor = ["RGB", 0.2, 0.4, 0.7]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Mail Form";',
+        '/Bl': 'var to = getField("doc_mail_to").value || "user@example.com"; var subj = getField("doc_mail_subject").value || "Form Data"; this.mailForm(true, to, "", "", subj, "Please find attached form data."); app.alert("Mail prepared to: " + to);'
+    })
+    created_fields_10.append(mail_btn)
+
+    # Export button
+    export_btn = create_text_field(pdf, page10, 'doc_export_btn', field_x + 10, 350, 510, 24, {
+        '/Fo': 'var f = getField("doc_export_btn"); f.fillColor = ["RGB", 0.6, 0.3, 0.6]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Export as Text";',
+        '/Bl': 'var data = this.exportAsText("/tmp/form-data.txt"); getField("doc_export_result").value = data;'
+    })
+    created_fields_10.append(export_btn)
+
+    # Print button
+    print_btn = create_text_field(pdf, page10, 'doc_print_btn', field_x + 10, 230, 220, 24, {
+        '/Fo': 'var f = getField("doc_print_btn"); f.fillColor = ["RGB", 0.55, 0.35, 0.13]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Print Document";',
+        '/Bl': 'var s = parseInt(getField("doc_print_start").value) || 0; var e = parseInt(getField("doc_print_end").value) || (this.numPages - 1); this.print(true, s, e); getField("doc_print_status").value = "Print: pages " + s + "-" + e;'
+    })
+    created_fields_10.append(print_btn)
+
+    # Calculate Now button
+    calc_btn = create_text_field(pdf, page10, 'doc_calc_btn', col2_x + 10, 120, 220, 24, {
+        '/Fo': 'var f = getField("doc_calc_btn"); f.fillColor = ["RGB", 0.13, 0.45, 0.55]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Calculate Now";',
+        '/Bl': 'this.calculateNow(); getField("doc_calc_status").value = "Calculations triggered!"; this.dirty = true; getField("doc_dirty_display").fillColor = ["RGB", 1, 0.9, 0.9]; getField("doc_dirty_display").value = "dirty = true";'
+    })
+    created_fields_10.append(calc_btn)
+
+    # Add fields to page
+    if '/Annots' not in page10:
+        page10['/Annots'] = []
+    for field in created_fields_10:
+        ref = pdf.make_indirect(field)
+        page10['/Annots'].append(ref)
+        pdf.Root['/AcroForm']['/Fields'].append(ref)
+
+    # Build content stream for Page 10
+    content10 = b""
+
+    # === HEADER ===
+    content10 += b"""
+q
+% Dark navy header
+0.12 0.18 0.33 rg
+0 720 612 72 re f
+
+BT
+/Helvetica-Bold 22 Tf
+1 1 1 rg
+50 755 Td
+(Document Operations Demo) Tj
+ET
+
+BT
+/Helvetica 10 Tf
+0.7 0.78 0.92 rg
+50 735 Td
+(Phase 4: Submit, mail, export, print, and calculation operations) Tj
+ET
+Q
+"""
+
+    # === CARD 1: Submit Form ===
+    content10 += _card(40, 578, 530, 140,
+                       'Submit Form',
+                       'this.submitForm(url) sends form\ndata to a server endpoint')
+    content10 += _label(field_x + 10, 646, 'Submit URL (leave blank for default)')
+    content10 += _label(field_x + 10, 616, 'Click submit button:')
+
+    # === CARD 2: Mail Form ===
+    content10 += _card(40, 458, 530, 120,
+                       'Mail Form',
+                       'this.mailForm(ui, to, cc, bcc,\nsubject, message)')
+    content10 += _label(field_x + 10, 526, 'To Email')
+    content10 += _label(col2_x + 10, 526, 'Subject')
+    content10 += _label(field_x + 10, 496, 'Click mail button:')
+
+    # === CARD 3: Export Data ===
+    content10 += _card(40, 338, 530, 120,
+                       'Export Data',
+                       'this.exportAsText(), exportAsFDF()\nexport form data in various formats')
+    content10 += _label(field_x + 10, 432, 'Export Result (auto-populated)')
+    content10 += _label(field_x + 10, 376, 'Click export button:')
+
+    # === CARD 4: Print ===
+    content10 += _card(40, 218, 530, 120,
+                       'Print Document',
+                       'this.print(ui, start, end, silent,\nshrinkToFit, printAsImage)')
+    content10 += _label(field_x + 10, 286, 'Start Page')
+    content10 += _label(field_x + 125, 286, 'End Page')
+    content10 += _label(col2_x + 10, 286, 'Print Status')
+    content10 += _label(field_x + 10, 256, 'Click print button:')
+
+    # === CARD 5: Dirty Flag & Calculations ===
+    content10 += _card(40, 108, 530, 120,
+                       'Dirty Flag & Calculations',
+                       'this.dirty tracks modifications,\nthis.calculateNow() triggers recalc')
+    content10 += _label(field_x + 10, 176, 'Document Modified?')
+    content10 += _label(col2_x + 10, 176, 'Calculation Status')
+    content10 += _label(col2_x + 10, 146, 'Click to trigger calculations:')
+
+    # === FOOTER ===
+    content10 += b"""
+q
+0.94 0.95 0.97 rg
+0 0 612 80 re f
+
+BT
+/Helvetica-Bold 10 Tf
+0.3 0.35 0.4 rg
+50 55 Td
+(Document Methods:) Tj
+/Helvetica 9 Tf
+0.5 0.55 0.6 rg
+150 0 Td
+(this.submitForm\\(\\), mailForm\\(\\), exportAsText\\(\\), exportAsFDF\\(\\), importAnFDF\\(\\),) Tj
+0 -14 Td
+(this.print\\(\\), calculateNow\\(\\), this.dirty, this.pageNum) Tj
+ET
+Q
+"""
+
+    page10.Contents = pdf.make_stream(content10)
+    print('  + Page 10 with Document Operations (5 cards, 16 interactive fields)')
+
+
 def main():
     input_pdf = Path('public/sample.pdf')
     output_pdf = Path('public/sample-enhanced.pdf')
-    
+
     if not input_pdf.exists():
         print(f'Error: {input_pdf} not found')
         print('Run: node scripts/generate-demo-pdf.js first')
         sys.exit(1)
-    
+
     print(f'Enhancing {input_pdf}...')
     pdf = pikepdf.Pdf.open(input_pdf)
-    
+
     print('Adding:')
     add_phone_js_action(pdf)
     add_js_test_page(pdf)
     add_field_api_demo_page(pdf)
-    
+    add_document_api_demo_pages(pdf)
+
     print(f'Saving to {output_pdf}...')
     pdf.save(output_pdf)
     print('Done!')

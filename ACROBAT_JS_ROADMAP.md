@@ -2,7 +2,7 @@
 
 **Goal:** Implement ALL Acrobat JavaScript functions with visual demos
 
-**Status:** 🚀 Phase 3 - Field Object API Complete (38/800+ done)
+**Status:** 🚀 Phase 4 - Document Object API Complete (50/800+ done)
 
 ---
 
@@ -85,33 +85,39 @@
 
 ---
 
-## 📄 Phase 4: Document Object API
+## ✅ Phase 4: Document Object API (DONE)
 
 ### Document Properties:
-- [ ] `this.numPages` - Page count
-- [ ] `this.pageNum` - Current page
-- [ ] `this.path` - Document path
-- [ ] `this.URL` - Document URL
-- [ ] `this.documentFileName` - File name
-- [ ] `this.filesize` - File size
-- [ ] `this.info` - Document metadata (title, author, etc.)
-- [ ] `this.dirty` - Modified flag
+- [x] `this.numPages` - Page count (configurable via context)
+- [x] `this.pageNum` - Current page (get/set with bounds checking)
+- [x] `this.path` - Document path
+- [x] `this.URL` - Document URL
+- [x] `this.documentFileName` - File name (auto-derived from path)
+- [x] `this.filesize` - File size in bytes
+- [x] `this.info` - Document metadata (Title, Author, Subject, Keywords, Creator, Producer)
+- [x] `this.dirty` - Modified flag (get/set, auto-set by mutations)
 
 ### Document Methods:
-- [ ] `this.getField(cName)` - Get field by name ✅ Basic done
-- [ ] `this.getNthFieldName(nIndex)` - Get field name by index
-- [ ] `this.resetForm(aFields)` - Reset form fields
-- [ ] `this.submitForm(cURL)` - Submit form data
-- [ ] `this.mailForm(bUI, cTo, cCc, cBcc, cSubject, cMsg)` - Email form
-- [ ] `this.exportAsText(cPath)` - Export as text
-- [ ] `this.exportAsFDF(cPath)` - Export form data
-- [ ] `this.importAnFDF(cPath)` - Import form data
-- [ ] `this.calculateNow()` - Trigger calculations ✅ Basic done
-- [ ] `this.print(bUI, nStart, nEnd, bSilent, bShrinkToFit, bPrintAsImage)` - Print
-- [ ] `this.addField(cName, cFieldType, nPageNum, oCoords)` - Add field
-- [ ] `this.removeField(cName)` - Remove field
+- [x] `this.getField(cName)` - Get field by name (also via `doc.getField` and top-level `getField`)
+- [x] `this.getNthFieldName(nIndex)` - Get field name by sorted index
+- [x] `this.resetForm(aFields)` - Reset form fields (all or specified subset)
+- [x] `this.submitForm(cURL)` - Submit form data (records request for host)
+- [x] `this.mailForm(bUI, cTo, cCc, cBcc, cSubject, cMsg)` - Email form (records request)
+- [x] `this.exportAsText(cPath)` - Export as tab-separated text
+- [x] `this.exportAsFDF(cPath)` - Export form data as FDF object
+- [x] `this.importAnFDF(cPath)` - Import form data (records request)
+- [x] `this.calculateNow()` - Trigger all field calculations
+- [x] `this.print(bUI, nStart, nEnd, bSilent, bShrinkToFit, bPrintAsImage)` - Print (records request)
+- [x] `this.addField(cName, cFieldType, nPageNum, oCoords)` - Add field dynamically
+- [x] `this.removeField(cName)` - Remove field from document
 
-**Demo Goal:** Page 10 - Document operations
+### Bonus:
+- [x] `this.numFields` - Total field count property
+- [x] `doc` object — Full document reference accessible in sandbox
+- [x] `this` binding — Document object bound as `this` in sandbox (Acrobat compatibility)
+- [x] `docRequests` — Operation tracking for host integration (submit, mail, print, export)
+
+**Demo:** Pages 9-10 - 9 cards, 26 interactive fields showing document operations
 
 ---
 
@@ -212,12 +218,12 @@
 
 ## 📈 Progress Tracking
 
-**Functions Implemented:** 38 / ~800
-**Demo Pages:** 2 / 13+
-**Phase:** 3 / 8
-**Tests:** 81 passing (vitest)
+**Functions Implemented:** 50 / ~800
+**Demo Pages:** 4 / 13+
+**Phase:** 4 / 8
+**Tests:** 122 passing (vitest)
 
-**Next Up:** Phase 4 - Document Object API
+**Next Up:** Phase 5 - App Object API
 
 ---
 
@@ -233,4 +239,4 @@ Each page should be:
 
 ---
 
-*Last Updated: March 26, 2026*
+*Last Updated: March 26, 2026 — Phase 4 Complete*

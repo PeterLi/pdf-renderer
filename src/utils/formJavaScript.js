@@ -507,6 +507,231 @@ function createSandboxScope(context) {
     return _createFieldObject(name);
   };
 
+  // ---- Document Object API (Phase 4) ----
+  // Tracks document-level state and operations
+
+  /** Get sorted list of all field names */
+  const _getFieldNames = () => {
+    const names = new Set();
+    // Include fields from fieldValues
+    if (context.fieldValues) {
+      for (const key of context.fieldValues.keys()) names.add(key);
+    }
+    // Include fields from fieldMeta
+    for (const key of fieldMeta.keys()) names.add(key);
+    return [...names].sort();
+  };
+
+  // Document-level dirty flag
+  let _dirty = context._dirty || false;
+
+  // Collect document operation requests for the host
+  const _docRequests = context._docRequests || [];
+
+  /** Get field name by index (sorted order) */
+  const getNthFieldName = (nIndex) => {
+    const names = _getFieldNames();
+    const idx = parseInt(nIndex);
+    if (isNaN(idx) || idx < 0 || idx >= names.length) return '';
+    return names[idx];
+  };
+
+  /** Reset form fields to default values */
+  const resetForm = (aFields) => {
+    if (aFields && Array.isArray(aFields)) {
+      // Reset only specified fields
+      for (const name of aFields) {
+        if (context.fieldValues.has(name)) {
+          context.fieldValues.set(name, '');
+        }
+        // Reset field metadata to defaults
+        if (fieldMeta.has(name)) {
+          const meta = fieldMeta.get(name);
+          meta.display = 0;
+          meta.readonly = false;
+          meta.required = false;
+        }
+      }
+    } else {
+      // Reset all fields
+      for (const [key] of context.fieldValues) {
+        context.fieldValues.set(key, '');
+      }
+      for (const [, meta] of fieldMeta) {
+        meta.display = 0;
+        meta.readonly = false;
+        meta.required = false;
+      }
+    }
+    _dirty = true;
+  };
+
+  /** Submit form data (records request for host) */
+  const submitForm = (cURL, bFDF, bEmpty, aFields) => {
+    _docRequests.push({
+      type: 'submitForm',
+      url: String(cURL || ''),
+      asFDF: bFDF !== false,
+      includeEmpty: bEmpty !== false,
+      fields: aFields || null,
+    });
+  };
+
+  /** Mail form (records request for host) */
+  const mailForm = (bUI, cTo, cCc, cBcc, cSubject, cMsg) => {
+    _docRequests.push({
+      type: 'mailForm',
+      ui: bUI !== false,
+      to: String(cTo || ''),
+      cc: String(cCc || ''),
+      bcc: String(cBcc || ''),
+      subject: String(cSubject || ''),
+      msg: String(cMsg || ''),
+    });
+  };
+
+  /** Export form data as text (returns tab-separated field data) */
+  const exportAsText = (cPath) => {
+    const names = _getFieldNames();
+    const header = names.join('\t');
+    const values = names.map(n => context.fieldValues.get(n) || '').join('\t');
+    _docRequests.push({ type: 'exportAsText', path: String(cPath || ''), data: header + '\n' + values });
+    return header + '\n' + values;
+  };
+
+  /** Export form data as FDF (records request for host) */
+  const exportAsFDF = (cPath) => {
+    const fdfData = {};
+    for (const [key, val] of context.fieldValues) {
+      fdfData[key] = val;
+    }
+    _docRequests.push({ type: 'exportAsFDF', path: String(cPath || ''), data: fdfData });
+    return fdfData;
+  };
+
+  /** Import FDF data (records request for host) */
+  const importAnFDF = (cPath) => {
+    _docRequests.push({ type: 'importAnFDF', path: String(cPath || '') });
+  };
+
+  /** Trigger all field calculations */
+  const calculateNow = () => {
+    // Collect all calculation scripts from field meta
+    for (const [name, meta] of fieldMeta) {
+      if (meta.actions && meta.actions.Calculate) {
+        const calcCode = meta.actions.Calculate;
+        try {
+          // Create a mini execution context for each calculation
+          const calcEvent = {
+            value: context.fieldValues.get(name) || '',
+            target: { name, value: context.fieldValues.get(name) || '' },
+            rc: true,
+          };
+          // We can't recurse into executeSandboxed here, so record the request
+          _docRequests.push({ type: 'calculateNow', field: name, code: calcCode });
+        } catch (e) {
+          // Silently ignore calculation errors (Acrobat behavior)
+        }
+      }
+    }
+    _dirty = true;
+  };
+
+  /** Print document (records request for host) */
+  const print = (bUI, nStart, nEnd, bSilent, bShrinkToFit, bPrintAsImage) => {
+    _docRequests.push({
+      type: 'print',
+      ui: bUI !== false,
+      startPage: nStart != null ? parseInt(nStart) : 0,
+      endPage: nEnd != null ? parseInt(nEnd) : (context.numPages || 1) - 1,
+      silent: !!bSilent,
+      shrinkToFit: bShrinkToFit !== false,
+      printAsImage: !!bPrintAsImage,
+    });
+  };
+
+  /** Add a new field to the document */
+  const addField = (cName, cFieldType, nPageNum, oCoords) => {
+    if (!cName || typeof cName !== 'string') return null;
+    const name = String(cName);
+    const fieldType = String(cFieldType || 'text').toLowerCase();
+
+    // Initialize the field value
+    if (!context.fieldValues.has(name)) {
+      context.fieldValues.set(name, '');
+    }
+
+    // Initialize field metadata with type
+    const meta = _getFieldMeta(name);
+    meta._type = fieldType;
+    meta._pageNum = nPageNum != null ? parseInt(nPageNum) : 0;
+    meta._coords = oCoords || null;
+
+    _docRequests.push({
+      type: 'addField',
+      name,
+      fieldType,
+      pageNum: meta._pageNum,
+      coords: meta._coords,
+    });
+    _dirty = true;
+
+    return _createFieldObject(name);
+  };
+
+  /** Remove a field from the document */
+  const removeField = (cName) => {
+    if (!cName || typeof cName !== 'string') return;
+    context.fieldValues.delete(cName);
+    fieldMeta.delete(cName);
+    _docRequests.push({ type: 'removeField', name: String(cName) });
+    _dirty = true;
+  };
+
+  // Document object — exposed as `this` and `doc` in sandbox
+  const numPages = context.numPages || 1;
+  let pageNum = context.pageNum || 0;
+  const docPath = context.path || '';
+  const docURL = context.url || '';
+  const documentFileName = context.documentFileName || (docPath ? docPath.split('/').pop() : '');
+  const docFilesize = context.filesize || 0;
+  const docInfo = context.info || {
+    Title: '', Author: '', Subject: '', Keywords: '',
+    Creator: 'PDF Renderer', Producer: 'PDF Renderer',
+    CreationDate: new Date(), ModDate: new Date(),
+  };
+
+  const doc = {
+    // ---- Document Properties ----
+    get numPages() { return numPages; },
+    get pageNum() { return pageNum; },
+    set pageNum(v) { const n = parseInt(v); if (!isNaN(n) && n >= 0 && n < numPages) pageNum = n; },
+    get path() { return docPath; },
+    get URL() { return docURL; },
+    get documentFileName() { return documentFileName; },
+    get filesize() { return docFilesize; },
+    get info() { return docInfo; },
+    get dirty() { return _dirty; },
+    set dirty(v) { _dirty = !!v; },
+
+    // ---- Document Methods ----
+    getField,
+    getNthFieldName,
+    resetForm,
+    submitForm,
+    mailForm,
+    exportAsText,
+    exportAsFDF,
+    importAnFDF,
+    calculateNow,
+    print,
+    addField,
+    removeField,
+
+    // ---- Field enumeration ----
+    get numFields() { return _getFieldNames().length; },
+  };
+
   // app object (Acrobat JS API subset)
   const app = {
     alert(msg) {
@@ -1052,7 +1277,22 @@ function createSandboxScope(context) {
     console,
     color,
     display: { visible: 0, hidden: 1, noPrint: 2, noView: 3 },
+    doc,
     getField,
+    getNthFieldName,
+    resetForm,
+    submitForm,
+    mailForm,
+    exportAsText,
+    exportAsFDF,
+    importAnFDF,
+    calculateNow,
+    print: print,  // doc.print
+    addField,
+    removeField,
+    // Document properties at top level (Acrobat compatibility)
+    numPages,
+    numFields: doc.numFields,
     AFSimple_Calculate,
     AFNumber_Format,
     AFNumber_Keystroke,
@@ -1073,7 +1313,7 @@ function createSandboxScope(context) {
   // Don't add BLOCKED_GLOBALS to scope - they're blocked by not being in scope!
   // Adding them as undefined causes "eval" and other reserved words to become parameter names
 
-  return scope;
+  return { scope, doc };
 }
 
 /**
@@ -1095,25 +1335,13 @@ export function executeSandboxed(code, context, options = {}) {
   // Initialize fieldMeta map if not provided (stores field properties set via Field API)
   if (!context.fieldMeta) context.fieldMeta = new Map();
 
+  // Initialize document request tracking
+  if (!context._docRequests) context._docRequests = [];
+
   try {
-    const scope = createSandboxScope(context);
+    const { scope, doc } = createSandboxScope(context);
     const scopeKeys = Object.keys(scope);
     const scopeValues = scopeKeys.map(k => scope[k]);
-
-    console.log('[formJavaScript] Scope keys:', scopeKeys);
-    console.log('[formJavaScript] Has AFSpecial_Format?', scopeKeys.includes('AFSpecial_Format'));
-    
-    // Check for reserved words that can't be parameter names in strict mode
-    const strictReservedWords = [
-      'implements', 'interface', 'let', 'package', 'private', 'protected',
-      'public', 'static', 'yield', 'eval', 'arguments', 'undefined'
-    ];
-    const invalidKeys = scopeKeys.filter(k => strictReservedWords.includes(k));
-    if (invalidKeys.length > 0) {
-      console.error('[formJavaScript] Found reserved words in scope:', invalidKeys);
-    }
-    
-    console.log('[formJavaScript] Code to execute:', code);
 
     // Build function body with timeout check
     const wrappedCode = `
@@ -1122,16 +1350,13 @@ export function executeSandboxed(code, context, options = {}) {
       return event;
     `;
 
-    console.log('[formJavaScript] Wrapped code:', wrappedCode);
-
     // Use Function constructor with controlled scope
     // The scope parameters shadow any global access
     const fn = new Function(...scopeKeys, wrappedCode);
 
-    // Execute with timeout via synchronous approach
-    // (true timeout requires workers, but we limit code complexity instead)
+    // Execute with `this` bound to the doc object (Acrobat compatibility)
     const startTime = performance.now();
-    const resultEvent = fn(...scopeValues);
+    const resultEvent = fn.call(doc, ...scopeValues);
     const elapsed = performance.now() - startTime;
 
     if (elapsed > timeoutMs) {
@@ -1151,6 +1376,8 @@ export function executeSandboxed(code, context, options = {}) {
       alerts,
       fieldMeta: context.fieldMeta,
       focusRequest: context._focusRequest || null,
+      docRequests: context._docRequests,
+      dirty: doc.dirty,
     };
   } catch (err) {
     console.error('[formJavaScript] Execution error:', err);
