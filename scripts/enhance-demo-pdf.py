@@ -65,53 +65,53 @@ def add_js_test_page(pdf):
     """Add page 7 with JavaScript function tests"""
     page = pdf.add_blank_page(page_size=(612, 792))
     
-    # Field configurations: (name, label, width, y_pos, js_actions, description, example)
+    # Field configurations: (name, icon, label, width, y_pos, js_actions, description, example)
     fields_config = [
-        ('zipcode_test', 'ZIP Code', 120, 660, 
+        ('zipcode_test', '[ZIP]', 'ZIP Code', 110, 650, 
          {'/F': 'AFSpecial_Format(0);', '/K': 'AFSpecial_Keystroke(0);'},
-         'US ZIP code formatting - 5 digits only',
-         'Type: 12345'),
+         'US postal code - automatically validates 5 digits',
+         'Try: 12345'),
         
-        ('ssn_test', 'Social Security Number', 150, 600,
+        ('ssn_test', '[SSN]', 'Social Security Number', 140, 585,
          {'/F': 'AFSpecial_Format(3);', '/K': 'AFSpecial_Keystroke(3);'},
-         'SSN formatting with dashes (xxx-xx-xxxx)',
-         'Type: 123456789 -> 123-45-6789'),
+         'Auto-formats with dashes as you type',
+         'Try: 123456789  =  123-45-6789'),
         
-        ('date_mmddyy', 'Date (Short Format)', 130, 540,
+        ('date_mmddyy', '[DATE]', 'Date - Short Format', 120, 520,
          {'/F': 'AFDate_Format(2);', '/K': 'AFDate_Keystroke(2);'},
-         'Date in mm/dd/yy format',
-         'Type: 03/15/2024 -> 03/15/24'),
+         'Converts to mm/dd/yy format',
+         'Try: 03/15/2024  =  03/15/24'),
         
-        ('date_iso', 'Date (ISO Format)', 140, 480,
+        ('date_iso', '[DATE]', 'Date - ISO Format', 130, 455,
          {'/F': 'AFDate_Format(8);', '/K': 'AFDate_Keystroke(8);'},
-         'Date in ISO yyyy-mm-dd format',
-         'Type: 03/15/2024 -> 2024-03-15'),
+         'Converts to ISO yyyy-mm-dd format',
+         'Try: 03/15/2024  =  2024-03-15'),
         
-        ('time_test', 'Time (24-hour)', 100, 420,
+        ('time_test', '[TIME]', 'Time (24-hour)', 90, 390,
          {'/F': 'AFTime_Format(0);', '/K': 'AFTime_Keystroke(0);'},
-         'Time in 24-hour HH:MM format',
-         'Type: 14:30'),
+         'Validates HH:MM format',
+         'Try: 14:30'),
         
-        ('percent_test', 'Percentage', 120, 360,
+        ('percent_test', '[%]', 'Percentage', 110, 325,
          {'/F': 'AFPercent_Format(2, 0);'},
-         'Converts decimal to percentage (0.25 -> 25.00%)',
-         'Type: 0.25 -> 25.00%'),
+         'Converts decimal to percent with 2 decimals',
+         'Try: 0.25  =  25.00%'),
         
-        ('age_test', 'Age', 80, 300,
+        ('age_test', '[#]', 'Age Validation', 70, 260,
          {'/V': 'AFRange_Validate(true, 1, true, 100);', '/K': 'AFNumber_Keystroke(0, 0, 0, 0, "", true);'},
-         'Number validation: must be between 1 and 100',
-         'Type: 150 -> Rejects!'),
+         'Must be between 1-100, rejects invalid',
+         'Try: 150  =  ERROR!'),
         
-        ('price_test', 'Price', 140, 240,
+        ('price_test', '[$]', 'Currency', 130, 195,
          {'/F': 'AFNumber_Format(2, 0, 0, 0, "$", true);', '/K': 'AFNumber_Keystroke(2, 0, 0, 0, "$", true);'},
-         'Currency formatting with thousand separators',
-         'Type: 1234.56 -> $1,234.56'),
+         'Formats with $, commas, and 2 decimals',
+         'Try: 1234.56  =  $1,234.56'),
     ]
     
     # Create fields
     fields = []
-    for name, label, width, y_pos, actions, description, example in fields_config:
-        field = create_text_field(pdf, page, name, 60, y_pos, width, 25, actions)
+    for name, icon, label, width, y_pos, actions, description, example in fields_config:
+        field = create_text_field(pdf, page, name, 70, y_pos, width, 28, actions)
         fields.append(field)
     
     # Add fields to page and form
@@ -125,81 +125,122 @@ def add_js_test_page(pdf):
     # Create beautiful content stream with boxes and detailed info
     content = b"""
 q
-% Header background
-0.15 0.23 0.37 rg
-0 732 612 60 re f
+% Header background - gradient effect with darker blue
+0.11 0.18 0.30 rg
+0 720 612 72 re f
 
 % Header text
 BT
-/Helvetica-Bold 22 Tf
+/Helvetica-Bold 24 Tf
 1 1 1 rg
-60 760 Td
+50 762 Td
 (JavaScript Function Tests) Tj
 ET
 
 BT
-/Helvetica 11 Tf
-0.9 0.9 0.9 rg
-60 740 Td
-(Enable Form Mode + JS: ON, then tab out of fields to see live formatting!) Tj
+/Helvetica 10 Tf
+0.85 0.90 0.95 rg
+50 740 Td
+(Enable Form Mode + JS: ON button, then tab out of fields to see live formatting magic!) Tj
+ET
+Q
+
+% Instruction box
+q
+0.95 0.97 1.0 rg
+40 695 532 20 re f
+0.60 0.70 0.85 RG
+0.5 w
+40 695 532 20 re S
+
+BT
+/Helvetica-Bold 9 Tf
+0.2 0.3 0.5 rg
+50 701 Td
+(INSTRUCTIONS: ) Tj
+/Helvetica 9 Tf
+0.3 0.4 0.5 rg
+(Click in a field below, type the example value, then press TAB to see formatting.) Tj
 ET
 Q
 
 """
     
     # Add field boxes and labels
-    for name, label, width, y_pos, actions, description, example in fields_config:
-        # Light background box for each field group
+    for name, icon, label, width, y_pos, actions, description, example in fields_config:
+        # Card-style background box for each field
         content += f"""
 q
-0.97 0.98 0.99 rg
-50 {y_pos - 10} 512 50 re f
-0.85 0.88 0.92 RG
+% Card shadow
+0.90 0.92 0.94 rg
+42 {y_pos - 8} 530 58 re f
+
+% Card background
+0.98 0.99 1.0 rg
+40 {y_pos - 6} 530 58 re f
+
+% Card border
+0.80 0.85 0.90 RG
 0.5 w
-50 {y_pos - 10} 512 50 re S
+40 {y_pos - 6} 530 58 re S
 Q
 
 """.encode('latin-1')
         
-        # Label (bold)
+        # Icon badge
+        content += f"""
+q
+0.25 0.45 0.75 rg
+50 {y_pos + 33} 45 16 re f
+BT
+/Helvetica-Bold 8 Tf
+1 1 1 rg
+53 {y_pos + 37} Td
+({icon}) Tj
+ET
+Q
+
+""".encode('latin-1')
+        
+        # Label (bold, larger)
         content += f"""
 BT
-/Helvetica-Bold 11 Tf
-0.1 0.1 0.2 rg
-60 {y_pos + 30} Td
+/Helvetica-Bold 12 Tf
+0.15 0.20 0.30 rg
+105 {y_pos + 35} Td
 ({label}) Tj
 ET
 
 """.encode('latin-1')
         
-        # Description (smaller, gray)
+        # Description (smaller, medium gray)
         content += f"""
 BT
-/Helvetica 9 Tf
-0.4 0.4 0.5 rg
-60 {y_pos + 17} Td
+/Helvetica 8.5 Tf
+0.45 0.50 0.55 rg
+105 {y_pos + 20} Td
 ({description}) Tj
 ET
 
 """.encode('latin-1')
         
-        # Example (italic, blue-ish)
+        # Example (monospace-ish, blue)
         content += f"""
 BT
-/Helvetica-Oblique 9 Tf
-0.2 0.4 0.7 rg
-220 {y_pos + 5} Td
+/Courier 9 Tf
+0.15 0.35 0.65 rg
+280 {y_pos + 8} Td
 ({example}) Tj
 ET
 
 """.encode('latin-1')
         
-        # Field border box (so you can see it even without form mode)
+        # Field border box (visible, rounded corners effect)
         content += f"""
 q
-0.3 0.5 0.8 RG
-1 w
-60 {y_pos} {width} 25 re S
+0.30 0.50 0.80 RG
+1.5 w
+70 {y_pos} {width} 28 re S
 Q
 
 """.encode('latin-1')
@@ -207,29 +248,44 @@ Q
     # Footer with function reference
     content += b"""
 q
-0.96 0.97 0.98 rg
-0 0 612 120 re f
+% Footer gradient
+0.11 0.18 0.30 rg
+0 0 612 100 re f
+
+% Decorative line
+0.40 0.50 0.70 RG
+2 w
+40 95 532 0 m S
 
 BT
-/Helvetica-Bold 10 Tf
-0.2 0.2 0.3 rg
-60 95 Td
-(Acrobat JavaScript Functions Tested:) Tj
+/Helvetica-Bold 11 Tf
+0.85 0.90 0.95 rg
+50 75 Td
+(Acrobat JavaScript API Functions Demonstrated:) Tj
 ET
 
 BT
-/Helvetica 9 Tf
-0.4 0.4 0.5 rg
-60 80 Td
-(AFSpecial_Format, AFSpecial_Keystroke - Phone, ZIP, SSN formatting) Tj
-0 -12 Td
-(AFDate_Format, AFDate_Keystroke - Date parsing and formatting) Tj
-0 -12 Td
-(AFTime_Format, AFTime_Keystroke - Time validation) Tj
-0 -12 Td
-(AFPercent_Format, AFNumber_Format - Percentage and currency formatting) Tj
-0 -12 Td
-(AFRange_Validate, AFNumber_Keystroke - Number validation and constraints) Tj
+/Courier 8 Tf
+0.70 0.80 0.90 rg
+50 58 Td
+(AFSpecial_Format & AFSpecial_Keystroke) Tj
+/Helvetica 8 Tf
+(  -  Phone, ZIP, SSN auto-formatting) Tj
+0 -11 Td
+/Courier 8 Tf
+(AFDate_Format & AFDate_Keystroke) Tj
+/Helvetica 8 Tf
+(  -  Date parsing and format conversion) Tj
+0 -11 Td
+/Courier 8 Tf
+(AFTime_Format & AFTime_Keystroke) Tj
+/Helvetica 8 Tf
+(  -  Time validation and formatting) Tj
+0 -11 Td
+/Courier 8 Tf
+(AFPercent_Format, AFNumber_Format, AFRange_Validate) Tj
+/Helvetica 8 Tf
+(  -  Math, currency, validation) Tj
 ET
 Q
 """
