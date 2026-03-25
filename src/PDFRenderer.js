@@ -28,7 +28,7 @@ class PDFRenderer {
       onLoad: options.onLoad || null,
       onError: options.onError || null,
       // Form validation & JavaScript config
-      allowFormJavaScript: options.allowFormJavaScript ?? false,
+      allowFormJavaScript: options.allowFormJavaScript ?? true,  // Sandboxed JS is secure - enabled by default
       validateOnBlur: options.validateOnBlur ?? true,
       validateOnSubmit: options.validateOnSubmit ?? true,
       showValidationErrors: options.showValidationErrors ?? true,
