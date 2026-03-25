@@ -248,6 +248,7 @@ async function generateDemoPDF() {
 
   y -= 40;
   page4.drawText('Full Name:', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  page4.drawText('(Plain text field)', { x: 370, y: y + 5, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
   y -= 30;
   const nameField = form.createTextField('fullName');
   nameField.addToPage(page4, { x: 60, y, width: 300, height: 25 });
@@ -255,6 +256,7 @@ async function generateDemoPDF() {
 
   y -= 50;
   page4.drawText('Comments (multiline):', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  page4.drawText('(Multiline textarea)', { x: 370, y: y + 5, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
   y -= 30;
   const commentsField = form.createTextField('comments');
   commentsField.addToPage(page4, { x: 60, y: y - 50, width: 400, height: 80 });
@@ -263,6 +265,7 @@ async function generateDemoPDF() {
 
   y -= 80;
   page4.drawText('Password:', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  page4.drawText('(Password field - text hidden)', { x: 370, y: y + 5, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
   y -= 30;
   const passwordField = form.createTextField('password');
   passwordField.addToPage(page4, { x: 60, y, width: 250, height: 25 });
@@ -271,6 +274,7 @@ async function generateDemoPDF() {
 
   y -= 50;
   page4.drawText('Email (required):*', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0.8, 0, 0) });
+  page4.drawText('(Required + email pattern validation)', { x: 370, y: y + 5, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
   y -= 30;
   const emailField = form.createTextField('email');
   emailField.addToPage(page4, { x: 60, y, width: 300, height: 25 });
@@ -279,6 +283,7 @@ async function generateDemoPDF() {
 
   y -= 50;
   page4.drawText('Username (max 10 chars):', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  page4.drawText('(MaxLength validation)', { x: 370, y: y + 5, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
   y -= 30;
   const usernameField = form.createTextField('username');
   usernameField.addToPage(page4, { x: 60, y, width: 200, height: 25 });
@@ -287,6 +292,7 @@ async function generateDemoPDF() {
 
   y -= 50;
   page4.drawText('Phone (xxx) xxx-xxxx:', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  page4.drawText('(Phone pattern validation - NO auto-format)', { x: 370, y: y + 5, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
   y -= 30;
   const phoneField = form.createTextField('phone');
   phoneField.addToPage(page4, { x: 60, y, width: 250, height: 25 });
@@ -313,6 +319,7 @@ async function generateDemoPDF() {
 
   y -= 60;
   page5.drawText('Checkboxes:', { x: 60, y, size: 14, font: helveticaBold, color: rgb(0.15, 0.23, 0.37) });
+  page5.drawText('(Optional and required checkboxes)', { x: 200, y, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
   
   y -= 30;
   const agreeBox = form.createCheckBox('agreeTerms');
@@ -324,6 +331,7 @@ async function generateDemoPDF() {
   privacyBox.addToPage(page5, { x: 60, y, width: 20, height: 20 });
   privacyBox.enableRequired();
   page5.drawText('I have read the privacy policy (required)*', { x: 90, y: y + 5, size: 11, font: helvetica, color: rgb(0.8, 0, 0) });
+  page5.drawText('(Required checkbox)', { x: 370, y: y + 5, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
 
   y -= 40;
   page5.drawText('Interests:', { x: 60, y, size: 11, font: helvetica, color: rgb(0, 0, 0) });
@@ -348,6 +356,7 @@ async function generateDemoPDF() {
 
   y -= 120;
   page5.drawText('T-shirt size (required):*', { x: 60, y, size: 11, font: helvetica, color: rgb(0.8, 0, 0) });
+  page5.drawText('(Required radio group)', { x: 370, y, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
   const sizeGroup = form.createRadioGroup('tshirtSize');
   sizeGroup.enableRequired();
   const sizes = ['S', 'M', 'L', 'XL'];
