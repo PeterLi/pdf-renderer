@@ -220,9 +220,203 @@ async function generateDemoPDF() {
     color: rgb(0.5, 0.5, 0.5),
   });
 
+  // --- Page 4: Form Fields - Text Inputs ---
+  const form = doc.getForm();
+  const page4 = doc.addPage([612, 792]);
+  let y = height - 60;
+
+  page4.drawRectangle({
+    x: 0, y: y,
+    width, height: 60,
+    color: rgb(0.15, 0.23, 0.37),
+  });
+
+  page4.drawText('Form Features: Text Inputs', {
+    x: 60, y: y + 18,
+    size: 22,
+    font: helveticaBold,
+    color: rgb(1, 1, 1),
+  });
+
+  y -= 50;
+  page4.drawText('The renderer supports interactive PDF forms with validation:', {
+    x: 60, y,
+    size: 12,
+    font: helvetica,
+    color: rgb(0.2, 0.2, 0.2),
+  });
+
+  y -= 40;
+  page4.drawText('Full Name:', { x: 60, y: y + 30, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  const nameField = form.createTextField('fullName');
+  nameField.addToPage(page4, { x: 60, y, width: 300, height: 25 });
+  nameField.setFontSize(12);
+
+  y -= 50;
+  page4.drawText('Comments (multiline):', { x: 60, y: y + 90, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  const commentsField = form.createTextField('comments');
+  commentsField.addToPage(page4, { x: 60, y: y, width: 400, height: 80 });
+  commentsField.enableMultiline();
+  commentsField.setFontSize(11);
+
+  y -= 110;
+  page4.drawText('Password:', { x: 60, y: y + 30, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  const passwordField = form.createTextField('password');
+  passwordField.addToPage(page4, { x: 60, y, width: 250, height: 25 });
+  passwordField.enablePassword();
+  passwordField.setFontSize(12);
+
+  y -= 50;
+  page4.drawText('Email (required):*', { x: 60, y: y + 30, size: 11, font: helvetica, color: rgb(0.8, 0, 0) });
+  const emailField = form.createTextField('email');
+  emailField.addToPage(page4, { x: 60, y, width: 300, height: 25 });
+  emailField.enableRequired();
+  emailField.setFontSize(12);
+
+  y -= 50;
+  page4.drawText('Username (max 10 chars):', { x: 60, y: y + 30, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  const usernameField = form.createTextField('username');
+  usernameField.addToPage(page4, { x: 60, y, width: 200, height: 25 });
+  usernameField.setMaxLength(10);
+  usernameField.setFontSize(12);
+
+  y -= 50;
+  page4.drawText('Phone (xxx) xxx-xxxx:', { x: 60, y: y + 30, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  const phoneField = form.createTextField('phone');
+  phoneField.addToPage(page4, { x: 60, y, width: 250, height: 25 });
+  phoneField.setFontSize(12);
+
+  page4.drawText('* Required fields', { x: 60, y: 60, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
+
+  // --- Page 5: Form Fields - Checkboxes & Radio Buttons ---
+  const page5 = doc.addPage([612, 792]);
+  y = height - 60;
+
+  page5.drawRectangle({
+    x: 0, y: y,
+    width, height: 60,
+    color: rgb(0.15, 0.23, 0.37),
+  });
+
+  page5.drawText('Form Features: Checkboxes & Radios', {
+    x: 60, y: y + 18,
+    size: 22,
+    font: helveticaBold,
+    color: rgb(1, 1, 1),
+  });
+
+  y -= 60;
+  page5.drawText('Checkboxes:', { x: 60, y, size: 14, font: helveticaBold, color: rgb(0.15, 0.23, 0.37) });
+  
+  y -= 30;
+  const agreeBox = form.createCheckBox('agreeTerms');
+  agreeBox.addToPage(page5, { x: 60, y, width: 20, height: 20 });
+  page5.drawText('I agree to the terms and conditions', { x: 90, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+
+  y -= 30;
+  const privacyBox = form.createCheckBox('privacyPolicy');
+  privacyBox.addToPage(page5, { x: 60, y, width: 20, height: 20 });
+  privacyBox.enableRequired();
+  page5.drawText('I have read the privacy policy (required)*', { x: 90, y: y + 5, size: 11, font: helvetica, color: rgb(0.8, 0, 0) });
+
+  y -= 40;
+  page5.drawText('Interests:', { x: 60, y, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  const interests = ['Sports', 'Music', 'Reading', 'Gaming'];
+  interests.forEach((interest, i) => {
+    const checkbox = form.createCheckBox(`interest_${interest.toLowerCase()}`);
+    checkbox.addToPage(page5, { x: 60, y: y - 30 - (i * 30), width: 20, height: 20 });
+    page5.drawText(interest, { x: 90, y: y - 25 - (i * 30), size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  });
+
+  y -= 160;
+  page5.drawText('Radio Buttons:', { x: 60, y, size: 14, font: helveticaBold, color: rgb(0.15, 0.23, 0.37) });
+  
+  y -= 30;
+  page5.drawText('Preferred contact method:', { x: 60, y, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  const contactGroup = form.createRadioGroup('contactMethod');
+  const methods = ['Email', 'Phone', 'SMS'];
+  methods.forEach((method, i) => {
+    contactGroup.addOptionToPage(method, page5, { x: 60, y: y - 30 - (i * 30), width: 20, height: 20 });
+    page5.drawText(method, { x: 90, y: y - 25 - (i * 30), size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  });
+
+  y -= 120;
+  page5.drawText('T-shirt size (required):*', { x: 60, y, size: 11, font: helvetica, color: rgb(0.8, 0, 0) });
+  const sizeGroup = form.createRadioGroup('tshirtSize');
+  sizeGroup.enableRequired();
+  const sizes = ['S', 'M', 'L', 'XL'];
+  sizes.forEach((size, i) => {
+    sizeGroup.addOptionToPage(size, page5, { x: 60 + (i * 80), y: y - 30, width: 20, height: 20 });
+    page5.drawText(size, { x: 90 + (i * 80), y: y - 25, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  });
+
+  page5.drawText('* Required fields', { x: 60, y: 60, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
+
+  // --- Page 6: Form Fields - Dropdowns ---
+  const page6 = doc.addPage([612, 792]);
+  y = height - 60;
+
+  page6.drawRectangle({
+    x: 0, y: y,
+    width, height: 60,
+    color: rgb(0.15, 0.23, 0.37),
+  });
+
+  page6.drawText('Form Features: Dropdowns', {
+    x: 60, y: y + 18,
+    size: 22,
+    font: helveticaBold,
+    color: rgb(1, 1, 1),
+  });
+
+  y -= 60;
+  page6.drawText('Country:', { x: 60, y: y + 30, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  const countryDropdown = form.createDropdown('country');
+  countryDropdown.addOptions(['United States', 'Canada', 'United Kingdom', 'Australia', 'Germany', 'France', 'Japan', 'Other']);
+  countryDropdown.addToPage(page6, { x: 60, y, width: 300, height: 25 });
+  countryDropdown.select('United States');
+
+  y -= 50;
+  page6.drawText('Department (required):*', { x: 60, y: y + 30, size: 11, font: helvetica, color: rgb(0.8, 0, 0) });
+  const deptDropdown = form.createDropdown('department');
+  deptDropdown.addOptions(['Engineering', 'Marketing', 'Sales', 'HR', 'Finance', 'Operations']);
+  deptDropdown.addToPage(page6, { x: 60, y, width: 300, height: 25 });
+  deptDropdown.enableRequired();
+
+  y -= 60;
+  page6.drawText('Programming Language:', { x: 60, y: y + 30, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  const langDropdown = form.createDropdown('language');
+  langDropdown.addOptions(['JavaScript', 'Python', 'Java', 'C++', 'C#', 'Go', 'Rust', 'TypeScript', 'Ruby', 'PHP']);
+  langDropdown.addToPage(page6, { x: 60, y, width: 300, height: 25 });
+  langDropdown.select('JavaScript');
+
+  y -= 60;
+  page6.drawText('Job Title (editable dropdown):', { x: 60, y: y + 30, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  const jobCombo = form.createDropdown('jobTitle');
+  jobCombo.addOptions(['Software Engineer', 'Product Manager', 'Designer', 'Data Scientist', 'DevOps Engineer']);
+  jobCombo.enableEditing();
+  jobCombo.addToPage(page6, { x: 60, y, width: 350, height: 25 });
+
+  y -= 80;
+  page6.drawText('Try these interactive features:', { x: 60, y, size: 12, font: helveticaBold, color: rgb(0.15, 0.23, 0.37) });
+  const tips = [
+    '  •  Fill out the form fields above',
+    '  •  Required fields are marked with *',
+    '  •  Try the validation (required fields, maxLength)',
+    '  •  Export the filled PDF with your data',
+    '  •  Use stamps and annotations on form pages',
+  ];
+  tips.forEach((tip, i) => {
+    page6.drawText(tip, { x: 60, y: y - 25 - (i * 20), size: 11, font: helvetica, color: rgb(0.2, 0.2, 0.2) });
+  });
+
+  page6.drawText('* Required fields', { x: 60, y: 60, size: 9, font: helvetica, color: rgb(0.5, 0.5, 0.5) });
+
   const pdfBytes = await doc.save();
   writeFileSync('public/sample.pdf', pdfBytes);
-  console.log('Demo PDF created: public/sample.pdf');
+  console.log('✅ Demo PDF created: public/sample.pdf');
+  console.log('   Pages 1-3: PDF viewer & annotation features');
+  console.log('   Pages 4-6: Interactive form fields with validation');
 }
 
 generateDemoPDF();
