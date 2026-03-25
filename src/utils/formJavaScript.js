@@ -428,9 +428,12 @@ function createSandboxScope(context) {
   const AFPercent_Keystroke = () => {};
   const AFRange_Validate = () => {};
 
-  // Build scope
+  // Build scope (filter out 'undefined' - can't be a parameter name in strict mode)
+  const allowedGlobalsFiltered = { ...ALLOWED_GLOBALS };
+  delete allowedGlobalsFiltered.undefined;
+  
   const scope = {
-    ...ALLOWED_GLOBALS,
+    ...allowedGlobalsFiltered,
     event,
     app,
     console,
