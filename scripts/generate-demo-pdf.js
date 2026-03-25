@@ -247,41 +247,47 @@ async function generateDemoPDF() {
   });
 
   y -= 40;
-  page4.drawText('Full Name:', { x: 60, y: y + 30, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  page4.drawText('Full Name:', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  y -= 30;
   const nameField = form.createTextField('fullName');
   nameField.addToPage(page4, { x: 60, y, width: 300, height: 25 });
   nameField.setFontSize(12);
 
   y -= 50;
-  page4.drawText('Comments (multiline):', { x: 60, y: y + 90, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  page4.drawText('Comments (multiline):', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  y -= 30;
   const commentsField = form.createTextField('comments');
-  commentsField.addToPage(page4, { x: 60, y: y, width: 400, height: 80 });
+  commentsField.addToPage(page4, { x: 60, y: y - 50, width: 400, height: 80 });
   commentsField.enableMultiline();
   commentsField.setFontSize(11);
 
-  y -= 110;
-  page4.drawText('Password:', { x: 60, y: y + 30, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  y -= 80;
+  page4.drawText('Password:', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  y -= 30;
   const passwordField = form.createTextField('password');
   passwordField.addToPage(page4, { x: 60, y, width: 250, height: 25 });
   passwordField.enablePassword();
   passwordField.setFontSize(12);
 
   y -= 50;
-  page4.drawText('Email (required):*', { x: 60, y: y + 30, size: 11, font: helvetica, color: rgb(0.8, 0, 0) });
+  page4.drawText('Email (required):*', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0.8, 0, 0) });
+  y -= 30;
   const emailField = form.createTextField('email');
   emailField.addToPage(page4, { x: 60, y, width: 300, height: 25 });
   emailField.enableRequired();
   emailField.setFontSize(12);
 
   y -= 50;
-  page4.drawText('Username (max 10 chars):', { x: 60, y: y + 30, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  page4.drawText('Username (max 10 chars):', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  y -= 30;
   const usernameField = form.createTextField('username');
   usernameField.addToPage(page4, { x: 60, y, width: 200, height: 25 });
   usernameField.setMaxLength(10);
   usernameField.setFontSize(12);
 
   y -= 50;
-  page4.drawText('Phone (xxx) xxx-xxxx:', { x: 60, y: y + 30, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  page4.drawText('Phone (xxx) xxx-xxxx:', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  y -= 30;
   const phoneField = form.createTextField('phone');
   phoneField.addToPage(page4, { x: 60, y, width: 250, height: 25 });
   phoneField.setFontSize(12);
@@ -370,28 +376,32 @@ async function generateDemoPDF() {
   });
 
   y -= 60;
-  page6.drawText('Country:', { x: 60, y: y + 30, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  page6.drawText('Country:', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  y -= 30;
   const countryDropdown = form.createDropdown('country');
   countryDropdown.addOptions(['United States', 'Canada', 'United Kingdom', 'Australia', 'Germany', 'France', 'Japan', 'Other']);
   countryDropdown.addToPage(page6, { x: 60, y, width: 300, height: 25 });
   countryDropdown.select('United States');
 
   y -= 50;
-  page6.drawText('Department (required):*', { x: 60, y: y + 30, size: 11, font: helvetica, color: rgb(0.8, 0, 0) });
+  page6.drawText('Department (required):*', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0.8, 0, 0) });
+  y -= 30;
   const deptDropdown = form.createDropdown('department');
   deptDropdown.addOptions(['Engineering', 'Marketing', 'Sales', 'HR', 'Finance', 'Operations']);
   deptDropdown.addToPage(page6, { x: 60, y, width: 300, height: 25 });
   deptDropdown.enableRequired();
 
   y -= 60;
-  page6.drawText('Programming Language:', { x: 60, y: y + 30, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  page6.drawText('Programming Language:', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  y -= 30;
   const langDropdown = form.createDropdown('language');
   langDropdown.addOptions(['JavaScript', 'Python', 'Java', 'C++', 'C#', 'Go', 'Rust', 'TypeScript', 'Ruby', 'PHP']);
   langDropdown.addToPage(page6, { x: 60, y, width: 300, height: 25 });
   langDropdown.select('JavaScript');
 
   y -= 60;
-  page6.drawText('Job Title (editable dropdown):', { x: 60, y: y + 30, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  page6.drawText('Job Title (editable dropdown):', { x: 60, y: y + 5, size: 11, font: helvetica, color: rgb(0, 0, 0) });
+  y -= 30;
   const jobCombo = form.createDropdown('jobTitle');
   jobCombo.addOptions(['Software Engineer', 'Product Manager', 'Designer', 'Data Scientist', 'DevOps Engineer']);
   jobCombo.enableEditing();
