@@ -482,6 +482,17 @@ BT
 ET
 """.encode('latin-1')
 
+def _hint(x, y, text):
+    """Generate a hint/instruction text (smaller, lighter, non-bold)"""
+    return f"""
+BT
+/Helvetica 8 Tf
+0.4 0.5 0.6 rg
+{x} {y} Td
+({text}) Tj
+ET
+""".encode('latin-1')
+
 
 def add_document_api_demo_pages(pdf):
     """Add pages 9-10 with Document Object API demos - professional card layout"""
@@ -597,7 +608,7 @@ Q
                       'this.addField(name, type, page, coords) creates fields at runtime')
     content9 += _label(field_x + 10, 396, 'New Field Name')
     content9 += _label(col2_x + 10, 396, 'Result')
-    content9 += _label(field_x + 10, 366, 'Click to trigger addField:')
+    content9 += _hint(field_x + 240, 346, 'Click button to trigger addField')
 
     # === CARD 4: Reset Form ===
     content9 += _card(40, 208, 530, 120,
@@ -606,7 +617,7 @@ Q
     content9 += _label(field_x + 10, 276, 'Field 1')
     content9 += _label(field_x + 175, 276, 'Field 2')
     content9 += _label(col2_x + 10, 276, 'Reset Status')
-    content9 += _label(col2_x + 10, 246, 'Click to reset fields above:')
+    content9 += _hint(col2_x + 240, 226, 'Click to reset fields above')
 
     # === FOOTER ===
     content9 += b"""
