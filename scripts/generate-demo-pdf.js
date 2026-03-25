@@ -883,6 +883,16 @@ async function generateDemoPDF() {
   console.log('   Pages 1-3: PDF viewer & annotation features');
   console.log('   Pages 4-6: Interactive form fields with validation');
   console.log('   Pages 7-10: JavaScript actions (Focus, Blur, Calculate, Format)');
+  
+  // Step 2: Enhance with Python script (adds Acrobat JavaScript actions)
+  console.log('\n🔧 Running Python enhancement script...');
+  const { execSync } = await import('child_process');
+  try {
+    execSync('python3 scripts/enhance-demo-pdf.py', { stdio: 'inherit' });
+    console.log('✅ PDF enhanced with JavaScript actions: public/sample-enhanced.pdf');
+  } catch (error) {
+    console.error('❌ Python enhancement failed:', error.message);
+  }
 }
 
 generateDemoPDF();
