@@ -128,6 +128,8 @@ class PDFRenderer {
       formBar:        $('#form-bar'),
       formFieldCount: $('#form-field-count'),
       btnClearForm:   $('#btn-clear-form'),
+      btnJsToggle:    $('#btn-js-toggle'),
+      jsStatus:       $('#js-status'),
       btnValidateForm:$('#btn-validate-form'),
       btnExportFilled:$('#btn-export-filled'),
 
@@ -148,7 +150,7 @@ class PDFRenderer {
     });
 
     // Demo
-    els.btnDemo.addEventListener('click', () => this.openFromURL('./sample.pdf'));
+    els.btnDemo.addEventListener('click', () => this.openFromURL('./sample-enhanced.pdf'));
 
     // Navigation
     els.btnPrev.addEventListener('click', () => this.goToPage(this.currentPage - 1));
@@ -177,6 +179,9 @@ class PDFRenderer {
     // Form mode
     els.btnFormMode.addEventListener('click', () => this._toggleFormMode());
     els.btnClearForm.addEventListener('click', () => this._clearFormFields());
+    if (els.btnJsToggle) {
+      els.btnJsToggle.addEventListener('click', () => this._toggleJavaScript());
+    }
     if (els.btnValidateForm) {
       els.btnValidateForm.addEventListener('click', () => this._validateForm());
     }
@@ -760,6 +765,36 @@ class PDFRenderer {
     } else {
       const count = result.errors.size;
       showToast(`${count} field${count !== 1 ? 's' : ''} with errors`, 'error');
+    }
+  }
+
+  _toggleJavaScript() {
+    this.config.allowFormJavaScript = !this.config.allowFormJavaScript;
+    const { els } = this;
+    
+    if (els.jsStatus) {
+      els.jsStatus.textContent = this.config.allowFormJavaScript ? 'ON' : 'OFF';
+    }
+    
+    if (els.btnJsToggle) {
+      const title = this.config.allowFormJavaScript 
+        ? 'Disable JavaScript (currently enabled)' 
+        : 'Enable JavaScript (currently disabled for security)';
+      els.btnJsToggle.title = title;
+      
+      if (this.config.allowFormJavaScript) {
+        els.btnJsToggle.classList.add('active');
+      } else {
+        els.btnJsToggle.classList.remove('active');
+      }
+    }
+    
+    const status = this.config.allowFormJavaScript ? 'enabled' : 'disabled';
+    showToast(`Form JavaScript ${status}`, this.config.allowFormJavaScript ? 'success' : 'info');
+    
+    // Update FormLayer if it exists
+    if (this.formLayer) {
+      this.formLayer.config.allowFormJavaScript = this.config.allowFormJavaScript;
     }
   }
 
