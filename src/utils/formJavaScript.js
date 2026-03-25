@@ -84,12 +84,23 @@ export function parseJavaScriptActions(widget) {
   };
 
   // Parse PDF.js actions object (different from raw PDF AA dictionary)
-  // PDF.js exposes actions as: { Fo: [action], Bl: [action], ... }
+  // PDF.js exposes actions with FULL names: { Format: [...], Validate: [...], ... }
   const pdfJsActions = widget.actions;
   if (pdfJsActions && typeof pdfJsActions === 'object') {
-    // PDF.js format: actions is an object with arrays
-    for (const [key, triggerName] of Object.entries(triggerMap)) {
-      const actionArray = pdfJsActions[key];
+    // PDF.js uses full trigger names as keys
+    const pdfJsTriggerMap = {
+      'Format': 'Format',
+      'Validate': 'Validate',
+      'Calculate': 'Calculate',
+      'Keystroke': 'Keystroke',
+      'MouseEnter': 'Enter',
+      'MouseExit': 'Exit',
+      'Focus': 'Focus',
+      'Blur': 'Blur',
+    };
+    
+    for (const [pdfJsKey, triggerName] of Object.entries(pdfJsTriggerMap)) {
+      const actionArray = pdfJsActions[pdfJsKey];
       if (Array.isArray(actionArray)) {
         for (const action of actionArray) {
           const code = typeof action === 'string' ? action : action.JS || action.js || '';
