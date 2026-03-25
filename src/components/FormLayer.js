@@ -283,15 +283,24 @@ export class FormLayer {
       el.classList.add('field-readonly');
     }
 
-    // Apply maxLength
-    if (meta?.maxLength && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) {
-      enforceMaxLength(el, meta.maxLength);
+    // Apply maxLength / charLimit
+    const charLimit = meta?.maxLength || meta?.charLimit || 0;
+    if (charLimit > 0 && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) {
+      enforceMaxLength(el, charLimit);
+    }
+
+    // Comb mode: each character in its own cell
+    if (flags.comb && charLimit > 0 && el.tagName === 'INPUT') {
+      const cellWidth = width / charLimit;
+      el.style.letterSpacing = `${cellWidth - (parseFloat(el.style.fontSize) || 10) * 0.6}px`;
+      el.style.fontFamily = 'monospace';
+      el.classList.add('field-comb');
     }
 
     // Tooltip: show field name + validation hints
     const tooltipParts = [meta?.tooltip || fieldName || ''];
     if (flags.required) tooltipParts.push('(Required)');
-    if (meta?.maxLength) tooltipParts.push(`Max ${meta.maxLength} chars`);
+    if (charLimit > 0) tooltipParts.push(`Max ${charLimit} chars`);
     el.title = tooltipParts.filter(Boolean).join(' — ');
 
     // Required indicator via data attribute
@@ -350,6 +359,29 @@ export class FormLayer {
 
       this._onChange?.();
     });
+
+    // Dropdown change: sync value, run Blur actions and calculations
+    if (el.tagName === 'SELECT') {
+      el.addEventListener('change', () => {
+        if (!fieldName) return;
+        this._values.set(fieldName, el.value);
+
+        if (this._config.allowFormJavaScript) {
+          // Run Blur actions (cross-field updates)
+          const actions = this._fieldActions.get(fieldName) || [];
+          const blurAction = actions.find(a => a.trigger === 'Blur');
+          if (blurAction) {
+            this._runTriggerAction(fieldName, el, 'Blur');
+          }
+          // Run calculations
+          if (this._calculations.length > 0) {
+            this._runCalculations();
+          }
+        }
+
+        this._onChange?.();
+      });
+    }
 
     // Check field actions
     const fieldActions = this._fieldActions.get(fieldName) || [];
@@ -774,6 +806,25 @@ export class FormLayer {
           el.classList.add('field-readonly');
         } else {
           el.classList.remove('field-readonly');
+        }
+      }
+
+      // Character limit (from JavaScript)
+      if (meta.charLimit !== undefined && meta.charLimit > 0) {
+        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+          el.maxLength = meta.charLimit;
+        }
+      }
+
+      // Comb mode (from JavaScript)
+      if (meta.comb !== undefined && meta.comb && el.tagName === 'INPUT') {
+        const limit = meta.charLimit || el.maxLength || 0;
+        if (limit > 0) {
+          const fieldWidth = parseFloat(el.style.width) || 100;
+          const cellWidth = fieldWidth / limit;
+          el.style.letterSpacing = `${cellWidth - (parseFloat(el.style.fontSize) || 10) * 0.6}px`;
+          el.style.fontFamily = 'monospace';
+          el.classList.add('field-comb');
         }
       }
 
