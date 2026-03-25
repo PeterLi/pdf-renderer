@@ -607,8 +607,8 @@ Q
                       'Dynamic Field Creation',
                       'this.addField(name, type, page, coords) creates fields at runtime')
     content9 += _label(field_x + 10, 396, 'New Field Name')
+    content9 += _hint(field_x + 150, 396, '(click button below to trigger addField)')
     content9 += _label(col2_x + 10, 396, 'Result')
-    content9 += _hint(field_x + 240, 346, 'Click button to trigger addField')
 
     # === CARD 4: Reset Form ===
     content9 += _card(40, 208, 530, 120,
@@ -617,7 +617,7 @@ Q
     content9 += _label(field_x + 10, 276, 'Field 1')
     content9 += _label(field_x + 175, 276, 'Field 2')
     content9 += _label(col2_x + 10, 276, 'Reset Status')
-    content9 += _hint(col2_x + 240, 226, 'Click to reset fields above')
+    content9 += _hint(col2_x + 120, 276, '(click button below to reset)')
 
     # === FOOTER ===
     content9 += b"""
@@ -756,22 +756,22 @@ Q
                        'Submit Form',
                        'this.submitForm(url) sends form\ndata to a server endpoint')
     content10 += _label(field_x + 10, 646, 'Submit URL (leave blank for default)')
-    content10 += _label(field_x + 10, 616, 'Click submit button:')
+    content10 += _hint(340, 646, '(click green button below to submit)')
 
     # === CARD 2: Mail Form ===
     content10 += _card(40, 458, 530, 120,
                        'Mail Form',
                        'this.mailForm(ui, to, cc, bcc,\nsubject, message)')
     content10 += _label(field_x + 10, 526, 'To Email')
+    content10 += _hint(140, 526, '(enter details, click blue button below)')
     content10 += _label(col2_x + 10, 526, 'Subject')
-    content10 += _label(field_x + 10, 496, 'Click mail button:')
 
     # === CARD 3: Export Data ===
     content10 += _card(40, 338, 530, 120,
                        'Export Data',
                        'this.exportAsText(), exportAsFDF()\nexport form data in various formats')
     content10 += _label(field_x + 10, 432, 'Export Result (auto-populated)')
-    content10 += _label(field_x + 10, 376, 'Click export button:')
+    content10 += _hint(250, 432, '(click purple button below to export)')
 
     # === CARD 4: Print ===
     content10 += _card(40, 218, 530, 120,
@@ -779,8 +779,8 @@ Q
                        'this.print(ui, start, end, silent,\nshrinkToFit, printAsImage)')
     content10 += _label(field_x + 10, 286, 'Start Page')
     content10 += _label(field_x + 125, 286, 'End Page')
+    content10 += _hint(field_x + 220, 286, '(click brown button below to print)')
     content10 += _label(col2_x + 10, 286, 'Print Status')
-    content10 += _label(field_x + 10, 256, 'Click print button:')
 
     # === CARD 5: Dirty Flag & Calculations ===
     content10 += _card(40, 108, 530, 120,
@@ -788,7 +788,7 @@ Q
                        'this.dirty tracks modifications,\nthis.calculateNow() triggers recalc')
     content10 += _label(field_x + 10, 176, 'Document Modified?')
     content10 += _label(col2_x + 10, 176, 'Calculation Status')
-    content10 += _label(col2_x + 10, 146, 'Click to trigger calculations:')
+    content10 += _hint(col2_x + 150, 176, '(click button below to recalculate)')
 
     # === FOOTER ===
     content10 += b"""
