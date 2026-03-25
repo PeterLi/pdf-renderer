@@ -47,7 +47,7 @@ class PDFRenderer {
 
     // Form state
     this.formLayer = null;
-    this.formMode = false;
+    this.formMode = true;  // Default ON - form overlays are performant and hide PDF text duplication
     this.formFieldsByPage = new Map();
     this.formFieldCount = 0;
     this.hasForm = false;

@@ -275,6 +275,12 @@ export class FormLayer {
     el.className = 'form-field-input';
     el.dataset.fieldName = fieldName ?? '';
     el.dataset.fieldType = fieldType ?? '';
+    
+    // Default opaque white background to hide PDF-rendered text underneath
+    // (will be overridden by fillColor if set via JavaScript)
+    if (el.tagName !== 'INPUT' || (el.type !== 'checkbox' && el.type !== 'radio')) {
+      el.style.backgroundColor = 'white';
+    }
 
     // Apply field flags
     if (flags.readOnly) {
