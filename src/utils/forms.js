@@ -41,8 +41,8 @@ export function extractEnhancedFieldMeta(widget) {
   // Debug: log all widget properties for phone field
   if (fieldName === 'phone') {
     console.log('[forms.js] Phone field widget properties:', Object.keys(widget));
+    console.log('[forms.js] Phone field actions:', widget.actions);
     console.log('[forms.js] Phone field AA:', widget.AA, widget.additionalActions);
-    console.log('[forms.js] Full phone widget:', widget);
   }
 
   // MaxLength for text fields
