@@ -478,12 +478,18 @@ export function executeSandboxed(code, context, options = {}) {
     const scopeKeys = Object.keys(scope);
     const scopeValues = scopeKeys.map(k => scope[k]);
 
+    console.log('[formJavaScript] Scope keys:', scopeKeys);
+    console.log('[formJavaScript] Has AFSpecial_Format?', scopeKeys.includes('AFSpecial_Format'));
+    console.log('[formJavaScript] Code to execute:', code);
+
     // Build function body with timeout check
     const wrappedCode = `
       "use strict";
       ${code}
       return event;
     `;
+
+    console.log('[formJavaScript] Wrapped code:', wrappedCode);
 
     // Use Function constructor with controlled scope
     // The scope parameters shadow any global access
