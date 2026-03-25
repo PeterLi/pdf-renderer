@@ -373,8 +373,10 @@ function createSandboxScope(context) {
   const AFDate_FormatEx = AFDate_Format;
 
   const AFSpecial_Format = (psf) => {
+    console.log('[AFSpecial_Format] Called with psf:', psf, 'event.value:', event.value);
     // psf: 0=zipcode, 1=zipcode+4, 2=phone, 3=ssn
     const value = String(event.value || '').replace(/\D/g, ''); // Remove non-digits
+    console.log('[AFSpecial_Format] Cleaned value:', value);
     
     switch (psf) {
       case 0: // Zipcode (xxxxx)
@@ -518,6 +520,8 @@ export function executeSandboxed(code, context, options = {}) {
       alerts,
     };
   } catch (err) {
+    console.error('[formJavaScript] Execution error:', err);
+    console.error('[formJavaScript] Error stack:', err.stack);
     return {
       success: false,
       event: { value: context.currentValue },
