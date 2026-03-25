@@ -131,6 +131,11 @@ export class FormLayer {
     }
 
     this._container.appendChild(this._overlay);
+
+    // Execute Focus actions on initial render (applies styling immediately)
+    if (this._config.allowFormJavaScript) {
+      this._runInitialActions();
+    }
   }
 
   /** Remove the overlay from the DOM */
@@ -346,15 +351,17 @@ export class FormLayer {
       this._onChange?.();
     });
 
-    // Check if field has format actions
-    const hasFormatAction = this._fieldActions.has(fieldName) && 
-      this._fieldActions.get(fieldName).some(a => a.trigger === 'Format');
-    
+    // Check field actions
+    const fieldActions = this._fieldActions.get(fieldName) || [];
+    const hasFormatAction = fieldActions.some(a => a.trigger === 'Format');
+    const hasFocusAction = fieldActions.some(a => a.trigger === 'Focus');
+    const hasBlurAction = fieldActions.some(a => a.trigger === 'Blur');
+
     // Check if field has validation
     const hasValidation = meta?.validationRules?.length > 0;
 
-    // Validate on blur
-    if ((this._config.validateOnBlur && hasValidation) || hasFormatAction) {
+    // Blur handler: validation + Format + Blur actions
+    if ((this._config.validateOnBlur && hasValidation) || hasFormatAction || hasBlurAction) {
       if (!flags.readOnly) {
         el.addEventListener('blur', () => {
           // Run validation if configured
@@ -366,14 +373,26 @@ export class FormLayer {
           if (hasFormatAction) {
             this._runFormatAction(fieldName, el);
           }
-        });
 
-        // Clear error on focus (only if validation exists)
-        if (hasValidation) {
-          el.addEventListener('focus', () => {
+          // Run Blur trigger action
+          if (hasBlurAction && this._config.allowFormJavaScript) {
+            this._runTriggerAction(fieldName, el, 'Blur');
+          }
+        });
+      }
+    }
+
+    // Focus handler: clear errors + Focus actions
+    if (hasValidation || hasFocusAction) {
+      if (!flags.readOnly) {
+        el.addEventListener('focus', () => {
+          if (hasValidation) {
             this._clearFieldError(fieldName, el);
-          });
-        }
+          }
+          if (hasFocusAction && this._config.allowFormJavaScript) {
+            this._runTriggerAction(fieldName, el, 'Focus');
+          }
+        });
       }
     }
 
@@ -557,5 +576,272 @@ export class FormLayer {
         }
       });
     }
+  }
+
+  /**
+   * Run a trigger action (Focus, Blur, etc.) for a field.
+   * Applies field metadata changes (styling, readonly, etc.) from the script result.
+   * @param {string} fieldName
+   * @param {HTMLElement} el
+   * @param {string} trigger - 'Focus', 'Blur', etc.
+   */
+  _runTriggerAction(fieldName, el, trigger) {
+    const actions = this._fieldActions.get(fieldName);
+    if (!actions) return;
+
+    const action = actions.find(a => a.trigger === trigger);
+    if (!action) return;
+
+    if (action.safety === SafetyLevel.UNSAFE && !this._config.allowFormJavaScript) {
+      return;
+    }
+
+    console.log(`[FormLayer] Running ${trigger} action for ${fieldName}:`, action.code);
+
+    const result = executeSandboxed(action.code, {
+      fieldValues: this._values,
+      currentFieldName: fieldName,
+      currentValue: el.value,
+    });
+
+    if (result.success) {
+      // Apply value changes
+      if (result.event && result.event.value !== undefined) {
+        const newValue = String(result.event.value);
+        if (newValue !== el.value) {
+          el.value = newValue;
+          this._values.set(fieldName, newValue);
+        }
+      }
+
+      // Apply field metadata changes (colors, readonly, etc.)
+      if (result.fieldMeta) {
+        this._applyFieldMeta(result.fieldMeta);
+      }
+
+      // Sync any cross-field value updates back to DOM
+      this._syncFieldValues();
+
+      // Log script output
+      if (result.logs?.length) {
+        result.logs.forEach(log => console.log(`[JS:${fieldName}]`, log));
+      }
+    } else if (result.error) {
+      console.warn(`[FormLayer] ${trigger} action error for ${fieldName}:`, result.error);
+    }
+  }
+
+  /**
+   * Run Focus actions on initial page render to apply styling immediately.
+   * This ensures that fields styled by Focus scripts (text color, readonly, etc.)
+   * appear correctly without requiring user interaction.
+   */
+  _runInitialActions() {
+    if (!this._overlay) return;
+
+    console.log('[FormLayer] Running initial actions for all fields');
+
+    // Collect all field metadata from Focus actions first
+    const combinedFieldMeta = new Map();
+
+    this._overlay.querySelectorAll('.form-field-input').forEach(el => {
+      const fieldName = el.dataset.fieldName;
+      if (!fieldName) return;
+
+      const actions = this._fieldActions.get(fieldName);
+      if (!actions) return;
+
+      // Run Focus actions to apply initial styling
+      const focusAction = actions.find(a => a.trigger === 'Focus');
+      if (focusAction) {
+        if (focusAction.safety === SafetyLevel.UNSAFE && !this._config.allowFormJavaScript) {
+          return;
+        }
+
+        console.log(`[FormLayer] Initial Focus action for ${fieldName}:`, focusAction.code);
+
+        const result = executeSandboxed(focusAction.code, {
+          fieldValues: this._values,
+          currentFieldName: fieldName,
+          currentValue: el.value,
+        });
+
+        if (result.success) {
+          if (result.event && result.event.value !== undefined) {
+            const newValue = String(result.event.value);
+            if (newValue !== el.value) {
+              el.value = newValue;
+              this._values.set(fieldName, newValue);
+            }
+          }
+          // Merge field metadata
+          if (result.fieldMeta) {
+            for (const [name, meta] of result.fieldMeta) {
+              combinedFieldMeta.set(name, meta);
+            }
+          }
+          if (result.logs?.length) {
+            result.logs.forEach(log => console.log(`[JS:init:${fieldName}]`, log));
+          }
+        }
+      }
+    });
+
+    // Apply all collected field metadata at once
+    if (combinedFieldMeta.size > 0) {
+      this._applyFieldMeta(combinedFieldMeta);
+    }
+
+    // Sync any cross-field value updates
+    this._syncFieldValues();
+
+    // Run initial calculations
+    if (this._calculations.length > 0) {
+      this._runCalculations();
+    }
+  }
+
+  /**
+   * Apply field metadata (from JavaScript execution) to DOM elements.
+   * Converts Acrobat color arrays to CSS and applies styling.
+   * @param {Map<string, Object>} fieldMeta - Field name -> metadata map
+   */
+  _applyFieldMeta(fieldMeta) {
+    if (!this._overlay || !fieldMeta || fieldMeta.size === 0) return;
+
+    this._overlay.querySelectorAll('.form-field-input').forEach(el => {
+      const name = el.dataset.fieldName;
+      if (!name || !fieldMeta.has(name)) return;
+
+      const meta = fieldMeta.get(name);
+      console.log(`[FormLayer] Applying metadata to ${name}:`, meta);
+
+      // Text color
+      if (meta.textColor) {
+        el.style.color = this._acrobatColorToCSS(meta.textColor);
+      }
+
+      // Fill/background color
+      if (meta.fillColor) {
+        el.style.backgroundColor = this._acrobatColorToCSS(meta.fillColor);
+      }
+
+      // Border color
+      if (meta.borderColor) {
+        const borderCSS = this._acrobatColorToCSS(meta.borderColor);
+        if (borderCSS !== 'transparent') {
+          el.style.borderColor = borderCSS;
+          el.style.borderWidth = '2px';
+          el.style.borderStyle = 'solid';
+        }
+      }
+
+      // Text size
+      if (meta.textSize && meta.textSize > 0) {
+        el.style.fontSize = `${meta.textSize * this._scale}px`;
+      }
+
+      // Font
+      if (meta.textFont) {
+        el.style.fontFamily = meta.textFont;
+      }
+
+      // Alignment
+      if (meta.alignment) {
+        el.style.textAlign = meta.alignment;
+      }
+
+      // Readonly
+      if (meta.readonly !== undefined) {
+        el.readOnly = meta.readonly;
+        el.disabled = meta.readonly;
+        if (meta.readonly) {
+          el.classList.add('field-readonly');
+        } else {
+          el.classList.remove('field-readonly');
+        }
+      }
+
+      // Display
+      if (meta.display !== undefined) {
+        switch (meta.display) {
+          case 0: // visible
+            el.style.visibility = 'visible';
+            el.style.display = '';
+            break;
+          case 1: // hidden
+            el.style.visibility = 'hidden';
+            break;
+          case 2: // noPrint (visible on screen)
+            el.style.visibility = 'visible';
+            el.style.display = '';
+            break;
+          case 3: // noView (hidden on screen)
+            el.style.display = 'none';
+            break;
+        }
+      }
+    });
+  }
+
+  /**
+   * Convert an Acrobat color array to a CSS color string.
+   * @param {Array} colorArr - Acrobat color: ['G', gray], ['RGB', r, g, b], ['CMYK', c, m, y, k], ['T']
+   * @returns {string} CSS color string
+   */
+  _acrobatColorToCSS(colorArr) {
+    if (!Array.isArray(colorArr) || colorArr.length === 0) return 'inherit';
+
+    const type = colorArr[0];
+    switch (type) {
+      case 'T':
+        return 'transparent';
+      case 'G': {
+        const g = Math.round((colorArr[1] ?? 0) * 255);
+        return `rgb(${g}, ${g}, ${g})`;
+      }
+      case 'RGB': {
+        const r = Math.round((colorArr[1] ?? 0) * 255);
+        const g = Math.round((colorArr[2] ?? 0) * 255);
+        const b = Math.round((colorArr[3] ?? 0) * 255);
+        return `rgb(${r}, ${g}, ${b})`;
+      }
+      case 'CMYK': {
+        const c = colorArr[1] ?? 0;
+        const m = colorArr[2] ?? 0;
+        const y = colorArr[3] ?? 0;
+        const k = colorArr[4] ?? 0;
+        const r = Math.round(255 * (1 - c) * (1 - k));
+        const g = Math.round(255 * (1 - m) * (1 - k));
+        const b = Math.round(255 * (1 - y) * (1 - k));
+        return `rgb(${r}, ${g}, ${b})`;
+      }
+      default:
+        return 'inherit';
+    }
+  }
+
+  /**
+   * Sync field values from the internal map back to DOM elements.
+   * Used after cross-field JavaScript updates values of other fields.
+   */
+  _syncFieldValues() {
+    if (!this._overlay) return;
+
+    this._overlay.querySelectorAll('.form-field-input').forEach(el => {
+      const name = el.dataset.fieldName;
+      if (!name) return;
+
+      const storedValue = this._values.get(name);
+      if (storedValue === undefined) return;
+
+      if (el.type === 'checkbox') {
+        el.checked = storedValue === 'on' || storedValue === 'true';
+      } else if (el.type === 'radio') {
+        el.checked = storedValue === el.value;
+      } else if (el.value !== storedValue) {
+        el.value = storedValue;
+      }
+    });
   }
 }
