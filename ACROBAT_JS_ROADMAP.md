@@ -2,7 +2,7 @@
 
 **Goal:** Implement ALL Acrobat JavaScript functions with visual demos
 
-**Status:** 🚀 Phase 1 - Core Functions (8/800+ done)
+**Status:** 🚀 Phase 2 - Advanced Form Functions (14/800+ done)
 
 ---
 
@@ -24,20 +24,20 @@
 
 ---
 
-## 🔨 Phase 2: Advanced Form Functions (NEXT)
+## ✅ Phase 2: Advanced Form Functions (DONE)
 
 ### Format Functions:
-- [ ] `AFDate_FormatEx(cFormat)` - Custom date format strings
-- [ ] `util.printd(cFormat, oDate)` - Advanced date formatting
-- [ ] `util.scand(cFormat, cDate)` - Date parsing
+- [x] `AFDate_FormatEx(cFormat)` - Custom date format strings (yyyy, yy, mm, m, dd, d, HH, H, MM, M, SS, S)
+- [x] `util.printd(cFormat, oDate)` - Advanced date formatting
+- [x] `util.scand(cFormat, cDate)` - Date parsing with format-aware extraction
 
 ### Calculation Functions:
-- [ ] `AFSimple_Calculate(cFunction, cFields)` - Enhanced (SUM/AVG/etc.) ✅ Basic done
+- [x] `AFSimple_Calculate(cFunction, cFields)` - Enhanced with error handling, field name resolution, string/array fields
 - [ ] Field calculation order & dependencies
 - [ ] Cross-field calculations
 
 ### Validation Functions:
-- [ ] `AFRegex_Validate(cRegex)` - Pattern matching ⚠️ Partially done
+- [x] `AFRegex_Validate(cRegex)` - Pattern matching with event.rc and error messages
 - [ ] Custom validation scripts
 - [ ] `event.rc` handling improvements
 
@@ -206,11 +206,11 @@
 
 ## 📈 Progress Tracking
 
-**Functions Implemented:** 10 / ~800  
-**Demo Pages:** 1 / 13+  
-**Phase:** 1 / 8
+**Functions Implemented:** 14 / ~800
+**Demo Pages:** 1 / 13+
+**Phase:** 2 / 8
 
-**Next Up:** Phase 2 - Advanced form functions
+**Next Up:** Phase 3 - Field Object API
 
 ---
 
@@ -226,4 +226,4 @@ Each page should be:
 
 ---
 
-*Last Updated: March 26, 2026, 3:15 AM*
+*Last Updated: March 26, 2026*

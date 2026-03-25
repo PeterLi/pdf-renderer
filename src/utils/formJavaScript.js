@@ -42,6 +42,8 @@ export function classifyAction(jsCode) {
     /^AFPercent_Format\(/,
     /^AFPercent_Keystroke\(/,
     /^AFRange_Validate\(/,
+    /^AFDate_FormatEx\(/,
+    /^AFRegex_Validate\(/,
   ];
 
   if (safePatterns.some(p => p.test(code))) return SafetyLevel.SAFE;
@@ -319,15 +321,39 @@ function createSandboxScope(context) {
     log(msg) { logs.push(String(msg)); },
   };
 
-  // AFSimple_Calculate helper
+  // AFSimple_Calculate — enhanced with error handling and field name resolution
   const AFSimple_Calculate = (op, fields) => {
-    const values = fields.map(f => {
-      const v = parseFloat((context.fieldValues.get(f) || '0').replace(/[$,]/g, ''));
+    // Normalize fields: accept string (single field), array, or comma-separated string
+    let fieldList;
+    if (typeof fields === 'string') {
+      fieldList = fields.split(',').map(f => f.trim()).filter(Boolean);
+    } else if (Array.isArray(fields)) {
+      fieldList = fields;
+    } else {
+      event.value = '0';
+      return;
+    }
+
+    // Resolve field names — try exact match, then partial match for hierarchical names
+    const resolveField = (name) => {
+      if (context.fieldValues.has(name)) return context.fieldValues.get(name);
+      // Try partial match (e.g., "Price" matches "Order.Price")
+      for (const [key, val] of context.fieldValues) {
+        if (key.endsWith('.' + name) || key === name) return val;
+      }
+      return '0';
+    };
+
+    const values = fieldList.map(f => {
+      const raw = resolveField(f);
+      const v = parseFloat(String(raw).replace(/[$,%\s]/g, ''));
+      // Non-numeric values treated as 0 (Acrobat behavior)
       return isNaN(v) ? 0 : v;
     });
 
     let result = 0;
-    switch (op.toUpperCase()) {
+    const operation = String(op).toUpperCase();
+    switch (operation) {
       case 'SUM':
         result = values.reduce((a, b) => a + b, 0);
         break;
@@ -343,6 +369,9 @@ function createSandboxScope(context) {
       case 'PRD':
         result = values.reduce((a, b) => a * b, 1);
         break;
+      default:
+        // Unknown operation — leave value unchanged
+        return;
     }
     event.value = String(result);
   };
@@ -386,7 +415,7 @@ function createSandboxScope(context) {
 
   /**
    * Apply an Acrobat date format string to a Date object.
-   * Supports: yyyy, yy, mmmm, mmm, mm, m, dd, d, HH, h, MM, ss, tt
+   * Supports: yyyy, yy, mmmm, mmm, mm, m, dd, d, HH, H, h, MM, M, SS, S, ss, tt
    */
   const _formatDate = (date, fmt) => {
     const months = ['January','February','March','April','May','June',
@@ -406,13 +435,18 @@ function createSandboxScope(context) {
     result = result.replace(/mmmm/g, months[date.getMonth()]);
     result = result.replace(/mmm/g, monthsShort[date.getMonth()]);
     result = result.replace(/mm/g, pad(date.getMonth() + 1));
-    result = result.replace(/m/g, String(date.getMonth() + 1));
+    // Use word boundary to avoid replacing 'm' inside already-replaced text
+    result = result.replace(/(?<=^|[^a-zA-Z])m(?=$|[^a-zA-Z])/g, String(date.getMonth() + 1));
     result = result.replace(/dd/g, pad(date.getDate()));
-    result = result.replace(/d/g, String(date.getDate()));
+    result = result.replace(/(?<=^|[^a-zA-Z])d(?=$|[^a-zA-Z])/g, String(date.getDate()));
     result = result.replace(/HH/g, pad(hours24));
+    result = result.replace(/(?<=^|[^a-zA-Z])H(?=$|[^a-zA-Z])/g, String(hours24));
     result = result.replace(/h/g, String(hours12));
     result = result.replace(/MM/g, pad(date.getMinutes()));
+    result = result.replace(/(?<=^|[^a-zA-Z])M(?=$|[^a-zA-Z])/g, String(date.getMinutes()));
+    result = result.replace(/SS/g, pad(date.getSeconds()));
     result = result.replace(/ss/g, pad(date.getSeconds()));
+    result = result.replace(/(?<=^|[^a-zA-Z])S(?=$|[^a-zA-Z])/g, String(date.getSeconds()));
     result = result.replace(/tt/g, ampm);
 
     return result;
@@ -647,6 +681,145 @@ function createSandboxScope(context) {
     }
   };
 
+  // AFRegex_Validate — validate event.value against a regular expression pattern
+  const AFRegex_Validate = (cRegex) => {
+    const val = String(event.value || '');
+    // Allow empty values (use required validation separately)
+    if (!val) return;
+
+    try {
+      const regex = new RegExp(cRegex);
+      if (!regex.test(val)) {
+        event.rc = false;
+        // Match Acrobat's behavior: show descriptive error via app.alert
+        alerts.push('The value entered does not match the required format.');
+      }
+    } catch (e) {
+      // Invalid regex pattern — reject to be safe
+      event.rc = false;
+      alerts.push('Invalid validation pattern.');
+    }
+  };
+
+  // util object — Acrobat JavaScript utility functions
+  const util = {
+    /**
+     * printd — format a Date object using an Acrobat format string.
+     * @param {string} cFormat - Format string (same tokens as _formatDate)
+     * @param {Date|number|string} oDate - Date to format
+     * @returns {string} Formatted date string
+     */
+    printd(cFormat, oDate) {
+      let date;
+      if (oDate instanceof Date) {
+        date = oDate;
+      } else {
+        date = _parseDate(oDate);
+      }
+      if (!date || isNaN(date.getTime())) return '';
+      return _formatDate(date, String(cFormat));
+    },
+
+    /**
+     * scand — parse a date string using an Acrobat format string.
+     * @param {string} cFormat - Expected format (used as hint for parsing)
+     * @param {string} cDate - Date string to parse
+     * @returns {Date|null} Parsed Date object or null on failure
+     */
+    scand(cFormat, cDate) {
+      if (!cDate) return null;
+      const s = String(cDate).trim();
+      if (!s) return null;
+
+      // Try format-aware parsing for common patterns
+      const fmt = String(cFormat);
+
+      // Extract expected token positions from format
+      // Supports: yyyy/yy, mm/m, dd/d with any separator
+      const fmtTokens = fmt.match(/(yyyy|yy|mmmm|mmm|mm|m|dd|d|HH|H|h|MM|M|SS|S|ss|tt)/g);
+      if (fmtTokens) {
+        // Build a regex from the format, replacing tokens with capture groups
+        let regexStr = fmt.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+        const tokenMap = {};
+        let groupIdx = 1;
+
+        for (const token of fmtTokens) {
+          const escapedToken = token.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+          let pattern;
+          switch (token) {
+            case 'yyyy': pattern = '(\\d{4})'; break;
+            case 'yy': pattern = '(\\d{2})'; break;
+            case 'mmmm': pattern = '([A-Za-z]+)'; break;
+            case 'mmm': pattern = '([A-Za-z]{3})'; break;
+            case 'mm': case 'dd': case 'HH': case 'MM': case 'SS': case 'ss':
+              pattern = '(\\d{1,2})'; break;
+            case 'm': case 'd': case 'H': case 'h': case 'M': case 'S':
+              pattern = '(\\d{1,2})'; break;
+            case 'tt': pattern = '([AaPp][Mm])'; break;
+            default: pattern = '(.+?)'; break;
+          }
+          regexStr = regexStr.replace(escapedToken, pattern);
+          tokenMap[groupIdx] = token;
+          groupIdx++;
+        }
+
+        const match = s.match(new RegExp('^' + regexStr + '$'));
+        if (match) {
+          let year = new Date().getFullYear();
+          let month = 0, day = 1, hours = 0, minutes = 0, seconds = 0;
+          const monthNames = ['jan','feb','mar','apr','may','jun',
+            'jul','aug','sep','oct','nov','dec'];
+          const monthNamesFull = ['january','february','march','april','may','june',
+            'july','august','september','october','november','december'];
+
+          for (let i = 1; i < match.length; i++) {
+            const token = tokenMap[i];
+            const val = match[i];
+            switch (token) {
+              case 'yyyy': year = parseInt(val); break;
+              case 'yy': {
+                const yy = parseInt(val);
+                year = yy < 50 ? 2000 + yy : 1900 + yy;
+                break;
+              }
+              case 'mmmm': {
+                const idx = monthNamesFull.indexOf(val.toLowerCase());
+                if (idx >= 0) month = idx;
+                break;
+              }
+              case 'mmm': {
+                const idx = monthNames.indexOf(val.toLowerCase());
+                if (idx >= 0) month = idx;
+                break;
+              }
+              case 'mm': case 'm': month = parseInt(val) - 1; break;
+              case 'dd': case 'd': day = parseInt(val); break;
+              case 'HH': case 'H': hours = parseInt(val); break;
+              case 'h': {
+                hours = parseInt(val);
+                break;
+              }
+              case 'MM': case 'M': minutes = parseInt(val); break;
+              case 'SS': case 'S': case 'ss': seconds = parseInt(val); break;
+              case 'tt': {
+                const isPM = val.toLowerCase() === 'pm';
+                if (isPM && hours < 12) hours += 12;
+                if (!isPM && hours === 12) hours = 0;
+                break;
+              }
+            }
+          }
+
+          const result = new Date(year, month, day, hours, minutes, seconds);
+          if (!isNaN(result.getTime())) return result;
+        }
+      }
+
+      // Fallback: try native Date parsing
+      return _parseDate(s);
+    },
+  };
+
   // Build scope (filter out 'undefined' - can't be a parameter name in strict mode)
   const allowedGlobalsFiltered = { ...ALLOWED_GLOBALS };
   delete allowedGlobalsFiltered.undefined;
@@ -670,6 +843,8 @@ function createSandboxScope(context) {
     AFPercent_Format,
     AFPercent_Keystroke,
     AFRange_Validate,
+    AFRegex_Validate,
+    util,
   };
 
   // Don't add BLOCKED_GLOBALS to scope - they're blocked by not being in scope!
