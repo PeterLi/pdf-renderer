@@ -339,7 +339,51 @@ function createSandboxScope(context) {
 
   const AFDate_FormatEx = AFDate_Format;
 
-  const AFSpecial_Format = () => {};
+  const AFSpecial_Format = (psf) => {
+    // psf: 0=zipcode, 1=zipcode+4, 2=phone, 3=ssn
+    const value = String(event.value || '').replace(/\D/g, ''); // Remove non-digits
+    
+    switch (psf) {
+      case 0: // Zipcode (xxxxx)
+        event.value = value.substring(0, 5);
+        break;
+        
+      case 1: // Zipcode + 4 (xxxxx-xxxx)
+        if (value.length <= 5) {
+          event.value = value;
+        } else {
+          event.value = value.substring(0, 5) + '-' + value.substring(5, 9);
+        }
+        break;
+        
+      case 2: // Phone ((xxx) xxx-xxxx)
+        if (value.length === 0) {
+          event.value = '';
+        } else if (value.length <= 3) {
+          event.value = '(' + value;
+        } else if (value.length <= 6) {
+          event.value = '(' + value.substring(0, 3) + ') ' + value.substring(3);
+        } else {
+          event.value = '(' + value.substring(0, 3) + ') ' + value.substring(3, 6) + '-' + value.substring(6, 10);
+        }
+        break;
+        
+      case 3: // SSN (xxx-xx-xxxx)
+        if (value.length <= 3) {
+          event.value = value;
+        } else if (value.length <= 5) {
+          event.value = value.substring(0, 3) + '-' + value.substring(3);
+        } else {
+          event.value = value.substring(0, 3) + '-' + value.substring(3, 5) + '-' + value.substring(5, 9);
+        }
+        break;
+        
+      default:
+        // Unknown format, leave as-is
+        break;
+    }
+  };
+
   const AFNumber_Keystroke = () => {};
   const AFDate_Keystroke = () => {};
   const AFTime_Format = () => {};

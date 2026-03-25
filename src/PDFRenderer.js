@@ -794,7 +794,7 @@ class PDFRenderer {
     
     // Update FormLayer if it exists
     if (this.formLayer) {
-      this.formLayer.config.allowFormJavaScript = this.config.allowFormJavaScript;
+      this.formLayer._config.allowFormJavaScript = this.config.allowFormJavaScript;
     }
   }
 
