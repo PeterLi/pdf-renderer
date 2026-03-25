@@ -360,19 +360,27 @@ export class FormLayer {
       this._onChange?.();
     });
 
-    // Dropdown change: sync value, run Blur actions and calculations
+    // Dropdown change: sync value, run Blur + Validate actions and calculations
     if (el.tagName === 'SELECT') {
       el.addEventListener('change', () => {
         if (!fieldName) return;
         this._values.set(fieldName, el.value);
 
         if (this._config.allowFormJavaScript) {
-          // Run Blur actions (cross-field updates)
           const actions = this._fieldActions.get(fieldName) || [];
+          
+          // Run Blur actions (cross-field updates)
           const blurAction = actions.find(a => a.trigger === 'Blur');
           if (blurAction) {
             this._runTriggerAction(fieldName, el, 'Blur');
           }
+          
+          // Run Validate actions (often used for cross-field updates in dropdowns)
+          const validateAction = actions.find(a => a.trigger === 'Validate');
+          if (validateAction) {
+            this._runTriggerAction(fieldName, el, 'Validate');
+          }
+          
           // Run calculations
           if (this._calculations.length > 0) {
             this._runCalculations();
