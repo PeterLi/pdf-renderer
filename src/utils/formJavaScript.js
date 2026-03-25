@@ -453,10 +453,8 @@ function createSandboxScope(context) {
     AFRange_Validate,
   };
 
-  // Block dangerous globals
-  for (const name of BLOCKED_GLOBALS) {
-    scope[name] = undefined;
-  }
+  // Don't add BLOCKED_GLOBALS to scope - they're blocked by not being in scope!
+  // Adding them as undefined causes "eval" and other reserved words to become parameter names
 
   return scope;
 }
@@ -485,6 +483,17 @@ export function executeSandboxed(code, context, options = {}) {
 
     console.log('[formJavaScript] Scope keys:', scopeKeys);
     console.log('[formJavaScript] Has AFSpecial_Format?', scopeKeys.includes('AFSpecial_Format'));
+    
+    // Check for reserved words that can't be parameter names in strict mode
+    const strictReservedWords = [
+      'implements', 'interface', 'let', 'package', 'private', 'protected',
+      'public', 'static', 'yield', 'eval', 'arguments', 'undefined'
+    ];
+    const invalidKeys = scopeKeys.filter(k => strictReservedWords.includes(k));
+    if (invalidKeys.length > 0) {
+      console.error('[formJavaScript] Found reserved words in scope:', invalidKeys);
+    }
+    
     console.log('[formJavaScript] Code to execute:', code);
 
     // Build function body with timeout check
