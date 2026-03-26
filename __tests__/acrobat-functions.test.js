@@ -622,6 +622,156 @@ describe('Phase 3: Field Object API', () => {
       `, '');
       expect(result.event.value).toBe('G,0|RGB,1,0,0|T');
     });
+
+    it('has all 12 named color constants', () => {
+      const result = run(`
+        var names = ['transparent','black','white','red','green','blue',
+                     'cyan','magenta','yellow','dkGray','gray','ltGray'];
+        var all = names.map(function(n) { return color[n][0]; });
+        event.value = all.join(",");
+      `, '');
+      expect(result.event.value).toBe('T,G,G,RGB,RGB,RGB,CMYK,CMYK,CMYK,G,G,G');
+    });
+
+    describe('color.convert', () => {
+      it('converts RGB to Gray', () => {
+        const result = run(`
+          var gray = color.convert(color.white, "G");
+          event.value = gray.join(",");
+        `, '');
+        expect(result.event.value).toBe('G,1');
+      });
+
+      it('converts RGB red to Gray using luminance', () => {
+        const result = run(`
+          var gray = color.convert(color.red, "G");
+          event.value = gray.join(",");
+        `, '');
+        expect(result.event.value).toBe('G,0.3');
+      });
+
+      it('converts Gray to RGB', () => {
+        const result = run(`
+          var rgb = color.convert(color.gray, "RGB");
+          event.value = rgb.join(",");
+        `, '');
+        expect(result.event.value).toBe('RGB,0.5,0.5,0.5');
+      });
+
+      it('converts RGB to CMYK', () => {
+        const result = run(`
+          var cmyk = color.convert(color.red, "CMYK");
+          event.value = cmyk.join(",");
+        `, '');
+        expect(result.event.value).toBe('CMYK,0,1,1,0');
+      });
+
+      it('converts CMYK to RGB', () => {
+        const result = run(`
+          var rgb = color.convert(color.cyan, "RGB");
+          event.value = rgb.join(",");
+        `, '');
+        expect(result.event.value).toBe('RGB,0,1,1');
+      });
+
+      it('converts CMYK to Gray', () => {
+        const result = run(`
+          var gray = color.convert(color.cyan, "G");
+          event.value = gray.join(",");
+        `, '');
+        // cyan (0,1,1) -> luminance 0.3*0 + 0.59*1 + 0.11*1 = 0.7
+        expect(result.event.value).toBe('G,0.7');
+      });
+
+      it('converts black (Gray 0) to CMYK', () => {
+        const result = run(`
+          var cmyk = color.convert(color.black, "CMYK");
+          event.value = cmyk.join(",");
+        `, '');
+        expect(result.event.value).toBe('CMYK,0,0,0,1');
+      });
+
+      it('returns transparent when converting to T', () => {
+        const result = run(`
+          var t = color.convert(color.red, "T");
+          event.value = t.join(",");
+        `, '');
+        expect(result.event.value).toBe('T');
+      });
+
+      it('converts transparent to other spaces as black', () => {
+        const result = run(`
+          var g = color.convert(color.transparent, "G");
+          var rgb = color.convert(color.transparent, "RGB");
+          var cmyk = color.convert(color.transparent, "CMYK");
+          event.value = g.join(",") + "|" + rgb.join(",") + "|" + cmyk.join(",");
+        `, '');
+        expect(result.event.value).toBe('G,0|RGB,0,0,0|CMYK,0,0,0,1');
+      });
+
+      it('same space returns a copy', () => {
+        const result = run(`
+          var orig = color.red;
+          var copy = color.convert(orig, "RGB");
+          event.value = (copy.join(",") === orig.join(",")) + "," + (copy !== orig);
+        `, '');
+        expect(result.event.value).toBe('true,true');
+      });
+    });
+
+    describe('color.equal', () => {
+      it('same color is equal', () => {
+        const result = run(`
+          event.value = String(color.equal(color.red, ["RGB", 1, 0, 0]));
+        `, '');
+        expect(result.event.value).toBe('true');
+      });
+
+      it('different colors are not equal', () => {
+        const result = run(`
+          event.value = String(color.equal(color.red, color.blue));
+        `, '');
+        expect(result.event.value).toBe('false');
+      });
+
+      it('transparent equals transparent', () => {
+        const result = run(`
+          event.value = String(color.equal(color.transparent, ["T"]));
+        `, '');
+        expect(result.event.value).toBe('true');
+      });
+
+      it('transparent does not equal black', () => {
+        const result = run(`
+          event.value = String(color.equal(color.transparent, color.black));
+        `, '');
+        expect(result.event.value).toBe('false');
+      });
+
+      it('compares colors across different color spaces', () => {
+        const result = run(`
+          // Gray 0.5 should equal RGB 0.5,0.5,0.5
+          var g = ["G", 0.5];
+          var rgb = ["RGB", 0.5, 0.5, 0.5];
+          event.value = String(color.equal(g, rgb));
+        `, '');
+        expect(result.event.value).toBe('true');
+      });
+
+      it('white in Gray equals white in RGB', () => {
+        const result = run(`
+          event.value = String(color.equal(["G", 1], ["RGB", 1, 1, 1]));
+        `, '');
+        expect(result.event.value).toBe('true');
+      });
+
+      it('handles invalid input gracefully', () => {
+        const result = run(`
+          event.value = String(color.equal(null, color.red));
+        `, '');
+        expect(result.event.value).toBe('false');
+      });
+    });
   });
 
   describe('Cross-field Manipulation', () => {

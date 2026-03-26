@@ -1636,7 +1636,7 @@ function createSandboxScope(context) {
     },
   };
 
-  // color object — Acrobat named color constants
+  // color object — Acrobat named color constants + convert/equal methods
   const color = {
     transparent: ['T'],
     black: ['G', 0],
@@ -1650,6 +1650,103 @@ function createSandboxScope(context) {
     dkGray: ['G', 0.25],
     gray: ['G', 0.5],
     ltGray: ['G', 0.75],
+
+    /**
+     * Convert a color to a different color space.
+     * Supports: "T" (transparent), "G" (grayscale), "RGB", "CMYK".
+     * @param {Array} aColor - Acrobat color array e.g. ['RGB', 1, 0, 0]
+     * @param {string} cColorSpace - Target color space: "T", "G", "RGB", or "CMYK"
+     * @returns {Array} Converted color array
+     */
+    convert(aColor, cColorSpace) {
+      if (!Array.isArray(aColor) || aColor.length === 0) return ['T'];
+      const srcSpace = aColor[0];
+      const target = cColorSpace;
+
+      // Same space — return copy
+      if (srcSpace === target) return aColor.slice();
+
+      // Anything to Transparent
+      if (target === 'T') return ['T'];
+
+      // Transparent to anything — return black in that space
+      if (srcSpace === 'T') {
+        if (target === 'G') return ['G', 0];
+        if (target === 'RGB') return ['RGB', 0, 0, 0];
+        if (target === 'CMYK') return ['CMYK', 0, 0, 0, 1];
+        return ['T'];
+      }
+
+      // First normalize source to RGB
+      let r, g, b;
+      if (srcSpace === 'G') {
+        const gray = aColor[1];
+        r = gray; g = gray; b = gray;
+      } else if (srcSpace === 'RGB') {
+        r = aColor[1]; g = aColor[2]; b = aColor[3];
+      } else if (srcSpace === 'CMYK') {
+        const c = aColor[1], m = aColor[2], y = aColor[3], k = aColor[4];
+        r = (1 - c) * (1 - k);
+        g = (1 - m) * (1 - k);
+        b = (1 - y) * (1 - k);
+      } else {
+        return ['T'];
+      }
+
+      // Then convert RGB to target
+      if (target === 'G') {
+        // Standard luminance formula
+        const gray = 0.3 * r + 0.59 * g + 0.11 * b;
+        return ['G', Math.round(gray * 1000) / 1000];
+      } else if (target === 'RGB') {
+        return ['RGB',
+          Math.round(r * 1000) / 1000,
+          Math.round(g * 1000) / 1000,
+          Math.round(b * 1000) / 1000];
+      } else if (target === 'CMYK') {
+        const k = 1 - Math.max(r, g, b);
+        if (k >= 1) return ['CMYK', 0, 0, 0, 1];
+        const c = (1 - r - k) / (1 - k);
+        const m = (1 - g - k) / (1 - k);
+        const y = (1 - b - k) / (1 - k);
+        return ['CMYK',
+          Math.round(c * 1000) / 1000,
+          Math.round(m * 1000) / 1000,
+          Math.round(y * 1000) / 1000,
+          Math.round(k * 1000) / 1000];
+      }
+      return ['T'];
+    },
+
+    /**
+     * Compare two colors for equality.
+     * Colors are equal if they represent the same color (converted to same space).
+     * @param {Array} aColor1 - First color
+     * @param {Array} aColor2 - Second color
+     * @returns {boolean} true if colors are equal
+     */
+    equal(aColor1, aColor2) {
+      if (!Array.isArray(aColor1) || !Array.isArray(aColor2)) return false;
+      // Both transparent
+      if (aColor1[0] === 'T' && aColor2[0] === 'T') return true;
+      // One transparent, other not
+      if (aColor1[0] === 'T' || aColor2[0] === 'T') return false;
+      // Same color space — direct compare
+      if (aColor1[0] === aColor2[0]) {
+        if (aColor1.length !== aColor2.length) return false;
+        for (let i = 1; i < aColor1.length; i++) {
+          if (Math.abs(aColor1[i] - aColor2[i]) > 0.001) return false;
+        }
+        return true;
+      }
+      // Different color spaces — convert both to RGB and compare
+      const rgb1 = this.convert(aColor1, 'RGB');
+      const rgb2 = this.convert(aColor2, 'RGB');
+      for (let i = 1; i <= 3; i++) {
+        if (Math.abs(rgb1[i] - rgb2[i]) > 0.001) return false;
+      }
+      return true;
+    },
   };
 
   // display constants (matches Acrobat)
