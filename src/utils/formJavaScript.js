@@ -82,6 +82,8 @@ export function parseJavaScriptActions(widget) {
     K:  'Keystroke',
     E:  'Enter',      // Mouse enter
     X:  'Exit',       // Mouse exit
+    U:  'MouseUp',    // Mouse up (click)
+    D:  'MouseDown',  // Mouse down
     Fo: 'Focus',
     Bl: 'Blur',
   };
@@ -98,6 +100,8 @@ export function parseJavaScriptActions(widget) {
       'Keystroke': 'Keystroke',
       'MouseEnter': 'Enter',
       'MouseExit': 'Exit',
+      'MouseUp': 'MouseUp',
+      'MouseDown': 'MouseDown',
       'Focus': 'Focus',
       'Blur': 'Blur',
     };
@@ -515,6 +519,10 @@ function createSandboxScope(context) {
   /** Get sorted list of all field names */
   const _getFieldNames = () => {
     const names = new Set();
+    // Include all document field names (entire PDF, not just current page)
+    if (context.allFieldNames) {
+      for (const name of context.allFieldNames) names.add(name);
+    }
     // Include fields from fieldValues
     if (context.fieldValues) {
       for (const key of context.fieldValues.keys()) names.add(key);
@@ -1933,7 +1941,7 @@ export function getCalculationOrder(fieldActions) {
  * @param {boolean} allowUnsafe - Whether to run UNSAFE calculations
  * @returns {{ updates: Map<string, string>, errors: string[] }}
  */
-export function runCalculations(calculations, fieldValues, allowUnsafe = false) {
+export function runCalculations(calculations, fieldValues, allowUnsafe = false, docProps = {}) {
   const updates = new Map();
   const errors = [];
 
@@ -1944,6 +1952,7 @@ export function runCalculations(calculations, fieldValues, allowUnsafe = false) 
       fieldValues,
       currentFieldName: calc.fieldName,
       currentValue: fieldValues.get(calc.fieldName) || '',
+      ...docProps,
     });
 
     if (result.success && result.event) {

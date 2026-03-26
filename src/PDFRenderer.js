@@ -411,6 +411,7 @@ class PDFRenderer {
       const buffer = await resp.arrayBuffer();
       console.log('[PDFRenderer] Received', buffer.byteLength, 'bytes');
       const file = new File([buffer], url.split('/').pop() || 'document.pdf', { type: 'application/pdf' });
+      this._sourceURL = url;
       await this._openFile(file);
     } catch (err) {
       console.error('[PDFRenderer] openFromURL error:', err);
@@ -744,10 +745,61 @@ class PDFRenderer {
         });
         this.formLayer.setValues(existingValues);
         this.formLayer.setEnhancedMeta(this.enhancedMeta);
+
+        // Pass document-level properties for sandbox JS (this.numPages, etc.)
+        await this._setFormDocumentProperties();
       }
     } catch (err) {
       console.warn('Form detection failed:', err);
     }
+  }
+
+  /**
+   * Collect document properties and pass them to FormLayer for sandbox JS.
+   */
+  async _setFormDocumentProperties() {
+    if (!this.formLayer || !this.pdfDoc) return;
+
+    const filename = this.els.filename.textContent || '';
+    const url = this._sourceURL || '';
+
+    // Gather all field names across all pages
+    const allFieldNames = [];
+    for (const [, fields] of this.formFieldsByPage) {
+      for (const f of fields) {
+        if (f.fieldName) allFieldNames.push(f.fieldName);
+      }
+    }
+
+    // Get PDF metadata
+    let info = {};
+    try {
+      const meta = await this.pdfDoc.getMetadata();
+      if (meta?.info) {
+        info = {
+          Title: meta.info.Title || '',
+          Author: meta.info.Author || '',
+          Subject: meta.info.Subject || '',
+          Keywords: meta.info.Keywords || '',
+          Creator: meta.info.Creator || '',
+          Producer: meta.info.Producer || '',
+          CreationDate: meta.info.CreationDate ? new Date(meta.info.CreationDate) : new Date(),
+          ModDate: meta.info.ModDate ? new Date(meta.info.ModDate) : new Date(),
+        };
+      }
+    } catch (e) {
+      console.warn('[PDFRenderer] Could not get PDF metadata:', e);
+    }
+
+    this.formLayer.setDocumentProperties({
+      numPages: this.totalPages,
+      documentFileName: filename,
+      filesize: this.pdfBytes ? this.pdfBytes.length : 0,
+      path: url || filename,
+      url,
+      info,
+      allFieldNames,
+    });
   }
 
   async _toggleFormMode() {

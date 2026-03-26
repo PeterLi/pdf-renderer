@@ -57,6 +57,9 @@ export class FormLayer {
       validateOnSubmit: config.validateOnSubmit ?? true,
       showValidationErrors: config.showValidationErrors ?? true,
     };
+
+    // Document properties for sandbox context (numPages, fileName, etc.)
+    this._docProps = {};
   }
 
   /** Get the current form values map */
@@ -73,6 +76,14 @@ export class FormLayer {
     for (const [k, v] of valuesMap) {
       this._values.set(k, v);
     }
+  }
+
+  /**
+   * Set document-level properties exposed to sandbox JS (this.numPages, etc.)
+   * @param {Object} props - { numPages, documentFileName, filesize, path, url, info, allFieldNames }
+   */
+  setDocumentProperties(props) {
+    this._docProps = props || {};
   }
 
   /**
@@ -403,6 +414,7 @@ export class FormLayer {
     const hasFormatAction = fieldActions.some(a => a.trigger === 'Format');
     const hasFocusAction = fieldActions.some(a => a.trigger === 'Focus');
     const hasBlurAction = fieldActions.some(a => a.trigger === 'Blur');
+    const hasMouseUpAction = fieldActions.some(a => a.trigger === 'MouseUp');
 
     // Check if field has validation
     const hasValidation = meta?.validationRules?.length > 0;
@@ -441,6 +453,14 @@ export class FormLayer {
           }
         });
       }
+    }
+
+    // MouseUp (click) handler: execute action immediately on click
+    if (hasMouseUpAction && this._config.allowFormJavaScript) {
+      el.addEventListener('click', () => {
+        this._runTriggerAction(fieldName, el, 'MouseUp');
+      });
+      el.style.cursor = 'pointer';
     }
 
     // Show existing errors (from prior validation)
@@ -557,6 +577,21 @@ export class FormLayer {
   // ============================================================
 
   /**
+   * Build a sandbox context object with field values and document properties.
+   * @param {string} fieldName
+   * @param {string} currentValue
+   * @returns {Object} context for executeSandboxed
+   */
+  _buildSandboxContext(fieldName, currentValue) {
+    return {
+      fieldValues: this._values,
+      currentFieldName: fieldName,
+      currentValue,
+      ...this._docProps,
+    };
+  }
+
+  /**
    * Run format action for a field (on blur).
    * @param {string} fieldName
    * @param {HTMLElement} el
@@ -584,11 +619,7 @@ export class FormLayer {
     }
 
     console.log('[FormLayer] Executing format action:', formatAction.code);
-    const result = executeSandboxed(formatAction.code, {
-      fieldValues: this._values,
-      currentFieldName: fieldName,
-      currentValue: el.value,
-    });
+    const result = executeSandboxed(formatAction.code, this._buildSandboxContext(fieldName, el.value));
 
     console.log('[FormLayer] Format result:', result);
 
@@ -612,6 +643,7 @@ export class FormLayer {
       this._calculations,
       this._values,
       this._config.allowFormJavaScript,
+      this._docProps,
     );
 
     // Update visible input elements for computed fields
@@ -645,11 +677,7 @@ export class FormLayer {
 
     console.log(`[FormLayer] Running ${trigger} action for ${fieldName}:`, action.code);
 
-    const result = executeSandboxed(action.code, {
-      fieldValues: this._values,
-      currentFieldName: fieldName,
-      currentValue: el.value,
-    });
+    const result = executeSandboxed(action.code, this._buildSandboxContext(fieldName, el.value));
 
     if (result.success) {
       // Apply value changes
@@ -687,9 +715,11 @@ export class FormLayer {
   _runInitialSetup() {
     if (!this._overlay) return;
 
-    console.log('[FormLayer] Running initial setup (calculations + value sync only, NO Focus actions)');
+    console.log('[FormLayer] Running initial setup (calculations + value sync + button init)');
 
-    // Log which triggers exist for debugging — but do NOT execute them
+    // Run Focus actions for button-like fields (those with MouseUp action)
+    // so their text/styling is visible immediately without user interaction.
+    // Regular text fields skip Focus on load to preserve default PDF styling.
     this._overlay.querySelectorAll('.form-field-input').forEach(el => {
       const fieldName = el.dataset.fieldName;
       if (!fieldName) return;
@@ -698,7 +728,15 @@ export class FormLayer {
       if (!actions) return;
 
       const triggers = actions.map(a => a.trigger);
-      console.log(`[FormLayer] Field "${fieldName}" has triggers: [${triggers.join(', ')}] — Focus skipped on load`);
+      const hasMouseUp = triggers.includes('MouseUp');
+      const hasFocus = triggers.includes('Focus');
+
+      if (hasMouseUp && hasFocus) {
+        console.log(`[FormLayer] Running Focus init for button "${fieldName}"`);
+        this._runTriggerAction(fieldName, el, 'Focus');
+      } else {
+        console.log(`[FormLayer] Field "${fieldName}" has triggers: [${triggers.join(', ')}] — Focus skipped on load`);
+      }
     });
 
     // Sync any cross-field value updates

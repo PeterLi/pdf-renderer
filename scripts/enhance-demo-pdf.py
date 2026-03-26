@@ -538,17 +538,17 @@ def add_document_api_demo_pages(pdf):
         field = create_text_field(pdf, page9, name, x, y, w, h, actions)
         created_fields_9.append(field)
 
-    # Button-like field: Add Field
+    # Button-like field: Add Field (MouseUp = click, Focus = styling init)
     add_btn = create_text_field(pdf, page9, 'doc_add_btn', field_x + 10, 340, 220, 24, {
         '/Fo': 'var f = getField("doc_add_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.55]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Click to Add Field";',
-        '/Bl': 'var nameF = getField("doc_new_name"); var name = nameF.value; if (name) { this.addField(name, "text", 0, [0,0,100,20]); getField("doc_add_result").value = "Added: " + name; } else { getField("doc_add_result").value = "Enter a name first!"; }'
+        '/U': 'var nameF = getField("doc_new_name"); var name = nameF.value; if (name) { this.addField(name, "text", 0, [0,0,100,20]); getField("doc_add_result").value = "Added: " + name; } else { getField("doc_add_result").value = "Enter a name first!"; }'
     })
     created_fields_9.append(add_btn)
 
-    # Button-like field: Reset Form
-    reset_btn = create_text_field(pdf, page9, 'doc_reset_btn', col2_x + 10, 220, 220, 24, {
+    # Button-like field: Reset Form (narrower to avoid overlap)
+    reset_btn = create_text_field(pdf, page9, 'doc_reset_btn', col2_x + 10, 220, 170, 24, {
         '/Fo': 'var f = getField("doc_reset_btn"); f.fillColor = ["RGB", 0.8, 0.2, 0.2]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Reset These Fields";',
-        '/Bl': 'this.resetForm(["doc_reset_field1", "doc_reset_field2"]); getField("doc_reset_status").value = "Fields reset!";'
+        '/U': 'this.resetForm(["doc_reset_field1", "doc_reset_field2"]); getField("doc_reset_status").value = "Fields reset!";'
     })
     created_fields_9.append(reset_btn)
 
