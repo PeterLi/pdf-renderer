@@ -1023,6 +1023,7 @@ def add_util_object_demo_page(pdf):
     printx_result = create_text_field(pdf, page, 'util_printx_result', col2_x + 10, 618, 220, 24, {
         '/Fo': 'var f = getField("util_printx_result"); f.readonly = true; f.fillColor = ["RGB", 0.96, 1, 0.96]; f.alignment = "center";'
     })
+    printx_result['/Ff'] = 1  # READ_ONLY flag - prevents validation on output field
     created_fields.append(printx_result)
 
     printx_btn = create_text_field(pdf, page, 'util_printx_btn', field_x + 10, 588, 510, 24, {
@@ -1038,6 +1039,7 @@ def add_util_object_demo_page(pdf):
     printx2_result = create_text_field(pdf, page, 'util_printx2_result', col2_x + 10, 528, 220, 24, {
         '/Fo': 'var f = getField("util_printx2_result"); f.readonly = true; f.fillColor = ["RGB", 0.96, 1, 0.96]; f.alignment = "center";'
     })
+    printx2_result['/Ff'] = 1  # READ_ONLY flag - prevents validation on output field
     created_fields.append(printx2_result)
 
     printx2_btn = create_text_field(pdf, page, 'util_printx2_btn', field_x + 10, 498, 510, 24, {
@@ -1050,6 +1052,7 @@ def add_util_object_demo_page(pdf):
     printf_result = create_text_field(pdf, page, 'util_printf_result', field_x + 10, 390, 510, 50, {
         '/Fo': 'var f = getField("util_printf_result"); f.readonly = true; f.multiline = true; f.fillColor = ["RGB", 0.96, 0.96, 1]; f.textSize = 10;'
     })
+    printf_result['/Ff'] = 1  # READ_ONLY flag - prevents validation on output field
     created_fields.append(printf_result)
 
     printf_btn = create_text_field(pdf, page, 'util_printf_btn', field_x + 10, 360, 510, 24, {
@@ -1065,6 +1068,7 @@ def add_util_object_demo_page(pdf):
     crack_result = create_text_field(pdf, page, 'util_crack_result', field_x + 10, 198, 510, 68, {
         '/Fo': 'var f = getField("util_crack_result"); f.readonly = true; f.multiline = true; f.fillColor = ["RGB", 1, 0.98, 0.94]; f.textSize = 9;'
     })
+    crack_result['/Ff'] = 1  # READ_ONLY flag - prevents validation on output field
     created_fields.append(crack_result)
 
     crack_btn = create_text_field(pdf, page, 'util_crack_btn', field_x + 10, 240, 510, 24, {
@@ -1080,6 +1084,7 @@ def add_util_object_demo_page(pdf):
     date_result = create_text_field(pdf, page, 'util_date_result', col2_x + 10, 118, 220, 24, {
         '/Fo': 'var f = getField("util_date_result"); f.readonly = true; f.fillColor = ["RGB", 0.96, 0.98, 1]; f.alignment = "center";'
     })
+    date_result['/Ff'] = 1  # READ_ONLY flag - prevents validation on output field
     created_fields.append(date_result)
 
     date_btn = create_text_field(pdf, page, 'util_date_btn', field_x + 10, 88, 510, 24, {
