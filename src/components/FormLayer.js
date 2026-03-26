@@ -801,7 +801,10 @@ export class FormLayer {
       // Readonly
       if (meta.readonly !== undefined) {
         el.readOnly = meta.readonly;
-        el.disabled = meta.readonly;
+        // Don't disable fields that have MouseUp actions — disabled elements
+        // don't fire click events, which would break button-like swatches.
+        const hasMouseUp = this._fieldActions.get(name)?.some(a => a.trigger === 'MouseUp');
+        el.disabled = meta.readonly && !hasMouseUp;
         if (meta.readonly) {
           el.classList.add('field-readonly');
         } else {
