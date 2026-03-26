@@ -98,10 +98,15 @@ export function parseJavaScriptActions(widget) {
       'Validate': 'Validate',
       'Calculate': 'Calculate',
       'Keystroke': 'Keystroke',
+      // PDF.js uses space-separated names for mouse events
       'MouseEnter': 'Enter',
+      'Mouse Enter': 'Enter',
       'MouseExit': 'Exit',
+      'Mouse Exit': 'Exit',
       'MouseUp': 'MouseUp',
+      'Mouse Up': 'MouseUp',
       'MouseDown': 'MouseDown',
+      'Mouse Down': 'MouseDown',
       'Focus': 'Focus',
       'Blur': 'Blur',
     };
