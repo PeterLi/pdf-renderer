@@ -411,14 +411,14 @@ export class FormLayer {
     if ((this._config.validateOnBlur && hasValidation) || hasFormatAction || hasBlurAction) {
       if (!flags.readOnly) {
         el.addEventListener('blur', () => {
-          // Run validation if configured
-          if (this._config.validateOnBlur && hasValidation) {
-            this._validateAndShowError(fieldName, el, left, top, width, height);
-          }
-
-          // Run format action if available
+          // Run format action first so validation sees the formatted value
           if (hasFormatAction) {
             this._runFormatAction(fieldName, el);
+          }
+
+          // Run validation after formatting so it checks the formatted value
+          if (this._config.validateOnBlur && hasValidation) {
+            this._validateAndShowError(fieldName, el, left, top, width, height);
           }
 
           // Run Blur trigger action
