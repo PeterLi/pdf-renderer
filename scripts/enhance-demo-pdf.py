@@ -11,6 +11,20 @@ from pikepdf import Dictionary, Name
 import sys
 from pathlib import Path
 
+def ensure_page_fonts(page):
+    """Ensure Helvetica fonts are registered in page resources for macOS Preview compatibility"""
+    if "/Resources" not in page:
+        page["/Resources"] = Dictionary({})
+    if "/Font" not in page["/Resources"]:
+        page["/Resources"]["/Font"] = Dictionary({})
+    for font_name in ["/Helvetica", "/Helvetica-Bold"]:
+        if font_name not in page["/Resources"]["/Font"]:
+            page["/Resources"]["/Font"][font_name] = Dictionary({
+                "/Type": Name("/Font"),
+                "/Subtype": Name("/Type1"),
+                "/BaseFont": Name(font_name)
+            })
+
 def add_phone_js_action(pdf):
     """Add AFSpecial_Format(2) to phone field"""
     def find_field(pdf, name):
@@ -206,6 +220,7 @@ Q
 """
     
     page.Contents = pdf.make_stream(content)
+    ensure_page_fonts(page)
     print('  + Page 7 with 8 JavaScript test fields')
 
 def create_choice_field(pdf, page, name, x, y, width, height, options=None, js_actions=None):
@@ -426,6 +441,7 @@ Q
 """
 
     page.Contents = pdf.make_stream(content)
+    ensure_page_fonts(page)
     print('  + Page 8 with Field Object API demo (5 cards, 11 interactive fields)')
 
 
@@ -641,6 +657,7 @@ Q
 """
 
     page9.Contents = pdf.make_stream(content9)
+    ensure_page_fonts(page9)
     print('  + Page 9 with Document Properties & Field Enumeration (4 cards, 10 fields)')
 
     # ============================================================
@@ -819,6 +836,7 @@ Q
 """
 
     page10.Contents = pdf.make_stream(content10)
+    ensure_page_fonts(page10)
     print('  + Page 10 with Document Operations (5 cards, 16 interactive fields)')
 
 
@@ -1013,6 +1031,7 @@ Q
 """
 
     page.Contents = pdf.make_stream(content)
+    ensure_page_fonts(page)
     print('  + Page 11 with App Object API demo (5 cards, 15 interactive fields)')
 
 
@@ -1186,6 +1205,7 @@ Q
 """
 
     page.Contents = pdf.make_stream(content)
+    ensure_page_fonts(page)
     print('  + Page 12 with Util Object API demo (4 cards, 14 interactive fields)')
 
 
@@ -1379,6 +1399,7 @@ Q
 """
 
     page.Contents = pdf.make_stream(content)
+    ensure_page_fonts(page)
     print('  + Page 13 with Event Object demo (6 cards, 14 interactive fields)')
 
 
@@ -1583,6 +1604,7 @@ Q
 """
 
     page.Contents = pdf.make_stream(content)
+    ensure_page_fonts(page)
     print('  + Page 14 with Color Object demo (4 cards, ~30 interactive fields)')
 
 
