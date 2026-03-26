@@ -2,7 +2,7 @@
 
 **Goal:** Implement ALL Acrobat JavaScript functions with visual demos
 
-**Status:** 🚀 Phase 5 - App Object API Complete (62/800+ done)
+**Status:** 🚀 Phase 6 - Util Object API Complete (68/800+ done)
 
 ---
 
@@ -146,19 +146,19 @@
 
 ---
 
-## 📐 Phase 6: Util Object API
+## ✅ Phase 6: Util Object API (DONE)
 
 ### Date/Time:
-- [ ] `util.printd(cFormat, oDate)` - Format date
-- [ ] `util.scand(cFormat, cDate)` - Parse date
-- [ ] `util.printx(cFormat, cSource)` - Format with mask
+- [x] `util.printd(cFormat, oDate)` - Format date (tokenized to avoid substitution bugs)
+- [x] `util.scand(cFormat, cDate)` - Parse date (format-aware with regex extraction)
+- [x] `util.printx(cFormat, cSource)` - Format with mask (?, X, A, 9, *, \, >, <, =)
 
 ### String Functions:
-- [ ] `util.printf(cFormat, ...)` - Printf formatting
-- [ ] `util.spansToXML(oSpans)` - Spans to XML
+- [x] `util.printf(cFormat, ...)` - Printf formatting (%d, %f, %s, %x, %X, %o, width, precision, flags)
+- [x] `util.spansToXML(oSpans)` - Spans to XML (font styling, HTML entity escaping)
 
-### Math Functions:
-- [ ] `util.crackURL(cURL)` - Parse URL
+### URL Functions:
+- [x] `util.crackURL(cURL)` - Parse URL (scheme, user, password, host, port, path, parameters)
 
 **Demo Goal:** Page 12 - Utility functions
 
@@ -223,7 +223,7 @@
 **Phase:** 5 / 8
 **Tests:** 152 passing (vitest)
 
-**Next Up:** Phase 6 - Util Object API
+**Next Up:** Phase 7 - Event Object (Enhanced)
 
 ---
 
@@ -239,4 +239,4 @@ Each page should be:
 
 ---
 
-*Last Updated: March 26, 2026 — Phase 4 Complete*
+*Last Updated: March 26, 2026 — Phase 6 Complete*

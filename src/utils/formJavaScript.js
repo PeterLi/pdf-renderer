@@ -962,28 +962,32 @@ function createSandboxScope(context) {
     const ampm = hours24 < 12 ? 'am' : 'pm';
     const pad = (n) => String(n).padStart(2, '0');
 
-    // Replace tokens from longest to shortest to avoid partial matches
-    let result = fmt;
-    result = result.replace(/yyyy/g, String(date.getFullYear()));
-    result = result.replace(/yy/g, String(date.getFullYear()).slice(-2));
-    result = result.replace(/mmmm/g, months[date.getMonth()]);
-    result = result.replace(/mmm/g, monthsShort[date.getMonth()]);
-    result = result.replace(/mm/g, pad(date.getMonth() + 1));
-    // Use word boundary to avoid replacing 'm' inside already-replaced text
-    result = result.replace(/(?<=^|[^a-zA-Z])m(?=$|[^a-zA-Z])/g, String(date.getMonth() + 1));
-    result = result.replace(/dd/g, pad(date.getDate()));
-    result = result.replace(/(?<=^|[^a-zA-Z])d(?=$|[^a-zA-Z])/g, String(date.getDate()));
-    result = result.replace(/HH/g, pad(hours24));
-    result = result.replace(/(?<=^|[^a-zA-Z])H(?=$|[^a-zA-Z])/g, String(hours24));
-    result = result.replace(/h/g, String(hours12));
-    result = result.replace(/MM/g, pad(date.getMinutes()));
-    result = result.replace(/(?<=^|[^a-zA-Z])M(?=$|[^a-zA-Z])/g, String(date.getMinutes()));
-    result = result.replace(/SS/g, pad(date.getSeconds()));
-    result = result.replace(/ss/g, pad(date.getSeconds()));
-    result = result.replace(/(?<=^|[^a-zA-Z])S(?=$|[^a-zA-Z])/g, String(date.getSeconds()));
-    result = result.replace(/tt/g, ampm);
+    // Tokenize format string to avoid replacing characters inside already-substituted text.
+    // Match known tokens (longest first) or single literal characters.
+    const tokenRegex = /yyyy|yy|mmmm|mmm|mm|m|dd|d|HH|H|h|MM|M|SS|ss|S|tt|./gs;
+    const tokens = fmt.match(tokenRegex) || [];
 
-    return result;
+    return tokens.map(token => {
+      switch (token) {
+        case 'yyyy': return String(date.getFullYear());
+        case 'yy': return String(date.getFullYear()).slice(-2);
+        case 'mmmm': return months[date.getMonth()];
+        case 'mmm': return monthsShort[date.getMonth()];
+        case 'mm': return pad(date.getMonth() + 1);
+        case 'm': return String(date.getMonth() + 1);
+        case 'dd': return pad(date.getDate());
+        case 'd': return String(date.getDate());
+        case 'HH': return pad(hours24);
+        case 'H': return String(hours24);
+        case 'h': return String(hours12);
+        case 'MM': return pad(date.getMinutes());
+        case 'M': return String(date.getMinutes());
+        case 'SS': case 'ss': return pad(date.getSeconds());
+        case 'S': return String(date.getSeconds());
+        case 'tt': return ampm;
+        default: return token;
+      }
+    }).join('');
   };
 
   /**
@@ -1260,6 +1264,282 @@ function createSandboxScope(context) {
      * @param {string} cDate - Date string to parse
      * @returns {Date|null} Parsed Date object or null on failure
      */
+    /**
+     * printx — format a source string using a mask/picture format.
+     * Mask characters:
+     *   ? = any single character
+     *   X = [0-9A-Za-z]
+     *   A = [A-Za-z]
+     *   9 = [0-9]
+     *   * = repeat next mask char to fill remaining
+     *   \ = escape next character (insert literally)
+     *   > = uppercase remaining
+     *   < = lowercase remaining
+     *   = = keep case as-is (reset > or <)
+     *   All other mask chars are inserted literally.
+     * @param {string} cFormat - Mask format string
+     * @param {string} cSource - Source string to format
+     * @returns {string} Formatted string
+     */
+    printx(cFormat, cSource) {
+      const src = String(cSource);
+      const fmt = String(cFormat);
+      let result = '';
+      let srcIdx = 0;
+      let caseMode = 0; // 0=none, 1=upper, -1=lower
+
+      const applyCase = (ch) => {
+        if (caseMode === 1) return ch.toUpperCase();
+        if (caseMode === -1) return ch.toLowerCase();
+        return ch;
+      };
+
+      for (let i = 0; i < fmt.length; i++) {
+        const m = fmt[i];
+        if (m === '\\') {
+          // Escape: insert next mask char literally
+          i++;
+          if (i < fmt.length) result += fmt[i];
+        } else if (m === '>') {
+          caseMode = 1;
+        } else if (m === '<') {
+          caseMode = -1;
+        } else if (m === '=') {
+          caseMode = 0;
+        } else if (m === '?') {
+          if (srcIdx < src.length) result += applyCase(src[srcIdx++]);
+        } else if (m === 'X') {
+          // Skip non-alphanumeric in source
+          while (srcIdx < src.length && !/[0-9A-Za-z]/.test(src[srcIdx])) srcIdx++;
+          if (srcIdx < src.length) result += applyCase(src[srcIdx++]);
+        } else if (m === 'A') {
+          // Skip non-alpha in source
+          while (srcIdx < src.length && !/[A-Za-z]/.test(src[srcIdx])) srcIdx++;
+          if (srcIdx < src.length) result += applyCase(src[srcIdx++]);
+        } else if (m === '9') {
+          // Skip non-digit in source
+          while (srcIdx < src.length && !/[0-9]/.test(src[srcIdx])) srcIdx++;
+          if (srcIdx < src.length) result += applyCase(src[srcIdx++]);
+        } else if (m === '*') {
+          // Repeat next mask char to consume remaining source
+          i++;
+          if (i < fmt.length) {
+            const repeatMask = fmt[i];
+            while (srcIdx < src.length) {
+              if (repeatMask === '?' || repeatMask === 'X' || repeatMask === 'A' || repeatMask === '9') {
+                // Apply filter like above
+                if (repeatMask === '?') {
+                  result += applyCase(src[srcIdx++]);
+                } else if (repeatMask === 'X') {
+                  if (/[0-9A-Za-z]/.test(src[srcIdx])) result += applyCase(src[srcIdx]);
+                  srcIdx++;
+                } else if (repeatMask === 'A') {
+                  if (/[A-Za-z]/.test(src[srcIdx])) result += applyCase(src[srcIdx]);
+                  srcIdx++;
+                } else if (repeatMask === '9') {
+                  if (/[0-9]/.test(src[srcIdx])) result += applyCase(src[srcIdx]);
+                  srcIdx++;
+                }
+              } else {
+                // Literal repeated — unusual but handle it
+                result += repeatMask;
+                break;
+              }
+            }
+          }
+        } else {
+          // Literal mask character — insert as-is
+          result += m;
+        }
+      }
+      return result;
+    },
+
+    /**
+     * printf — C-style printf formatting.
+     * Supports: %d, %f, %s, %x, %o, %% and width/precision modifiers.
+     * @param {string} cFormat - printf format string
+     * @param {...*} args - Values to format
+     * @returns {string} Formatted string
+     */
+    printf(cFormat, ...args) {
+      const format = String(cFormat);
+      let argIdx = 0;
+      return format.replace(/%([+\-0 #]*)(\d+)?(?:\.(\d+))?([dfsxXo%])/g,
+        (match, flags, width, precision, type) => {
+          if (type === '%') return '%';
+          if (argIdx >= args.length) return match;
+          const val = args[argIdx++];
+          let result;
+          const leftAlign = flags.includes('-');
+          const zeroPad = flags.includes('0');
+          const plusSign = flags.includes('+');
+          const spaceSign = flags.includes(' ');
+          const w = width ? parseInt(width) : 0;
+
+          switch (type) {
+            case 'd': {
+              const n = parseInt(val) || 0;
+              result = Math.abs(n).toString();
+              if (n < 0) result = '-' + result;
+              else if (plusSign) result = '+' + result;
+              else if (spaceSign) result = ' ' + result;
+              break;
+            }
+            case 'f': {
+              const n = parseFloat(val) || 0;
+              const prec = precision !== undefined ? parseInt(precision) : 6;
+              result = Math.abs(n).toFixed(prec);
+              if (n < 0) result = '-' + result;
+              else if (plusSign) result = '+' + result;
+              else if (spaceSign) result = ' ' + result;
+              break;
+            }
+            case 's': {
+              result = String(val);
+              if (precision !== undefined) result = result.substring(0, parseInt(precision));
+              break;
+            }
+            case 'x': {
+              result = (parseInt(val) || 0).toString(16);
+              break;
+            }
+            case 'X': {
+              result = (parseInt(val) || 0).toString(16).toUpperCase();
+              break;
+            }
+            case 'o': {
+              result = (parseInt(val) || 0).toString(8);
+              break;
+            }
+            default:
+              result = String(val);
+          }
+
+          // Pad to width
+          if (w > result.length) {
+            const padChar = (zeroPad && !leftAlign && type !== 's') ? '0' : ' ';
+            if (leftAlign) {
+              result = result.padEnd(w, ' ');
+            } else {
+              // For zero-padding with sign, put sign before zeros
+              if (zeroPad && (result[0] === '-' || result[0] === '+' || result[0] === ' ')) {
+                const sign = result[0];
+                result = sign + result.substring(1).padStart(w - 1, '0');
+              } else {
+                result = result.padStart(w, padChar);
+              }
+            }
+          }
+          return result;
+        });
+    },
+
+    /**
+     * spansToXML — convert a spans array to XML string.
+     * Each span object can have: text, alignment, fontFamily, fontStyle, fontWeight, fontSize, etc.
+     * @param {Array} oSpans - Array of span objects
+     * @returns {string} XML string representing the rich text
+     */
+    spansToXML(oSpans) {
+      if (!Array.isArray(oSpans)) return '';
+      let xml = '<?xml version="1.0"?><body xmlns="http://www.w3.org/1999/xhtml">';
+      for (const span of oSpans) {
+        if (!span || typeof span !== 'object') continue;
+        const styles = [];
+        if (span.fontFamily) styles.push('font-family:' + span.fontFamily);
+        if (span.fontSize) styles.push('font-size:' + span.fontSize + 'pt');
+        if (span.fontWeight) styles.push('font-weight:' + span.fontWeight);
+        if (span.fontStyle) styles.push('font-style:' + span.fontStyle);
+        if (span.color) styles.push('color:' + span.color);
+        if (span.textDecoration) styles.push('text-decoration:' + span.textDecoration);
+        if (span.alignment) styles.push('text-align:' + span.alignment);
+
+        const styleAttr = styles.length > 0 ? ' style="' + styles.join(';') + '"' : '';
+        const text = span.text != null ? String(span.text)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;') : '';
+        xml += '<p><span' + styleAttr + '>' + text + '</span></p>';
+      }
+      xml += '</body>';
+      return xml;
+    },
+
+    /**
+     * crackURL — parse a URL string into its component parts.
+     * @param {string} cURL - URL string to parse
+     * @returns {object} Object with: cScheme, cUser, cPassword, cHost, nPort, cPath, cParameters
+     */
+    crackURL(cURL) {
+      const url = String(cURL);
+      const result = {
+        cScheme: '',
+        cUser: '',
+        cPassword: '',
+        cHost: '',
+        nPort: -1,
+        cPath: '',
+        cParameters: '',
+      };
+
+      try {
+        // Handle scheme
+        const schemeMatch = url.match(/^([a-zA-Z][a-zA-Z0-9+\-.]*):\/\//);
+        if (!schemeMatch) return result;
+
+        result.cScheme = schemeMatch[1].toLowerCase();
+        let rest = url.substring(schemeMatch[0].length);
+
+        // Handle user:password@
+        const atIdx = rest.indexOf('@');
+        const slashIdx = rest.indexOf('/');
+        if (atIdx !== -1 && (slashIdx === -1 || atIdx < slashIdx)) {
+          const userInfo = rest.substring(0, atIdx);
+          rest = rest.substring(atIdx + 1);
+          const colonIdx = userInfo.indexOf(':');
+          if (colonIdx !== -1) {
+            result.cUser = userInfo.substring(0, colonIdx);
+            result.cPassword = userInfo.substring(colonIdx + 1);
+          } else {
+            result.cUser = userInfo;
+          }
+        }
+
+        // Handle host:port
+        const pathStart = rest.indexOf('/');
+        const hostPart = pathStart !== -1 ? rest.substring(0, pathStart) : rest;
+        const pathPart = pathStart !== -1 ? rest.substring(pathStart) : '/';
+
+        const portMatch = hostPart.match(/^(.+):(\d+)$/);
+        if (portMatch) {
+          result.cHost = portMatch[1];
+          result.nPort = parseInt(portMatch[2]);
+        } else {
+          result.cHost = hostPart;
+          // Default ports
+          if (result.cScheme === 'http') result.nPort = 80;
+          else if (result.cScheme === 'https') result.nPort = 443;
+        }
+
+        // Handle path and parameters
+        const qIdx = pathPart.indexOf('?');
+        if (qIdx !== -1) {
+          result.cPath = pathPart.substring(0, qIdx);
+          result.cParameters = pathPart.substring(qIdx + 1);
+        } else {
+          // Check for hash
+          const hIdx = pathPart.indexOf('#');
+          result.cPath = hIdx !== -1 ? pathPart.substring(0, hIdx) : pathPart;
+        }
+      } catch (e) {
+        // Return default object on parse failure
+      }
+
+      return result;
+    },
+
     scand(cFormat, cDate) {
       if (!cDate) return null;
       const s = String(cDate).trim();

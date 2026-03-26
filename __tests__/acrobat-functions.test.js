@@ -1306,6 +1306,283 @@ describe('parseFormatFunction', () => {
   });
 });
 
+// ============================================================
+// Phase 6: Util Object API
+// ============================================================
+
+describe('Phase 6: Util Object API', () => {
+
+  describe('util.printx', () => {
+    it('formats phone number with mask', () => {
+      const result = run('event.value = util.printx("(999) 999-9999", "5551234567");', '');
+      expect(result.event.value).toBe('(555) 123-4567');
+    });
+
+    it('formats SSN with mask', () => {
+      const result = run('event.value = util.printx("999-99-9999", "123456789");', '');
+      expect(result.event.value).toBe('123-45-6789');
+    });
+
+    it('formats ZIP+4 with mask', () => {
+      const result = run('event.value = util.printx("99999-9999", "123456789");', '');
+      expect(result.event.value).toBe('12345-6789');
+    });
+
+    it('converts to uppercase with >', () => {
+      const result = run('event.value = util.printx(">?????", "hello");', '');
+      expect(result.event.value).toBe('HELLO');
+    });
+
+    it('converts to lowercase with <', () => {
+      const result = run('event.value = util.printx("<?????", "HELLO");', '');
+      expect(result.event.value).toBe('hello');
+    });
+
+    it('resets case with =', () => {
+      const result = run('event.value = util.printx(">??=???", "hEllo");', '');
+      expect(result.event.value).toBe('HEllo');
+    });
+
+    it('uses escape with backslash', () => {
+      const result = run('event.value = util.printx("\\\\A999", "123");', '');
+      expect(result.event.value).toBe('A123');
+    });
+
+    it('filters alphanumeric with X', () => {
+      const result = run('event.value = util.printx("XXXX", "a-b-c-d");', '');
+      expect(result.event.value).toBe('abcd');
+    });
+
+    it('filters alpha with A', () => {
+      const result = run('event.value = util.printx("AAA", "1a2b3c");', '');
+      expect(result.event.value).toBe('abc');
+    });
+
+    it('uses * to repeat mask char', () => {
+      const result = run('event.value = util.printx("*9", "abc123def456");', '');
+      expect(result.event.value).toBe('123456');
+    });
+  });
+
+  describe('util.printf', () => {
+    it('formats integer with %d', () => {
+      const result = run('event.value = util.printf("%d", 42);', '');
+      expect(result.event.value).toBe('42');
+    });
+
+    it('formats float with %f', () => {
+      const result = run('event.value = util.printf("%.2f", 3.14159);', '');
+      expect(result.event.value).toBe('3.14');
+    });
+
+    it('formats string with %s', () => {
+      const result = run('event.value = util.printf("Hello %s!", "World");', '');
+      expect(result.event.value).toBe('Hello World!');
+    });
+
+    it('formats hex with %x', () => {
+      const result = run('event.value = util.printf("%x", 255);', '');
+      expect(result.event.value).toBe('ff');
+    });
+
+    it('formats uppercase hex with %X', () => {
+      const result = run('event.value = util.printf("%X", 255);', '');
+      expect(result.event.value).toBe('FF');
+    });
+
+    it('formats octal with %o', () => {
+      const result = run('event.value = util.printf("%o", 8);', '');
+      expect(result.event.value).toBe('10');
+    });
+
+    it('handles width padding', () => {
+      const result = run('event.value = util.printf("%5d", 42);', '');
+      expect(result.event.value).toBe('   42');
+    });
+
+    it('handles zero padding', () => {
+      const result = run('event.value = util.printf("%05d", 42);', '');
+      expect(result.event.value).toBe('00042');
+    });
+
+    it('handles left alignment', () => {
+      const result = run('event.value = util.printf("%-5d|", 42);', '');
+      expect(result.event.value).toBe('42   |');
+    });
+
+    it('handles %% literal', () => {
+      const result = run('event.value = util.printf("%d%%", 50);', '');
+      expect(result.event.value).toBe('50%');
+    });
+
+    it('handles multiple arguments', () => {
+      const result = run('event.value = util.printf("%s is %d years old", "Alice", 30);', '');
+      expect(result.event.value).toBe('Alice is 30 years old');
+    });
+
+    it('handles plus sign flag', () => {
+      const result = run('event.value = util.printf("%+d", 42);', '');
+      expect(result.event.value).toBe('+42');
+    });
+
+    it('handles string precision (truncation)', () => {
+      const result = run('event.value = util.printf("%.3s", "Hello");', '');
+      expect(result.event.value).toBe('Hel');
+    });
+  });
+
+  describe('util.spansToXML', () => {
+    it('converts simple text span', () => {
+      const result = run('event.value = util.spansToXML([{text: "Hello"}]);', '');
+      expect(result.event.value).toContain('<span>Hello</span>');
+      expect(result.event.value).toContain('<?xml version="1.0"?>');
+      expect(result.event.value).toContain('<body');
+    });
+
+    it('converts span with font styling', () => {
+      const result = run(`event.value = util.spansToXML([{
+        text: "Bold",
+        fontFamily: "Helvetica",
+        fontSize: 14,
+        fontWeight: "bold"
+      }]);`, '');
+      expect(result.event.value).toContain('font-family:Helvetica');
+      expect(result.event.value).toContain('font-size:14pt');
+      expect(result.event.value).toContain('font-weight:bold');
+    });
+
+    it('escapes HTML entities in text', () => {
+      const result = run('event.value = util.spansToXML([{text: "<b>test</b>"}]);', '');
+      expect(result.event.value).toContain('&lt;b&gt;test&lt;/b&gt;');
+    });
+
+    it('handles multiple spans', () => {
+      const result = run('event.value = util.spansToXML([{text: "A"}, {text: "B"}]);', '');
+      expect(result.event.value).toContain('<span>A</span>');
+      expect(result.event.value).toContain('<span>B</span>');
+    });
+
+    it('returns empty string for non-array', () => {
+      const result = run('event.value = util.spansToXML("not an array");', '');
+      expect(result.event.value).toBe('');
+    });
+  });
+
+  describe('util.crackURL', () => {
+    it('parses simple HTTP URL', () => {
+      const result = run(`
+        var u = util.crackURL("http://www.example.com/path/page.html");
+        event.value = u.cScheme + "|" + u.cHost + "|" + u.nPort + "|" + u.cPath;
+      `, '');
+      expect(result.event.value).toBe('http|www.example.com|80|/path/page.html');
+    });
+
+    it('parses HTTPS URL with port', () => {
+      const result = run(`
+        var u = util.crackURL("https://example.com:8443/api/data");
+        event.value = u.cScheme + "|" + u.cHost + "|" + u.nPort + "|" + u.cPath;
+      `, '');
+      expect(result.event.value).toBe('https|example.com|8443|/api/data');
+    });
+
+    it('parses URL with query parameters', () => {
+      const result = run(`
+        var u = util.crackURL("http://example.com/search?q=test&page=1");
+        event.value = u.cParameters;
+      `, '');
+      expect(result.event.value).toBe('q=test&page=1');
+    });
+
+    it('parses URL with user credentials', () => {
+      const result = run(`
+        var u = util.crackURL("ftp://user:pass@ftp.example.com/files");
+        event.value = u.cUser + "|" + u.cPassword + "|" + u.cHost;
+      `, '');
+      expect(result.event.value).toBe('user|pass|ftp.example.com');
+    });
+
+    it('parses URL with user only (no password)', () => {
+      const result = run(`
+        var u = util.crackURL("http://admin@example.com/");
+        event.value = u.cUser + "|" + u.cPassword;
+      `, '');
+      expect(result.event.value).toBe('admin|');
+    });
+
+    it('defaults HTTPS port to 443', () => {
+      const result = run(`
+        var u = util.crackURL("https://secure.example.com/");
+        event.value = String(u.nPort);
+      `, '');
+      expect(result.event.value).toBe('443');
+    });
+
+    it('handles invalid URL gracefully', () => {
+      const result = run(`
+        var u = util.crackURL("not-a-url");
+        event.value = u.cScheme + "|" + String(u.nPort);
+      `, '');
+      expect(result.event.value).toBe('|-1');
+    });
+  });
+
+  describe('util.printd (enhanced)', () => {
+    it('formats with month names (mmmm)', () => {
+      const result = run('event.value = util.printd("mmmm dd, yyyy", new Date(2024, 2, 15));', '');
+      expect(result.event.value).toBe('March 15, 2024');
+    });
+
+    it('formats with short month names (mmm)', () => {
+      const result = run('event.value = util.printd("mmm dd, yyyy", new Date(2024, 0, 5));', '');
+      expect(result.event.value).toBe('Jan 05, 2024');
+    });
+
+    it('handles time formatting', () => {
+      const result = run('event.value = util.printd("HH:MM:SS", new Date(2024, 0, 1, 14, 5, 9));', '');
+      expect(result.event.value).toBe('14:05:09');
+    });
+
+    it('returns empty string for invalid date', () => {
+      const result = run('event.value = util.printd("yyyy-mm-dd", "not-a-date");', '');
+      expect(result.event.value).toBe('');
+    });
+  });
+
+  describe('util.scand (enhanced)', () => {
+    it('parses date with dashes', () => {
+      const result = run(`
+        var d = util.scand("yyyy-mm-dd", "2024-12-25");
+        event.value = d ? (d.getMonth()+1) + "/" + d.getDate() + "/" + d.getFullYear() : "null";
+      `, '');
+      expect(result.event.value).toBe('12/25/2024');
+    });
+
+    it('parses date with short year', () => {
+      const result = run(`
+        var d = util.scand("mm/dd/yy", "03/15/24");
+        event.value = d ? String(d.getFullYear()) : "null";
+      `, '');
+      expect(result.event.value).toBe('2024');
+    });
+
+    it('parses date with month name', () => {
+      const result = run(`
+        var d = util.scand("mmm dd, yyyy", "Jan 05, 2024");
+        event.value = d ? (d.getMonth()+1) + "/" + d.getDate() : "null";
+      `, '');
+      expect(result.event.value).toBe('1/5');
+    });
+
+    it('returns null for empty string', () => {
+      const result = run(`
+        var d = util.scand("mm/dd/yyyy", "");
+        event.value = d === null ? "null" : "not null";
+      `, '');
+      expect(result.event.value).toBe('null');
+    });
+  });
+});
+
 describe('parseRangeValidation', () => {
   it('parses range with both bounds', () => {
     const result = parseRangeValidation('AFRange_Validate(true, 0, true, 100)');
