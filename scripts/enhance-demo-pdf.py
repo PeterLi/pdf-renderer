@@ -696,12 +696,19 @@ Q
     })
     created_fields_10.append(mail_btn)
 
-    # Export button - shows field names + values
-    export_btn = create_text_field(pdf, page10, 'doc_export_btn', field_x + 10, 328, 510, 24, {
-        '/Fo': 'var f = getField("doc_export_btn"); f.fillColor = ["RGB", 0.5, 0.2, 0.7]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Export Field Data";',
-        '/U': 'var output = ""; for (var i = 0; i < this.numFields; i++) { var name = this.getNthFieldName(i); var field = this.getField(name); if (field.value) { output += name + ": " + field.value + " | "; } } if (!output) output = "(no fields have values)"; getField("doc_export_result").value = output; var f = getField("doc_export_btn"); f.fillColor = ["RGB", 0.5, 0.2, 0.7]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Export Field Data";'
+    # Export as Text button - triggers browser download of .txt file
+    export_text_btn = create_text_field(pdf, page10, 'doc_export_text_btn', field_x + 10, 328, 245, 24, {
+        '/Fo': 'var f = getField("doc_export_text_btn"); f.fillColor = ["RGB", 0.5, 0.2, 0.7]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Export as Text";',
+        '/U': 'this.exportAsText(); getField("doc_export_result").value = "Text exported to " + this.documentFileName.replace(".pdf", ".txt"); var f = getField("doc_export_text_btn"); f.fillColor = ["RGB", 0.5, 0.2, 0.7]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Export as Text";'
     })
-    created_fields_10.append(export_btn)
+    created_fields_10.append(export_text_btn)
+
+    # Export as FDF button - triggers browser download of .xfdf file
+    export_fdf_btn = create_text_field(pdf, page10, 'doc_export_fdf_btn', field_x + 10 + 255, 328, 245, 24, {
+        '/Fo': 'var f = getField("doc_export_fdf_btn"); f.fillColor = ["RGB", 0.4, 0.15, 0.6]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Export as FDF";',
+        '/U': 'this.exportAsFDF(); getField("doc_export_result").value = "Form data exported to " + this.documentFileName.replace(".pdf", ".xfdf"); var f = getField("doc_export_fdf_btn"); f.fillColor = ["RGB", 0.4, 0.15, 0.6]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Export as FDF";'
+    })
+    created_fields_10.append(export_fdf_btn)
 
     # Print button
     print_btn = create_text_field(pdf, page10, 'doc_print_btn', field_x + 10, 210, 220, 24, {

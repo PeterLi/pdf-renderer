@@ -1042,21 +1042,27 @@ describe('Phase 4: Document Object API', () => {
     });
 
     describe('this.exportAsText()', () => {
-      it('exports field data as tab-separated text', () => {
+      it('exports field data as text with download request', () => {
         const fields = new Map([['name', 'John'], ['age', '30']]);
-        const result = run('event.value = this.exportAsText("/tmp/data.txt");', '', fields);
-        expect(result.event.value).toContain('name');
-        expect(result.event.value).toContain('John');
+        const result = run('event.value = this.exportAsText();', '', fields);
+        expect(result.event.value).toBe(true);
         expect(result.docRequests[0].type).toBe('exportAsText');
+        expect(result.docRequests[0].data).toContain('name: John');
+        expect(result.docRequests[0].data).toContain('age: 30');
+        expect(result.docRequests[0].fileName).toMatch(/\.txt$/);
       });
     });
 
     describe('this.exportAsFDF()', () => {
-      it('exports field data as FDF object', () => {
+      it('exports field data as XFDF with download request', () => {
         const fields = new Map([['name', 'John'], ['age', '30']]);
-        const result = run('var fdf = this.exportAsFDF("/tmp/data.fdf"); event.value = "ok";', '', fields);
+        const result = run('event.value = this.exportAsFDF();', '', fields);
+        expect(result.event.value).toBe(true);
         expect(result.docRequests[0].type).toBe('exportAsFDF');
-        expect(result.docRequests[0].data.name).toBe('John');
+        expect(result.docRequests[0].data).toContain('<xfdf');
+        expect(result.docRequests[0].data).toContain('<field name="name">');
+        expect(result.docRequests[0].data).toContain('<value>John</value>');
+        expect(result.docRequests[0].fileName).toMatch(/\.xfdf$/);
       });
     });
 

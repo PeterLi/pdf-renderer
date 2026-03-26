@@ -962,6 +962,12 @@ export class FormLayer {
         case 'launchURL':
           this._handleLaunchURL(req);
           break;
+        case 'exportAsText':
+          this._triggerFileDownload(req.data, req.fileName || 'export.txt', 'text/plain');
+          break;
+        case 'exportAsFDF':
+          this._triggerFileDownload(req.data, req.fileName || 'formdata.xfdf', 'application/vnd.adobe.xfdf');
+          break;
         case 'print':
           window.print();
           break;
@@ -981,6 +987,21 @@ export class FormLayer {
           console.log(`[FormLayer] Unhandled docRequest type: ${req.type}`);
       }
     }
+  }
+
+  /**
+   * Trigger a browser file download with given content.
+   */
+  _triggerFileDownload(data, fileName, mimeType) {
+    const blob = new Blob([data], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   /**

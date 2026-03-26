@@ -605,23 +605,69 @@ function createSandboxScope(context) {
     });
   };
 
-  /** Export form data as text (returns tab-separated field data) */
-  const exportAsText = (cPath) => {
-    const names = _getFieldNames();
-    const header = names.join('\t');
-    const values = names.map(n => context.fieldValues.get(n) || '').join('\t');
-    _docRequests.push({ type: 'exportAsText', path: String(cPath || ''), data: header + '\n' + values });
-    return header + '\n' + values;
+  /** Export visible text content from PDF pages as a text file download */
+  const exportAsText = (options) => {
+    options = options || {};
+    var nStart = options.nStart || 0;
+    var nEnd = options.nEnd !== undefined ? options.nEnd : numPages - 1;
+    if (nEnd === -1) nEnd = numPages - 1;
+
+    // Build text with form field data per page
+    var text = '';
+    var fieldNames = _getFieldNames();
+    for (var i = nStart; i <= nEnd; i++) {
+      text += 'Page ' + (i + 1) + '\n\n';
+      // Include field values that belong to this page (or all on page 0)
+      for (var j = 0; j < fieldNames.length; j++) {
+        var name = fieldNames[j];
+        var val = context.fieldValues.get(name) || '';
+        if (val) {
+          text += name + ': ' + val + '\n';
+        }
+      }
+      text += '\f'; // Form feed between pages
+    }
+
+    var fileName = documentFileName ? documentFileName.replace(/\.pdf$/i, '.txt') : 'export.txt';
+    _docRequests.push({ type: 'exportAsText', fileName: fileName, data: text });
+    return true;
   };
 
-  /** Export form data as FDF (records request for host) */
-  const exportAsFDF = (cPath) => {
-    const fdfData = {};
-    for (const [key, val] of context.fieldValues) {
-      fdfData[key] = val;
+  /** Export form data as XFDF (XML Forms Data Format) file download */
+  const exportAsFDF = (options) => {
+    options = options || {};
+    var bEmpty = options.bEmpty || false;
+
+    var _escapeXml = function(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
+    };
+
+    var xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    xml += '<xfdf xmlns="http://ns.adobe.com/xfdf/">\n';
+    xml += '  <fields>\n';
+
+    var fieldNames = _getFieldNames();
+    for (var i = 0; i < fieldNames.length; i++) {
+      var name = fieldNames[i];
+      var value = context.fieldValues.get(name) || '';
+      // Skip empty fields unless bEmpty is true
+      if (!bEmpty && (!value || value === '')) continue;
+      xml += '    <field name="' + _escapeXml(name) + '">\n';
+      xml += '      <value>' + _escapeXml(value) + '</value>\n';
+      xml += '    </field>\n';
     }
-    _docRequests.push({ type: 'exportAsFDF', path: String(cPath || ''), data: fdfData });
-    return fdfData;
+
+    xml += '  </fields>\n';
+    xml += '</xfdf>';
+
+    var fileName = documentFileName ? documentFileName.replace(/\.pdf$/i, '.xfdf') : 'formdata.xfdf';
+    _docRequests.push({ type: 'exportAsFDF', fileName: fileName, data: xml });
+    return true;
   };
 
   /** Import FDF data (records request for host) */
