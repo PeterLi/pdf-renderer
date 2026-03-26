@@ -25,8 +25,8 @@ const FORMAT_VALIDATORS = {
     message: 'Please enter a valid SSN (XXX-XX-XXXX)',
   },
   date: {
-    pattern: /^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{2,4})$/,
-    message: 'Please enter a valid date (MM/DD/YYYY)',
+    pattern: /^(?:(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{2,4})|(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2}))$/,
+    message: 'Please enter a valid date',
   },
   currency: {
     pattern: /^\$?\d{1,3}(,?\d{3})*(\.\d{0,2})?$/,
