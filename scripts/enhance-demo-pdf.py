@@ -1032,57 +1032,57 @@ def add_util_object_demo_page(pdf):
     created_fields.append(printx_btn)
 
     # More printx masks
-    printx2_input = create_text_field(pdf, page, 'util_printx2_input', field_x + 10, 558, 220, 24, {})
+    printx2_input = create_text_field(pdf, page, 'util_printx2_input', field_x + 10, 528, 220, 24, {})
     created_fields.append(printx2_input)
 
-    printx2_result = create_text_field(pdf, page, 'util_printx2_result', col2_x + 10, 558, 220, 24, {
+    printx2_result = create_text_field(pdf, page, 'util_printx2_result', col2_x + 10, 528, 220, 24, {
         '/Fo': 'var f = getField("util_printx2_result"); f.readonly = true; f.fillColor = ["RGB", 0.96, 1, 0.96]; f.alignment = "center";'
     })
     created_fields.append(printx2_result)
 
-    printx2_btn = create_text_field(pdf, page, 'util_printx2_btn', field_x + 10, 528, 510, 24, {
+    printx2_btn = create_text_field(pdf, page, 'util_printx2_btn', field_x + 10, 498, 510, 24, {
         '/Fo': 'var f = getField("util_printx2_btn"); f.fillColor = ["RGB", 0.2, 0.5, 0.8]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Format SSN Mask: 999-99-9999";',
         '/U': 'var raw = getField("util_printx2_input").value || "123456789"; var formatted = util.printx("999-99-9999", raw); getField("util_printx2_result").value = formatted; var f = getField("util_printx2_btn"); f.fillColor = ["RGB", 0.2, 0.5, 0.8]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Format SSN Mask: 999-99-9999";'
     })
     created_fields.append(printx2_btn)
 
     # Card 2: util.printf
-    printf_result = create_text_field(pdf, page, 'util_printf_result', field_x + 10, 420, 510, 50, {
+    printf_result = create_text_field(pdf, page, 'util_printf_result', field_x + 10, 390, 510, 50, {
         '/Fo': 'var f = getField("util_printf_result"); f.readonly = true; f.multiline = true; f.fillColor = ["RGB", 0.96, 0.96, 1]; f.textSize = 10;'
     })
     created_fields.append(printf_result)
 
-    printf_btn = create_text_field(pdf, page, 'util_printf_btn', field_x + 10, 390, 510, 24, {
+    printf_btn = create_text_field(pdf, page, 'util_printf_btn', field_x + 10, 360, 510, 24, {
         '/Fo': 'var f = getField("util_printf_btn"); f.fillColor = ["RGB", 0.6, 0.3, 0.6]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Run printf Examples";',
         '/U': 'var lines = []; lines.push("Integer: " + util.printf("%d", 42)); lines.push("Float: " + util.printf("%.2f", 3.14159)); lines.push("Padded: " + util.printf("%05d", 42)); lines.push("String: " + util.printf("Hello %s!", "World")); lines.push("Hex: " + util.printf("%x", 255)); getField("util_printf_result").value = lines.join("\\n"); var f = getField("util_printf_btn"); f.fillColor = ["RGB", 0.6, 0.3, 0.6]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Run printf Examples";'
     })
     created_fields.append(printf_btn)
 
     # Card 3: util.crackURL
-    crack_input = create_text_field(pdf, page, 'util_crack_input', field_x + 10, 300, 510, 24, {})
+    crack_input = create_text_field(pdf, page, 'util_crack_input', field_x + 10, 270, 510, 24, {})
     created_fields.append(crack_input)
 
-    crack_result = create_text_field(pdf, page, 'util_crack_result', field_x + 10, 228, 510, 68, {
+    crack_result = create_text_field(pdf, page, 'util_crack_result', field_x + 10, 198, 510, 68, {
         '/Fo': 'var f = getField("util_crack_result"); f.readonly = true; f.multiline = true; f.fillColor = ["RGB", 1, 0.98, 0.94]; f.textSize = 9;'
     })
     created_fields.append(crack_result)
 
-    crack_btn = create_text_field(pdf, page, 'util_crack_btn', field_x + 10, 270, 510, 24, {
+    crack_btn = create_text_field(pdf, page, 'util_crack_btn', field_x + 10, 240, 510, 24, {
         '/Fo': 'var f = getField("util_crack_btn"); f.fillColor = ["RGB", 0.4, 0.2, 0.6]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Crack URL into Components";',
         '/U': 'var url = getField("util_crack_input").value || "https://user:pass@example.com:8080/path/file.html?q=test#section"; var parts = util.crackURL(url); var lines = []; lines.push("cScheme: " + parts.cScheme); lines.push("cUser: " + parts.cUser + " | cPassword: " + parts.cPassword); lines.push("cHost: " + parts.cHost + " | nPort: " + parts.nPort); lines.push("cPath: " + parts.cPath + " | cParameters: " + parts.cParameters); lines.push("cFragment: " + parts.cFragment); getField("util_crack_result").value = lines.join("\\n"); var f = getField("util_crack_btn"); f.fillColor = ["RGB", 0.4, 0.2, 0.6]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Crack URL into Components";'
     })
     created_fields.append(crack_btn)
 
     # Card 4: util.printd / scand
-    date_input = create_text_field(pdf, page, 'util_date_input', field_x + 10, 148, 220, 24, {})
+    date_input = create_text_field(pdf, page, 'util_date_input', field_x + 10, 118, 220, 24, {})
     created_fields.append(date_input)
 
-    date_result = create_text_field(pdf, page, 'util_date_result', col2_x + 10, 148, 220, 24, {
+    date_result = create_text_field(pdf, page, 'util_date_result', col2_x + 10, 118, 220, 24, {
         '/Fo': 'var f = getField("util_date_result"); f.readonly = true; f.fillColor = ["RGB", 0.96, 0.98, 1]; f.alignment = "center";'
     })
     created_fields.append(date_result)
 
-    date_btn = create_text_field(pdf, page, 'util_date_btn', field_x + 10, 118, 510, 24, {
+    date_btn = create_text_field(pdf, page, 'util_date_btn', field_x + 10, 88, 510, 24, {
         '/Fo': 'var f = getField("util_date_btn"); f.fillColor = ["RGB", 0.85, 0.45, 0.1]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Format Date with util.printd";',
         '/U': 'var input = getField("util_date_input").value || "03/15/2024"; var d = util.scand("mm/dd/yyyy", input); if (d) { getField("util_date_result").value = util.printd("yyyy-mm-dd", d) + " | " + util.printd("mmmm d, yyyy", d); } else { getField("util_date_result").value = "Invalid date format"; } var f = getField("util_date_btn"); f.fillColor = ["RGB", 0.85, 0.45, 0.1]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Format Date with util.printd";'
     })
@@ -1123,44 +1123,45 @@ Q
 """
 
     # === CARD 1: util.printx ===
-    content += _card(40, 518, 530, 200,
+    content += _card(40, 488, 530, 230,
                      'util.printx - Input Masks',
                      'Apply formatting masks to raw input.\n9 = digit, A = alpha, X = alphanumeric')
     content += _label(field_x + 10, 646, 'Raw Input (e.g. 5551234567)')
     content += _label(col2_x + 10, 646, 'Formatted Result')
-    content += _label(field_x + 10, 586, 'Raw Input (e.g. 123456789)')
-    content += _label(col2_x + 10, 586, 'Formatted Result')
+    content += _label(field_x + 10, 556, 'Raw Input (e.g. 123456789)')
+    content += _label(col2_x + 10, 556, 'Formatted Result')
 
     # === CARD 2: util.printf ===
-    content += _card(40, 378, 530, 140,
+    content += _card(40, 348, 530, 140,
                      'util.printf - C-Style Formatting',
                      '%d integer, %f float, %s string,\n%x hex, %05d zero-padded')
-    content += _label(field_x + 10, 474, 'printf Results (click button to run all examples)')
+    content += _label(col2_x + 10, 444, 'printf Results (click button to run all examples)')
 
     # === CARD 3: util.crackURL ===
-    content += _card(40, 218, 530, 160,
+    content += _card(40, 188, 530, 160,
                      'util.crackURL - URL Parser',
-                     'Parses URL into components:\ncScheme, cUser, cHost, nPort, cPath, cParameters, cFragment')
-    content += _label(field_x + 10, 328, 'URL Input (leave blank for example URL)')
-    content += _label(field_x + 10, 300, 'Parsed Components:')
+                     'Parse URLs into scheme, host, path, etc.')
+    content += _label(field_x + 10, 298, 'URL Input (leave blank for example URL)')
+    content += _label(col2_x + 10, 298, 'cScheme, cUser, cHost, nPort, cPath, cParameters')
+    content += _label(field_x + 10, 270, 'Parsed Components:')
 
     # === CARD 4: util.printd / scand ===
-    content += _card(40, 98, 530, 120,
+    content += _card(40, 68, 530, 120,
                      'Date Formatting & Parsing',
-                     'util.printd(format, date) formats dates,\nutil.scand(format, string) parses date strings')
-    content += _label(field_x + 10, 176, 'Date Input (mm/dd/yyyy)')
-    content += _label(col2_x + 10, 176, 'Formatted Result')
+                     'printd formats, scand parses')
+    content += _label(field_x + 10, 146, 'Date Input (mm/dd/yyyy)')
+    content += _label(col2_x + 10, 146, 'util.printd / util.scand Result')
 
     # === FOOTER ===
     content += b"""
 q
 0.94 0.95 0.97 rg
-0 0 612 80 re f
+0 0 612 60 re f
 
 BT
 /Helvetica-Bold 10 Tf
 0.3 0.35 0.4 rg
-50 55 Td
+50 40 Td
 (Util Object API:) Tj
 /Helvetica 9 Tf
 0.5 0.55 0.6 rg
