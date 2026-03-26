@@ -684,36 +684,36 @@ Q
 
     # Submit button
     submit_btn = create_text_field(pdf, page10, 'doc_submit_btn', field_x + 10, 590, 510, 24, {
-        '/Fo': 'var f = getField("doc_submit_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.13]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Submit Form";',
-        '/Bl': 'var url = getField("doc_submit_url").value || "https://httpbin.org/post"; this.submitForm(url); app.alert("Form submitted to: " + url);'
+        '/Fo': 'var f = getField("doc_submit_btn"); f.fillColor = ["RGB", 0.2, 0.7, 0.3]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Submit Form";',
+        '/U': 'var url = getField("doc_submit_url").value || "https://httpbin.org/post"; this.submitForm(url); app.alert("Form submitted to: " + url); var f = getField("doc_submit_btn"); f.fillColor = ["RGB", 0.2, 0.7, 0.3]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Submit Form";'
     })
     created_fields_10.append(submit_btn)
 
     # Mail button
     mail_btn = create_text_field(pdf, page10, 'doc_mail_btn', field_x + 10, 470, 510, 24, {
-        '/Fo': 'var f = getField("doc_mail_btn"); f.fillColor = ["RGB", 0.2, 0.4, 0.7]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Mail Form";',
-        '/Bl': 'var to = getField("doc_mail_to").value || "user@example.com"; var subj = getField("doc_mail_subject").value || "Form Data"; this.mailForm(true, to, "", "", subj, "Please find attached form data."); app.alert("Mail prepared to: " + to);'
+        '/Fo': 'var f = getField("doc_mail_btn"); f.fillColor = ["RGB", 0.2, 0.5, 0.8]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Mail Form";',
+        '/U': 'var to = getField("doc_mail_to").value || "user@example.com"; var subj = getField("doc_mail_subject").value || "Form Data"; this.mailForm(true, to, "", "", subj, "Please find attached form data."); app.alert("Mail prepared to: " + to); var f = getField("doc_mail_btn"); f.fillColor = ["RGB", 0.2, 0.5, 0.8]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Mail Form";'
     })
     created_fields_10.append(mail_btn)
 
     # Export button
     export_btn = create_text_field(pdf, page10, 'doc_export_btn', field_x + 10, 350, 510, 24, {
-        '/Fo': 'var f = getField("doc_export_btn"); f.fillColor = ["RGB", 0.6, 0.3, 0.6]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Export as Text";',
-        '/Bl': 'var data = this.exportAsText("/tmp/form-data.txt"); getField("doc_export_result").value = data;'
+        '/Fo': 'var f = getField("doc_export_btn"); f.fillColor = ["RGB", 0.5, 0.2, 0.7]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Export as Text";',
+        '/U': 'var data = this.exportAsText("/tmp/form-data.txt"); getField("doc_export_result").value = data; var f = getField("doc_export_btn"); f.fillColor = ["RGB", 0.5, 0.2, 0.7]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Export as Text";'
     })
     created_fields_10.append(export_btn)
 
     # Print button
     print_btn = create_text_field(pdf, page10, 'doc_print_btn', field_x + 10, 230, 220, 24, {
-        '/Fo': 'var f = getField("doc_print_btn"); f.fillColor = ["RGB", 0.55, 0.35, 0.13]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Print Document";',
-        '/Bl': 'var s = parseInt(getField("doc_print_start").value) || 0; var e = parseInt(getField("doc_print_end").value) || (this.numPages - 1); this.print(true, s, e); getField("doc_print_status").value = "Print: pages " + s + "-" + e;'
+        '/Fo': 'var f = getField("doc_print_btn"); f.fillColor = ["RGB", 0.85, 0.45, 0.1]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Print Document";',
+        '/U': 'var s = parseInt(getField("doc_print_start").value) || 0; var e = parseInt(getField("doc_print_end").value) || (this.numPages - 1); this.print(true, s, e); getField("doc_print_status").value = "Print: pages " + s + "-" + e; var f = getField("doc_print_btn"); f.fillColor = ["RGB", 0.85, 0.45, 0.1]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Print Document";'
     })
     created_fields_10.append(print_btn)
 
     # Calculate Now button
     calc_btn = create_text_field(pdf, page10, 'doc_calc_btn', col2_x + 10, 120, 220, 24, {
-        '/Fo': 'var f = getField("doc_calc_btn"); f.fillColor = ["RGB", 0.13, 0.45, 0.55]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Calculate Now";',
-        '/Bl': 'this.calculateNow(); getField("doc_calc_status").value = "Calculations triggered!"; this.dirty = true; getField("doc_dirty_display").fillColor = ["RGB", 1, 0.9, 0.9]; getField("doc_dirty_display").value = "dirty = true";'
+        '/Fo': 'var f = getField("doc_calc_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.55]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Calculate Now";',
+        '/U': 'this.calculateNow(); getField("doc_calc_status").value = "Calculations triggered!"; this.dirty = true; getField("doc_dirty_display").fillColor = ["RGB", 1, 0.9, 0.9]; getField("doc_dirty_display").value = "dirty = true"; var f = getField("doc_calc_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.55]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Calculate Now";'
     })
     created_fields_10.append(calc_btn)
 
