@@ -785,6 +785,10 @@ textarea.form-field-input {
   text-overflow: ellipsis;
   resize: none;
 }
+/* Comb mode fields use letter-spacing for cell layout; ellipsis must be disabled */
+.form-field-input.field-comb {
+  text-overflow: clip;
+}
 textarea.form-field-input {
   overflow-y: auto !important;
   vertical-align: top !important;
