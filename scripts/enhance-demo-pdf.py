@@ -1249,7 +1249,7 @@ def add_event_object_demo_page(pdf):
     # Card 6: event.source and event.target
     source_trigger = create_text_field(pdf, page, 'evt_source_trigger', field_x + 10, 118, 220, 24, {
         '/Fo': 'var f = getField("evt_source_trigger"); f.fillColor = ["RGB", 0.2, 0.5, 0.8]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Click Me (source demo)";',
-        '/Bl': 'getField("evt_source_info").value = "target: " + event.target.name + " | targetName: " + event.targetName + " | type: " + event.type;'
+        '/U': 'getField("evt_source_info").value = "target: " + event.target.name + " | targetName: " + event.targetName + " | type: " + event.type; var f = getField("evt_source_trigger"); f.fillColor = ["RGB", 0.2, 0.5, 0.8]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Click Me (source demo)";'
     })
     created_fields.append(source_trigger)
 
@@ -1331,16 +1331,17 @@ ET
 """.encode('latin-1')
 
     # === CARD 5: Focus & Blur ===
-    content += _card(40, 168, 530, 100,
+    content += _card(40, 165, 530, 103,
                      'Focus & Blur Events',
-                     'event.targetName, event.type\nidentify which field and event type')
-    content += _label(field_x + 10, 216, 'Click in/out of this field')
-    content += _label(col2_x + 10, 216, 'Focus/Blur Info')
+                     'event.targetName, event.type identify which field and event type')
+    content += _label(field_x + 10, 213, 'Click in/out of this field')
+    content += _label(col2_x + 10, 213, 'Focus/Blur Info')
 
     # === CARD 6: Source & Target ===
-    content += _card(40, 98, 530, 70,
+    content += _card(40, 88, 530, 77,
                      'Event Source & Target',
                      'event.target, event.targetName, event.type')
+    content += _label(field_x + 10, 146, 'Click Me (source demo)')
     content += _label(col2_x + 10, 146, 'Event Details')
 
     # === FOOTER ===
@@ -1401,7 +1402,7 @@ def add_color_object_demo_page(pdf):
         x = field_x + 10 + col * 175
         y = swatch_y - row * 30
         swatch_focus = f'var f = getField("clr_swatch_{name}"); f.readonly = true; f.textColor = color.black; f.alignment = "center"; f.textSize = 9; f.value = "{name}";'
-        swatch_click = f'var f = getField("clr_swatch_{name}"); f.fillColor = {expr}; f.textColor = {expr} == color.black || {expr} == color.dkGray ? color.white : color.black; f.value = "{name}";'
+        swatch_click = f'var f = getField("clr_swatch_{name}"); f.fillColor = {expr}; f.textColor = {expr} == color.black || {expr} == color.dkGray ? color.white : color.black; f.alignment = "center"; f.value = "{name}";'
         field = create_text_field(pdf, page, f'clr_swatch_{name}', x, y, swatch_w, swatch_h, {
             '/Fo': swatch_focus,
             '/U': swatch_click,

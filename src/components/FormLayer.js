@@ -370,6 +370,16 @@ export class FormLayer {
         this._values.set(fieldName, el.value);
       }
 
+      // Run Keystroke trigger action (cross-field updates on each key)
+      if (hasKeystrokeAction && this._config.allowFormJavaScript) {
+        this._runTriggerAction(fieldName, el, 'Keystroke', {
+          change: el.value.slice(-1) || '',
+          keyDown: true,
+          selStart: el.selectionStart || 0,
+          selEnd: el.selectionEnd || 0,
+        });
+      }
+
       // Run calculations if JS is enabled
       if (this._config.allowFormJavaScript && this._calculations.length > 0) {
         this._runCalculations();
@@ -415,12 +425,14 @@ export class FormLayer {
     const hasFocusAction = fieldActions.some(a => a.trigger === 'Focus');
     const hasBlurAction = fieldActions.some(a => a.trigger === 'Blur');
     const hasMouseUpAction = fieldActions.some(a => a.trigger === 'MouseUp');
+    const hasKeystrokeAction = fieldActions.some(a => a.trigger === 'Keystroke');
+    const hasValidateAction = fieldActions.some(a => a.trigger === 'Validate');
 
     // Check if field has validation
     const hasValidation = meta?.validationRules?.length > 0;
 
-    // Blur handler: validation + Format + Blur actions
-    if ((this._config.validateOnBlur && hasValidation) || hasFormatAction || hasBlurAction) {
+    // Blur handler: validation + Format + Validate + Blur actions
+    if ((this._config.validateOnBlur && hasValidation) || hasFormatAction || hasBlurAction || hasValidateAction) {
       if (!flags.readOnly) {
         el.addEventListener('blur', () => {
           // Run format action first so validation sees the formatted value
@@ -431,6 +443,11 @@ export class FormLayer {
           // Run validation after formatting so it checks the formatted value
           if (this._config.validateOnBlur && hasValidation) {
             this._validateAndShowError(fieldName, el, left, top, width, height);
+          }
+
+          // Run Validate trigger action (JavaScript /V actions)
+          if (hasValidateAction && this._config.allowFormJavaScript) {
+            this._runTriggerAction(fieldName, el, 'Validate');
           }
 
           // Run Blur trigger action
@@ -582,12 +599,13 @@ export class FormLayer {
    * @param {string} currentValue
    * @returns {Object} context for executeSandboxed
    */
-  _buildSandboxContext(fieldName, currentValue) {
+  _buildSandboxContext(fieldName, currentValue, extra = {}) {
     return {
       fieldValues: this._values,
       currentFieldName: fieldName,
       currentValue,
       ...this._docProps,
+      ...extra,
     };
   }
 
@@ -664,7 +682,7 @@ export class FormLayer {
    * @param {HTMLElement} el
    * @param {string} trigger - 'Focus', 'Blur', etc.
    */
-  _runTriggerAction(fieldName, el, trigger) {
+  _runTriggerAction(fieldName, el, trigger, extraContext = {}) {
     const actions = this._fieldActions.get(fieldName);
     if (!actions) return;
 
@@ -677,7 +695,10 @@ export class FormLayer {
 
     console.log(`[FormLayer] Running ${trigger} action for ${fieldName}:`, action.code);
 
-    const result = executeSandboxed(action.code, this._buildSandboxContext(fieldName, el.value));
+    const result = executeSandboxed(action.code, this._buildSandboxContext(fieldName, el.value, {
+      eventType: trigger,
+      ...extraContext,
+    }));
 
     if (result.success) {
       // Apply value changes
