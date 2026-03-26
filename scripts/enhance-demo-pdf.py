@@ -650,30 +650,30 @@ Q
     created_fields_10 = []
 
     demo_fields_10 = [
-        # Card 1: Submit Form
-        ('doc_submit_url', field_x + 10, 618, 510, 24, {}),
+        # Card 1: Submit Form (y=584, h=134, top=718)
+        ('doc_submit_url', field_x + 10, 630, 510, 24, {}),
 
-        # Card 2: Mail Form
-        ('doc_mail_to', field_x + 10, 498, 220, 24, {}),
-        ('doc_mail_subject', col2_x + 10, 498, 220, 24, {}),
+        # Card 2: Mail Form (y=466, h=118, top=584)
+        ('doc_mail_to', field_x + 10, 496, 220, 24, {}),
+        ('doc_mail_subject', col2_x + 10, 496, 220, 24, {}),
 
-        # Card 3: Export Data
-        ('doc_export_result', field_x + 10, 378, 510, 50, {
+        # Card 3: Export Data (y=326, h=140, top=466)
+        ('doc_export_result', field_x + 10, 356, 510, 46, {
             '/Fo': 'var f = getField("doc_export_result"); f.readonly = true; f.multiline = true; f.fillColor = ["RGB", 0.97, 0.97, 1]; f.textSize = 9;'
         }),
 
-        # Card 4: Print
-        ('doc_print_start', field_x + 10, 258, 100, 24, {}),
-        ('doc_print_end', field_x + 125, 258, 100, 24, {}),
-        ('doc_print_status', col2_x + 10, 258, 220, 24, {
+        # Card 4: Print (y=208, h=118, top=326)
+        ('doc_print_start', field_x + 10, 238, 100, 24, {}),
+        ('doc_print_end', field_x + 125, 238, 100, 24, {}),
+        ('doc_print_status', col2_x + 10, 238, 220, 24, {
             '/Fo': 'var f = getField("doc_print_status"); f.readonly = true; f.fillColor = ["RGB", 0.96, 1, 0.96]; f.alignment = "center";'
         }),
 
-        # Card 5: Dirty flag & calculateNow
-        ('doc_dirty_display', field_x + 10, 148, 220, 24, {
+        # Card 5: Dirty flag & calculateNow (y=80, h=128, top=208)
+        ('doc_dirty_display', field_x + 10, 120, 220, 24, {
             '/Fo': 'var f = getField("doc_dirty_display"); f.readonly = true; f.alignment = "center"; f.fillColor = this.dirty ? ["RGB", 1, 0.9, 0.9] : ["RGB", 0.9, 1, 0.9]; f.value = "dirty = " + String(this.dirty);'
         }),
-        ('doc_calc_status', col2_x + 10, 148, 220, 24, {
+        ('doc_calc_status', col2_x + 10, 120, 220, 24, {
             '/Fo': 'var f = getField("doc_calc_status"); f.readonly = true; f.fillColor = ["RGB", 0.96, 0.96, 1]; f.alignment = "center";'
         }),
     ]
@@ -683,35 +683,35 @@ Q
         created_fields_10.append(field)
 
     # Submit button
-    submit_btn = create_text_field(pdf, page10, 'doc_submit_btn', field_x + 10, 590, 510, 24, {
+    submit_btn = create_text_field(pdf, page10, 'doc_submit_btn', field_x + 10, 602, 510, 24, {
         '/Fo': 'var f = getField("doc_submit_btn"); f.fillColor = ["RGB", 0.2, 0.7, 0.3]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Submit Form";',
         '/U': 'var url = getField("doc_submit_url").value || "https://httpbin.org/post"; this.submitForm(url); app.alert("Form submitted to: " + url); var f = getField("doc_submit_btn"); f.fillColor = ["RGB", 0.2, 0.7, 0.3]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Submit Form";'
     })
     created_fields_10.append(submit_btn)
 
     # Mail button
-    mail_btn = create_text_field(pdf, page10, 'doc_mail_btn', field_x + 10, 470, 510, 24, {
+    mail_btn = create_text_field(pdf, page10, 'doc_mail_btn', field_x + 10, 468, 510, 24, {
         '/Fo': 'var f = getField("doc_mail_btn"); f.fillColor = ["RGB", 0.2, 0.5, 0.8]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Mail Form";',
         '/U': 'var to = getField("doc_mail_to").value || "user@example.com"; var subj = getField("doc_mail_subject").value || "Form Data"; this.mailForm(true, to, "", "", subj, "Please find attached form data."); app.alert("Mail prepared to: " + to); var f = getField("doc_mail_btn"); f.fillColor = ["RGB", 0.2, 0.5, 0.8]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Mail Form";'
     })
     created_fields_10.append(mail_btn)
 
     # Export button
-    export_btn = create_text_field(pdf, page10, 'doc_export_btn', field_x + 10, 350, 510, 24, {
+    export_btn = create_text_field(pdf, page10, 'doc_export_btn', field_x + 10, 328, 510, 24, {
         '/Fo': 'var f = getField("doc_export_btn"); f.fillColor = ["RGB", 0.5, 0.2, 0.7]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Export as Text";',
         '/U': 'var data = this.exportAsText("/tmp/form-data.txt"); getField("doc_export_result").value = data; var f = getField("doc_export_btn"); f.fillColor = ["RGB", 0.5, 0.2, 0.7]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Export as Text";'
     })
     created_fields_10.append(export_btn)
 
     # Print button
-    print_btn = create_text_field(pdf, page10, 'doc_print_btn', field_x + 10, 230, 220, 24, {
+    print_btn = create_text_field(pdf, page10, 'doc_print_btn', field_x + 10, 210, 220, 24, {
         '/Fo': 'var f = getField("doc_print_btn"); f.fillColor = ["RGB", 0.85, 0.45, 0.1]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Print Document";',
         '/U': 'var s = parseInt(getField("doc_print_start").value) || 0; var e = parseInt(getField("doc_print_end").value) || (this.numPages - 1); this.print(true, s, e); getField("doc_print_status").value = "Print: pages " + s + "-" + e; var f = getField("doc_print_btn"); f.fillColor = ["RGB", 0.85, 0.45, 0.1]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Print Document";'
     })
     created_fields_10.append(print_btn)
 
     # Calculate Now button
-    calc_btn = create_text_field(pdf, page10, 'doc_calc_btn', col2_x + 10, 120, 220, 24, {
+    calc_btn = create_text_field(pdf, page10, 'doc_calc_btn', col2_x + 10, 92, 220, 24, {
         '/Fo': 'var f = getField("doc_calc_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.55]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Calculate Now";',
         '/U': 'this.calculateNow(); getField("doc_calc_status").value = "Calculations triggered!"; this.dirty = true; getField("doc_dirty_display").fillColor = ["RGB", 1, 0.9, 0.9]; getField("doc_dirty_display").value = "dirty = true"; var f = getField("doc_calc_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.55]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Calculate Now";'
     })
@@ -751,44 +751,44 @@ ET
 Q
 """
 
-    # === CARD 1: Submit Form ===
-    content10 += _card(40, 578, 530, 140,
+    # === CARD 1: Submit Form (y=584, h=134) ===
+    content10 += _card(40, 584, 530, 134,
                        'Submit Form',
                        'this.submitForm(url) sends form\ndata to a server endpoint')
-    content10 += _label(field_x + 10, 646, 'Submit URL:')
-    content10 += _hint(field_x + 90, 646, '(leave blank for default \\267 green button submits)')
+    content10 += _label(field_x + 10, 658, 'Submit URL:')
+    content10 += _hint(field_x + 90, 658, '(leave blank for default \\267 green button submits)')
 
-    # === CARD 2: Mail Form ===
-    content10 += _card(40, 458, 530, 120,
+    # === CARD 2: Mail Form (y=466, h=118) ===
+    content10 += _card(40, 466, 530, 118,
                        'Mail Form',
                        'this.mailForm(ui, to, cc, bcc,\nsubject, message)')
-    content10 += _label(field_x + 10, 526, 'To Email:')
-    content10 += _label(col2_x + 10, 526, 'Subject:')
-    content10 += _hint(col2_x + 80, 526, '(blue button sends mail)')
+    content10 += _label(field_x + 10, 524, 'To Email:')
+    content10 += _label(col2_x + 10, 524, 'Subject:')
+    content10 += _hint(col2_x + 80, 524, '(blue button sends mail)')
 
-    # === CARD 3: Export Data ===
-    content10 += _card(40, 338, 530, 120,
+    # === CARD 3: Export Data (y=326, h=140) ===
+    content10 += _card(40, 326, 530, 140,
                        'Export Data',
                        'this.exportAsText(), exportAsFDF()\nexport form data in various formats')
-    content10 += _label(field_x + 10, 432, 'Export Result:')
-    content10 += _hint(field_x + 110, 432, '(auto-populated \\267 purple button exports)')
+    content10 += _label(field_x + 10, 406, 'Export Result:')
+    content10 += _hint(field_x + 110, 406, '(auto-populated \\267 purple button exports)')
 
-    # === CARD 4: Print ===
-    content10 += _card(40, 218, 530, 120,
+    # === CARD 4: Print (y=208, h=118) ===
+    content10 += _card(40, 208, 530, 118,
                        'Print Document',
                        'this.print(ui, start, end, silent,\nshrinkToFit, printAsImage)')
-    content10 += _label(field_x + 10, 286, 'Start Page:')
-    content10 += _label(field_x + 125, 286, 'End Page:')
-    content10 += _label(col2_x + 10, 286, 'Print Status:')
-    content10 += _hint(col2_x + 100, 286, '(brown button prints)')
+    content10 += _label(field_x + 10, 266, 'Start Page:')
+    content10 += _label(field_x + 125, 266, 'End Page:')
+    content10 += _label(col2_x + 10, 266, 'Print Status:')
+    content10 += _hint(col2_x + 100, 266, '(brown button prints)')
 
-    # === CARD 5: Dirty Flag & Calculations ===
-    content10 += _card(40, 108, 530, 120,
+    # === CARD 5: Dirty Flag & Calculations (y=80, h=128) ===
+    content10 += _card(40, 80, 530, 128,
                        'Dirty Flag & Calculations',
                        'this.dirty tracks modifications,\nthis.calculateNow() triggers recalc')
-    content10 += _label(field_x + 10, 176, 'Modified Status:')
-    content10 += _label(col2_x + 10, 176, 'Calc Status:')
-    content10 += _hint(col2_x + 90, 176, '(button triggers recalculate)')
+    content10 += _label(field_x + 10, 148, 'Modified Status:')
+    content10 += _label(col2_x + 10, 148, 'Calc Status:')
+    content10 += _hint(col2_x + 90, 148, '(button triggers recalculate)')
 
     # === FOOTER ===
     content10 += b"""
