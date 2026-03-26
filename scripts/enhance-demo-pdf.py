@@ -528,7 +528,7 @@ def add_document_api_demo_pages(pdf):
 
         # Card 4: Reset form demo
         ('doc_reset_field1', field_x + 10, 248, 150, 24, {}),
-        ('doc_reset_field2', field_x + 175, 248, 150, 24, {}),
+        ('doc_reset_field2', field_x + 175, 248, 100, 24, {}),
         ('doc_reset_status', col2_x + 10, 248, 220, 24, {
             '/Fo': 'var f = getField("doc_reset_status"); f.readonly = true; f.fillColor = ["RGB", 1, 0.96, 0.96]; f.alignment = "center";'
         }),
@@ -541,14 +541,14 @@ def add_document_api_demo_pages(pdf):
     # Button-like field: Add Field (MouseUp = click, Focus = styling init)
     add_btn = create_text_field(pdf, page9, 'doc_add_btn', field_x + 10, 340, 220, 24, {
         '/Fo': 'var f = getField("doc_add_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.55]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Click to Add Field";',
-        '/U': 'var nameF = getField("doc_new_name"); var name = nameF.value; if (name) { this.addField(name, "text", 0, [0,0,100,20]); getField("doc_add_result").value = "Added: " + name; } else { getField("doc_add_result").value = "Enter a name first!"; }'
+        '/U': 'var nameF = getField("doc_new_name"); var name = nameF.value; if (name) { this.addField(name, "text", 0, [0,0,100,20]); getField("doc_add_result").value = "Added: " + name; } else { getField("doc_add_result").value = "Enter a name first!"; } var f = getField("doc_add_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.55]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Click to Add Field";'
     })
     created_fields_9.append(add_btn)
 
     # Button-like field: Reset Form (narrower to avoid overlap)
     reset_btn = create_text_field(pdf, page9, 'doc_reset_btn', col2_x + 10, 220, 170, 24, {
         '/Fo': 'var f = getField("doc_reset_btn"); f.fillColor = ["RGB", 0.8, 0.2, 0.2]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Reset These Fields";',
-        '/U': 'this.resetForm(["doc_reset_field1", "doc_reset_field2"]); getField("doc_reset_status").value = "Fields reset!";'
+        '/U': 'this.resetForm(["doc_reset_field1", "doc_reset_field2"]); getField("doc_reset_status").value = "Fields reset!"; var f = getField("doc_reset_btn"); f.fillColor = ["RGB", 0.8, 0.2, 0.2]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Reset These Fields";'
     })
     created_fields_9.append(reset_btn)
 

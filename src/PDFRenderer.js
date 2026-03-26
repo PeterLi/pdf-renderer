@@ -843,10 +843,15 @@ class PDFRenderer {
   }
 
   async _clearFormFields() {
-    if (!this.formLayer) return;
+    if (!this.formLayer || !this.pdfDoc) return;
     this.formLayer.values.clear();
     this.formLayer.clearErrors();
-    await this._renderFormFields();
+    // Re-render without snapshotValues() — snapshotting would read old DOM
+    // values back into the map, undoing the clear.
+    const widgets = this.formFieldsByPage.get(this.currentPage) || [];
+    const page = await this.pdfDoc.getPage(this.currentPage);
+    const viewport = page.getViewport({ scale: this.currentScale });
+    this.formLayer.render(widgets, viewport, this.currentScale);
     showToast('Form fields cleared', 'info');
   }
 
