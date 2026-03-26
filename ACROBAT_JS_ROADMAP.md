@@ -2,7 +2,7 @@
 
 **Goal:** Implement ALL Acrobat JavaScript functions with visual demos
 
-**Status:** 🚀 Phase 4 - Document Object API Complete (50/800+ done)
+**Status:** 🚀 Phase 5 - App Object API Complete (62/800+ done)
 
 ---
 
@@ -121,26 +121,26 @@
 
 ---
 
-## 💬 Phase 5: App Object API
+## ✅ Phase 5: App Object API (DONE)
 
 ### App Properties:
-- [ ] `app.viewerType` - Viewer type (Reader/Acrobat/etc.)
-- [ ] `app.viewerVersion` - Version number
-- [ ] `app.platform` - Platform (WIN/MAC/UNIX)
-- [ ] `app.language` - UI language
+- [x] `app.viewerType` - Viewer type (Reader/Acrobat/etc.)
+- [x] `app.viewerVersion` - Version number (23.0)
+- [x] `app.platform` - Platform (WIN/MAC/UNIX, auto-detected)
+- [x] `app.language` - UI language (auto-detected from navigator)
 
 ### App Methods:
-- [x] `app.alert(cMsg, nIcon, nType, cTitle)` - Alert dialog ✅ Captured to array
-- [ ] `app.response(cQuestion, cTitle, cDefault, bPassword)` - Prompt dialog
-- [ ] `app.beep(nType)` - System beep
-- [ ] `app.setInterval(cExpr, nMilliseconds)` - Timer
-- [ ] `app.setTimeOut(cExpr, nMilliseconds)` - Timeout
-- [ ] `app.clearInterval(oInterval)` - Clear timer
-- [ ] `app.clearTimeOut(oTime)` - Clear timeout
-- [ ] `app.execMenuItem(cMenuItem)` - Execute menu command
-- [ ] `app.getNthPlugInName(nIndex)` - Get plugin name
-- [ ] `app.popUpMenu(...)` - Context menu
-- [ ] `app.launchURL(cURL, bNewFrame)` - Open URL
+- [x] `app.alert(cMsg, nIcon, nType, cTitle)` - Alert dialog ✅ Captured to array, returns 1
+- [x] `app.response(cQuestion, cTitle, cDefault, bPassword)` - Prompt dialog (records request, returns default)
+- [x] `app.beep(nType)` - System beep (records request, types 0-4)
+- [x] `app.setInterval(cExpr, nMilliseconds)` - Timer (returns timer object with id)
+- [x] `app.setTimeOut(cExpr, nMilliseconds)` - Timeout (returns timer object with id)
+- [x] `app.clearInterval(oInterval)` - Clear timer (records cancellation)
+- [x] `app.clearTimeOut(oTime)` - Clear timeout (records cancellation)
+- [x] `app.execMenuItem(cMenuItem)` - Execute menu command (records request)
+- [x] `app.getNthPlugInName(nIndex)` - Get plugin name (simulated plugin list)
+- [x] `app.popUpMenu(...)` - Context menu (variadic args, returns first item)
+- [x] `app.launchURL(cURL, bNewFrame)` - Open URL (records request)
 
 **Demo Goal:** Page 11 - Interactive dialogs
 
@@ -218,12 +218,12 @@
 
 ## 📈 Progress Tracking
 
-**Functions Implemented:** 50 / ~800
+**Functions Implemented:** 62 / ~800
 **Demo Pages:** 4 / 13+
-**Phase:** 4 / 8
-**Tests:** 122 passing (vitest)
+**Phase:** 5 / 8
+**Tests:** 152 passing (vitest)
 
-**Next Up:** Phase 5 - App Object API
+**Next Up:** Phase 6 - Util Object API
 
 ---
 

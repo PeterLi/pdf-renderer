@@ -1040,6 +1040,242 @@ describe('Phase 4: Document Object API', () => {
 });
 
 // ============================================================
+// Phase 5: App Object API
+// ============================================================
+
+describe('Phase 5: App Object API', () => {
+
+  describe('App Properties', () => {
+    it('app.viewerType returns Reader', () => {
+      const result = run('event.value = app.viewerType;', '');
+      expect(result.event.value).toBe('Reader');
+    });
+
+    it('app.viewerVersion returns a number', () => {
+      const result = run('event.value = String(typeof app.viewerVersion === "number");', '');
+      expect(result.event.value).toBe('true');
+    });
+
+    it('app.platform returns WIN, MAC, or UNIX', () => {
+      const result = run('event.value = app.platform;', '');
+      expect(['WIN', 'MAC', 'UNIX']).toContain(result.event.value);
+    });
+
+    it('app.language returns a string', () => {
+      const result = run('event.value = String(typeof app.language);', '');
+      expect(result.event.value).toBe('string');
+    });
+  });
+
+  describe('app.alert()', () => {
+    it('captures alert message', () => {
+      const result = run('app.alert("Hello World");', '');
+      expect(result.alerts).toContain('Hello World');
+    });
+
+    it('returns 1 (OK)', () => {
+      const result = run('event.value = String(app.alert("test"));', '');
+      expect(result.event.value).toBe('1');
+    });
+  });
+
+  describe('app.response()', () => {
+    it('records response request with all parameters', () => {
+      const result = run('var r = app.response("Enter name:", "Input", "John", false);', '');
+      expect(result.docRequests.some(r => r.type === 'response')).toBe(true);
+      const req = result.docRequests.find(r => r.type === 'response');
+      expect(req.question).toBe('Enter name:');
+      expect(req.title).toBe('Input');
+      expect(req.default).toBe('John');
+      expect(req.password).toBe(false);
+    });
+
+    it('returns default value', () => {
+      const result = run('event.value = app.response("Question?", "Title", "default");', '');
+      expect(result.event.value).toBe('default');
+    });
+
+    it('returns null when no default provided', () => {
+      const result = run('event.value = String(app.response("Question?") === null);', '');
+      expect(result.event.value).toBe('true');
+    });
+
+    it('records password flag', () => {
+      const result = run('app.response("Password:", "Auth", "", true);', '');
+      const req = result.docRequests.find(r => r.type === 'response');
+      expect(req.password).toBe(true);
+    });
+  });
+
+  describe('app.beep()', () => {
+    it('records beep request', () => {
+      const result = run('app.beep(0);', '');
+      const req = result.docRequests.find(r => r.type === 'beep');
+      expect(req).toBeDefined();
+      expect(req.beepType).toBe(0);
+    });
+
+    it('defaults to type 0 for invalid input', () => {
+      const result = run('app.beep(99);', '');
+      const req = result.docRequests.find(r => r.type === 'beep');
+      expect(req.beepType).toBe(0);
+    });
+
+    it('accepts valid beep types 0-4', () => {
+      const result = run('app.beep(3);', '');
+      const req = result.docRequests.find(r => r.type === 'beep');
+      expect(req.beepType).toBe(3);
+    });
+  });
+
+  describe('app.setInterval() / app.clearInterval()', () => {
+    it('creates an interval timer', () => {
+      const result = run(`
+        var t = app.setInterval("event.value = 'tick';", 1000);
+        event.value = String(t.id);
+      `, '');
+      expect(result.success).toBe(true);
+      expect(Number(result.event.value)).toBeGreaterThan(0);
+      const req = result.docRequests.find(r => r.type === 'setInterval');
+      expect(req).toBeDefined();
+      expect(req.interval).toBe(1000);
+    });
+
+    it('clearInterval records cancellation', () => {
+      const result = run(`
+        var t = app.setInterval("x", 500);
+        app.clearInterval(t);
+        event.value = "cleared";
+      `, '');
+      expect(result.success).toBe(true);
+      expect(result.docRequests.some(r => r.type === 'clearInterval')).toBe(true);
+    });
+  });
+
+  describe('app.setTimeOut() / app.clearTimeOut()', () => {
+    it('creates a timeout timer', () => {
+      const result = run(`
+        var t = app.setTimeOut("app.alert('done');", 2000);
+        event.value = String(t.id);
+      `, '');
+      expect(result.success).toBe(true);
+      expect(Number(result.event.value)).toBeGreaterThan(0);
+      const req = result.docRequests.find(r => r.type === 'setTimeOut');
+      expect(req).toBeDefined();
+      expect(req.timeout).toBe(2000);
+    });
+
+    it('clearTimeOut records cancellation', () => {
+      const result = run(`
+        var t = app.setTimeOut("x", 500);
+        app.clearTimeOut(t);
+        event.value = "cleared";
+      `, '');
+      expect(result.success).toBe(true);
+      expect(result.docRequests.some(r => r.type === 'clearTimeOut')).toBe(true);
+    });
+  });
+
+  describe('app.execMenuItem()', () => {
+    it('records menu item execution', () => {
+      const result = run('app.execMenuItem("SaveAs");', '');
+      const req = result.docRequests.find(r => r.type === 'execMenuItem');
+      expect(req).toBeDefined();
+      expect(req.menuItem).toBe('SaveAs');
+    });
+
+    it('ignores empty menu item', () => {
+      const result = run('app.execMenuItem(""); event.value = "ok";', '');
+      expect(result.docRequests.filter(r => r.type === 'execMenuItem')).toHaveLength(0);
+    });
+  });
+
+  describe('app.getNthPlugInName()', () => {
+    it('returns plugin name by index', () => {
+      const result = run('event.value = app.getNthPlugInName(0);', '');
+      expect(result.event.value).toBe('Acrobat Forms');
+    });
+
+    it('returns empty string for out-of-range index', () => {
+      const result = run('event.value = app.getNthPlugInName(99);', '');
+      expect(result.event.value).toBe('');
+    });
+
+    it('returns empty string for negative index', () => {
+      const result = run('event.value = app.getNthPlugInName(-1);', '');
+      expect(result.event.value).toBe('');
+    });
+  });
+
+  describe('app.popUpMenu()', () => {
+    it('records menu items and returns first item', () => {
+      const result = run('event.value = app.popUpMenu("Cut", "Copy", "Paste");', '');
+      expect(result.event.value).toBe('Cut');
+      const req = result.docRequests.find(r => r.type === 'popUpMenu');
+      expect(req.items).toEqual(['Cut', 'Copy', 'Paste']);
+    });
+
+    it('skips separators when returning selection', () => {
+      const result = run('event.value = String(app.popUpMenu("-", "First"));', '');
+      expect(result.event.value).toBe('First');
+    });
+
+    it('returns null for empty menu', () => {
+      const result = run('event.value = String(app.popUpMenu() === null);', '');
+      expect(result.event.value).toBe('true');
+    });
+  });
+
+  describe('app.launchURL()', () => {
+    it('records URL launch request', () => {
+      const result = run('app.launchURL("https://example.com", true);', '');
+      const req = result.docRequests.find(r => r.type === 'launchURL');
+      expect(req).toBeDefined();
+      expect(req.url).toBe('https://example.com');
+      expect(req.newFrame).toBe(true);
+    });
+
+    it('defaults newFrame to true', () => {
+      const result = run('app.launchURL("https://example.com");', '');
+      const req = result.docRequests.find(r => r.type === 'launchURL');
+      expect(req.newFrame).toBe(true);
+    });
+
+    it('ignores empty URL', () => {
+      const result = run('app.launchURL(""); event.value = "ok";', '');
+      expect(result.docRequests.filter(r => r.type === 'launchURL')).toHaveLength(0);
+    });
+  });
+
+  describe('App Cross-feature Tests', () => {
+    it('can combine alert and response', () => {
+      const result = run(`
+        var name = app.response("Name?", "Input", "User");
+        app.alert("Hello " + name);
+        event.value = name;
+      `, '');
+      expect(result.event.value).toBe('User');
+      expect(result.alerts).toContain('Hello User');
+    });
+
+    it('can create and clear multiple timers', () => {
+      const result = run(`
+        var t1 = app.setInterval("a", 100);
+        var t2 = app.setTimeOut("b", 200);
+        var t3 = app.setInterval("c", 300);
+        app.clearInterval(t1);
+        app.clearTimeOut(t2);
+        event.value = String(t1.id) + "," + String(t2.id) + "," + String(t3.id);
+      `, '');
+      expect(result.success).toBe(true);
+      const ids = result.event.value.split(',').map(Number);
+      expect(ids[0]).toBeLessThan(ids[1]);
+      expect(ids[1]).toBeLessThan(ids[2]);
+    });
+  });
+});
+
+// ============================================================
 // Safety & Parser Tests
 // ============================================================
 

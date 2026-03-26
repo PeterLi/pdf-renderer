@@ -733,9 +733,119 @@ function createSandboxScope(context) {
   };
 
   // app object (Acrobat JS API subset)
+  const _appTimers = { nextId: 1, intervals: {}, timeouts: {} };
   const app = {
-    alert(msg) {
-      alerts.push(String(msg));
+    // ---- Properties ----
+    viewerType: 'Reader',
+    viewerVersion: 23.0,
+    platform: typeof navigator !== 'undefined' && /Mac/.test(navigator.platform) ? 'MAC'
+      : typeof navigator !== 'undefined' && /Linux/.test(navigator.platform) ? 'UNIX' : 'WIN',
+    language: typeof navigator !== 'undefined' ? navigator.language.slice(0, 2).toUpperCase() : 'ENU',
+
+    // ---- Dialogs ----
+    alert(cMsg, nIcon, nType, cTitle) {
+      alerts.push(String(cMsg));
+      // Return 1 (OK) for single-button, simulate OK for multi-button
+      return 1;
+    },
+
+    response(cQuestion, cTitle, cDefault, bPassword) {
+      const request = {
+        type: 'response',
+        question: String(cQuestion || ''),
+        title: String(cTitle || 'Adobe Acrobat'),
+        default: cDefault != null ? String(cDefault) : '',
+        password: !!bPassword,
+      };
+      if (!context._docRequests) context._docRequests = [];
+      context._docRequests.push(request);
+      // Return the default value (simulates user clicking OK with default)
+      return cDefault != null ? String(cDefault) : null;
+    },
+
+    // ---- Sound ----
+    beep(nType) {
+      const request = {
+        type: 'beep',
+        beepType: (nType != null && nType >= 0 && nType <= 4) ? nType : 0,
+      };
+      if (!context._docRequests) context._docRequests = [];
+      context._docRequests.push(request);
+    },
+
+    // ---- Timers ----
+    setInterval(cExpr, nMilliseconds) {
+      const id = _appTimers.nextId++;
+      const timer = { id, code: String(cExpr), interval: Math.max(0, Number(nMilliseconds) || 0) };
+      _appTimers.intervals[id] = timer;
+      if (!context._docRequests) context._docRequests = [];
+      context._docRequests.push({ type: 'setInterval', ...timer });
+      return timer;
+    },
+
+    setTimeOut(cExpr, nMilliseconds) {
+      const id = _appTimers.nextId++;
+      const timer = { id, code: String(cExpr), timeout: Math.max(0, Number(nMilliseconds) || 0) };
+      _appTimers.timeouts[id] = timer;
+      if (!context._docRequests) context._docRequests = [];
+      context._docRequests.push({ type: 'setTimeOut', ...timer });
+      return timer;
+    },
+
+    clearInterval(oInterval) {
+      if (oInterval && oInterval.id != null) {
+        delete _appTimers.intervals[oInterval.id];
+        if (!context._docRequests) context._docRequests = [];
+        context._docRequests.push({ type: 'clearInterval', id: oInterval.id });
+      }
+    },
+
+    clearTimeOut(oTime) {
+      if (oTime && oTime.id != null) {
+        delete _appTimers.timeouts[oTime.id];
+        if (!context._docRequests) context._docRequests = [];
+        context._docRequests.push({ type: 'clearTimeOut', id: oTime.id });
+      }
+    },
+
+    // ---- Menu ----
+    execMenuItem(cMenuItem) {
+      if (!cMenuItem) return;
+      if (!context._docRequests) context._docRequests = [];
+      context._docRequests.push({ type: 'execMenuItem', menuItem: String(cMenuItem) });
+    },
+
+    // ---- Plugins ----
+    getNthPlugInName(nIndex) {
+      // Simulated plugin list (minimal set matching Acrobat Reader)
+      const plugins = ['Acrobat Forms', 'Annotations', 'Multimedia', 'Spelling'];
+      const idx = Math.floor(Number(nIndex));
+      if (idx < 0 || idx >= plugins.length) return '';
+      return plugins[idx];
+    },
+
+    // ---- Context Menu ----
+    popUpMenu() {
+      // Accept variadic args: strings for items, '-' for separator, arrays for submenus
+      const items = Array.from(arguments);
+      if (!context._docRequests) context._docRequests = [];
+      context._docRequests.push({ type: 'popUpMenu', items });
+      // Return first non-separator item (simulates user selecting first option)
+      for (const item of items) {
+        if (typeof item === 'string' && item !== '-') return item;
+      }
+      return null;
+    },
+
+    // ---- URL ----
+    launchURL(cURL, bNewFrame) {
+      if (!cURL) return;
+      if (!context._docRequests) context._docRequests = [];
+      context._docRequests.push({
+        type: 'launchURL',
+        url: String(cURL),
+        newFrame: bNewFrame !== false, // default true
+      });
     },
   };
 
