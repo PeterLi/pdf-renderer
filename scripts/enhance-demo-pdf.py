@@ -823,91 +823,91 @@ def add_app_object_demo_page(pdf):
     col2_x = 320
 
     # Card 1: App Properties - readonly display fields
-    app_info = create_text_field(pdf, page, 'app_info_display', field_x + 10, 618, 510, 24, {
+    app_info = create_text_field(pdf, page, 'app_info_display', field_x + 10, 625, 510, 24, {
         '/Fo': 'var f = getField("app_info_display"); f.readonly = true; f.fillColor = ["RGB", 0.96, 0.98, 1]; f.textSize = 9; f.value = "viewerType: " + app.viewerType + " | version: " + app.viewerVersion + " | platform: " + app.platform + " | language: " + app.language;'
     })
     created_fields.append(app_info)
 
     # Card 2: Alert and Response
-    alert_result = create_text_field(pdf, page, 'app_alert_result', col2_x + 10, 505, 220, 24, {
+    alert_result = create_text_field(pdf, page, 'app_alert_result', col2_x + 10, 515, 220, 24, {
         '/Fo': 'var f = getField("app_alert_result"); f.readonly = true; f.fillColor = ["RGB", 0.96, 1, 0.96]; f.alignment = "center";'
     })
     created_fields.append(alert_result)
 
-    alert_btn = create_text_field(pdf, page, 'app_alert_btn', field_x + 10, 505, 220, 24, {
-        '/Fo': 'var f = getField("app_alert_btn"); f.fillColor = ["RGB", 0.2, 0.5, 0.8]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Show Alert Dialog";',
-        '/Bl': 'var r = app.alert("Hello from app.alert!\\nChoose an option:", "Alert Demo", 1); getField("app_alert_result").value = "Button: " + r;'
+    alert_btn = create_text_field(pdf, page, 'app_alert_btn', field_x + 10, 515, 220, 24, {
+        '/Fo': 'var f = getField("app_alert_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.55]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Show Alert Dialog";',
+        '/U': 'var r = app.alert("Hello from app.alert!\\nChoose an option:", "Alert Demo", 1); getField("app_alert_result").value = "Button: " + r; var f = getField("app_alert_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.55]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Show Alert Dialog";'
     })
     created_fields.append(alert_btn)
 
-    response_result = create_text_field(pdf, page, 'app_response_result', col2_x + 10, 475, 220, 24, {
+    response_result = create_text_field(pdf, page, 'app_response_result', col2_x + 10, 480, 220, 24, {
         '/Fo': 'var f = getField("app_response_result"); f.readonly = true; f.fillColor = ["RGB", 1, 0.98, 0.96]; f.alignment = "center";'
     })
     created_fields.append(response_result)
 
-    response_btn = create_text_field(pdf, page, 'app_response_btn', field_x + 10, 475, 220, 24, {
-        '/Fo': 'var f = getField("app_response_btn"); f.fillColor = ["RGB", 0.6, 0.3, 0.6]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Show Response Dialog";',
-        '/Bl': 'var r = app.response("Enter your name:", "Response Demo", "World"); getField("app_response_result").value = r ? "Hello, " + r + "!" : "(cancelled)";'
+    response_btn = create_text_field(pdf, page, 'app_response_btn', field_x + 10, 480, 220, 24, {
+        '/Fo': 'var f = getField("app_response_btn"); f.fillColor = ["RGB", 0.2, 0.5, 0.8]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Show Response Dialog";',
+        '/U': 'var r = app.response("Enter your name:", "Response Demo", "World"); getField("app_response_result").value = r ? "Hello, " + r + "!" : "(cancelled)"; var f = getField("app_response_btn"); f.fillColor = ["RGB", 0.2, 0.5, 0.8]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Show Response Dialog";'
     })
     created_fields.append(response_btn)
 
     # Card 3: Timers
-    timer_display = create_text_field(pdf, page, 'app_timer_display', field_x + 10, 378, 510, 24, {
+    timer_display = create_text_field(pdf, page, 'app_timer_display', field_x + 10, 370, 510, 24, {
         '/Fo': 'var f = getField("app_timer_display"); f.readonly = true; f.fillColor = ["RGB", 1, 1, 0.92]; f.alignment = "center"; f.textSize = 12;'
     })
     created_fields.append(timer_display)
 
-    interval_btn = create_text_field(pdf, page, 'app_interval_btn', field_x + 10, 348, 160, 24, {
+    interval_btn = create_text_field(pdf, page, 'app_interval_btn', field_x + 10, 338, 160, 24, {
         '/Fo': 'var f = getField("app_interval_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.13]; f.textColor = color.white; f.alignment = "center"; f.textSize = 10; f.value = "Start Interval";',
-        '/Bl': 'if (!global._demoCount) global._demoCount = 0; global._demoTimer = app.setInterval("global._demoCount++; getField(\\"app_timer_display\\").value = \\"Count: \\" + global._demoCount;", 1000); getField("app_timer_display").value = "Timer started!";'
+        '/U': 'if (!global._demoCount) global._demoCount = 0; global._demoTimer = app.setInterval("global._demoCount++; getField(\\"app_timer_display\\").value = \\"Count: \\" + global._demoCount;", 1000); getField("app_timer_display").value = "Timer started!"; var f = getField("app_interval_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.13]; f.textColor = color.white; f.alignment = "center"; f.textSize = 10; f.value = "Start Interval";'
     })
     created_fields.append(interval_btn)
 
-    clear_btn = create_text_field(pdf, page, 'app_clear_btn', field_x + 180, 348, 160, 24, {
+    clear_btn = create_text_field(pdf, page, 'app_clear_btn', field_x + 180, 338, 160, 24, {
         '/Fo': 'var f = getField("app_clear_btn"); f.fillColor = ["RGB", 0.8, 0.2, 0.2]; f.textColor = color.white; f.alignment = "center"; f.textSize = 10; f.value = "Stop Interval";',
-        '/Bl': 'if (global._demoTimer) { app.clearInterval(global._demoTimer); global._demoTimer = null; } getField("app_timer_display").value = "Timer stopped at count: " + (global._demoCount || 0);'
+        '/U': 'if (global._demoTimer) { app.clearInterval(global._demoTimer); global._demoTimer = null; } getField("app_timer_display").value = "Timer stopped at count: " + (global._demoCount || 0); var f = getField("app_clear_btn"); f.fillColor = ["RGB", 0.8, 0.2, 0.2]; f.textColor = color.white; f.alignment = "center"; f.textSize = 10; f.value = "Stop Interval";'
     })
     created_fields.append(clear_btn)
 
-    timeout_btn = create_text_field(pdf, page, 'app_timeout_btn', col2_x + 10, 348, 220, 24, {
-        '/Fo': 'var f = getField("app_timeout_btn"); f.fillColor = ["RGB", 0.55, 0.35, 0.13]; f.textColor = color.white; f.alignment = "center"; f.textSize = 10; f.value = "Set Timeout (2s)";',
-        '/Bl': 'getField("app_timer_display").value = "Waiting 2 seconds..."; app.setTimeOut("getField(\\"app_timer_display\\").value = \\"Timeout fired!\\";", 2000);'
+    timeout_btn = create_text_field(pdf, page, 'app_timeout_btn', col2_x + 10, 338, 220, 24, {
+        '/Fo': 'var f = getField("app_timeout_btn"); f.fillColor = ["RGB", 0.5, 0.2, 0.7]; f.textColor = color.white; f.alignment = "center"; f.textSize = 10; f.value = "Set Timeout (2s)";',
+        '/U': 'getField("app_timer_display").value = "Waiting 2 seconds..."; app.setTimeOut("getField(\\"app_timer_display\\").value = \\"Timeout fired!\\";", 2000); var f = getField("app_timeout_btn"); f.fillColor = ["RGB", 0.5, 0.2, 0.7]; f.textColor = color.white; f.alignment = "center"; f.textSize = 10; f.value = "Set Timeout (2s)";'
     })
     created_fields.append(timeout_btn)
 
     # Card 4: Beep and Menu
-    beep_btn = create_text_field(pdf, page, 'app_beep_btn', field_x + 10, 238, 220, 24, {
+    beep_btn = create_text_field(pdf, page, 'app_beep_btn', field_x + 10, 225, 220, 24, {
         '/Fo': 'var f = getField("app_beep_btn"); f.fillColor = ["RGB", 0.9, 0.6, 0.1]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Beep!";',
-        '/Bl': 'app.beep(0);'
+        '/U': 'app.beep(0); var f = getField("app_beep_btn"); f.fillColor = ["RGB", 0.9, 0.6, 0.1]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Beep!";'
     })
     created_fields.append(beep_btn)
 
-    menu_result = create_text_field(pdf, page, 'app_menu_result', col2_x + 10, 238, 220, 24, {
+    menu_result = create_text_field(pdf, page, 'app_menu_result', col2_x + 10, 225, 220, 24, {
         '/Fo': 'var f = getField("app_menu_result"); f.readonly = true; f.fillColor = ["RGB", 0.96, 0.96, 1]; f.alignment = "center";'
     })
     created_fields.append(menu_result)
 
-    menu_btn = create_text_field(pdf, page, 'app_menu_btn', col2_x + 10, 208, 220, 24, {
-        '/Fo': 'var f = getField("app_menu_btn"); f.fillColor = ["RGB", 0.3, 0.3, 0.5]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Show Popup Menu";',
-        '/Bl': 'var r = app.popUpMenu("Option A", "-", "Option B", ["Submenu", "Sub 1", "Sub 2"]); getField("app_menu_result").value = r ? "Selected: " + r : "(cancelled)";'
+    menu_btn = create_text_field(pdf, page, 'app_menu_btn', col2_x + 10, 195, 220, 24, {
+        '/Fo': 'var f = getField("app_menu_btn"); f.fillColor = ["RGB", 0.2, 0.5, 0.8]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Show Popup Menu";',
+        '/U': 'var r = app.popUpMenu("Option A", "-", "Option B", ["Submenu", "Sub 1", "Sub 2"]); getField("app_menu_result").value = r ? "Selected: " + r : "(cancelled)"; var f = getField("app_menu_btn"); f.fillColor = ["RGB", 0.2, 0.5, 0.8]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Show Popup Menu";'
     })
     created_fields.append(menu_btn)
 
     # Card 5: Launch URL and Exec Menu Item
-    launch_btn = create_text_field(pdf, page, 'app_launch_btn', field_x + 10, 148, 220, 24, {
+    launch_btn = create_text_field(pdf, page, 'app_launch_btn', field_x + 10, 120, 220, 24, {
         '/Fo': 'var f = getField("app_launch_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.55]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Launch URL";',
-        '/Bl': 'app.launchURL("https://example.com", true);'
+        '/U': 'app.launchURL("https://example.com", true); var f = getField("app_launch_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.55]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Launch URL";'
     })
     created_fields.append(launch_btn)
 
-    exec_result = create_text_field(pdf, page, 'app_exec_result', col2_x + 10, 148, 220, 24, {
+    exec_result = create_text_field(pdf, page, 'app_exec_result', col2_x + 10, 120, 220, 24, {
         '/Fo': 'var f = getField("app_exec_result"); f.readonly = true; f.fillColor = ["RGB", 0.96, 1, 0.96]; f.alignment = "center";'
     })
     created_fields.append(exec_result)
 
-    exec_btn = create_text_field(pdf, page, 'app_exec_btn', col2_x + 10, 118, 220, 24, {
+    exec_btn = create_text_field(pdf, page, 'app_exec_btn', col2_x + 10, 90, 220, 24, {
         '/Fo': 'var f = getField("app_exec_btn"); f.fillColor = ["RGB", 0.4, 0.6, 0.3]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Exec Menu: ZoomTo";',
-        '/Bl': 'app.execMenuItem("ZoomTo"); getField("app_exec_result").value = "Executed: ZoomTo";'
+        '/U': 'app.execMenuItem("ZoomTo"); getField("app_exec_result").value = "Executed: ZoomTo"; var f = getField("app_exec_btn"); f.fillColor = ["RGB", 0.4, 0.6, 0.3]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Exec Menu: ZoomTo";'
     })
     created_fields.append(exec_btn)
 
@@ -946,43 +946,43 @@ Q
 """
 
     # === CARD 1: App Properties ===
-    content += _card(40, 598, 530, 120,
+    content += _card(40, 610, 530, 108,
                      'Application Properties',
                      'app.viewerType, app.viewerVersion,\napp.platform, app.language')
-    content += _label(field_x + 10, 646, 'App Info (auto-populated on focus)')
+    content += _label(field_x + 10, 653, 'App Info (auto-populated on focus)')
 
     # === CARD 2: Alert & Response ===
-    content += _card(40, 458, 530, 120,
+    content += _card(40, 462, 530, 140,
                      'Dialogs: Alert & Response',
                      'app.alert() shows message box,\napp.response() prompts for input')
-    content += _label(field_x + 10, 533, 'Alert (returns button index)')
-    content += _label(col2_x + 10, 533, 'Result')
-    content += _label(field_x + 10, 503, 'Response (returns user input)')
-    content += _label(col2_x + 10, 503, 'Result')
+    content += _label(field_x + 10, 543, 'Alert (returns button index)')
+    content += _label(col2_x + 10, 543, 'Result')
+    content += _label(field_x + 10, 508, 'Response (returns user input)')
+    content += _label(col2_x + 10, 508, 'Result')
 
     # === CARD 3: Timers ===
-    content += _card(40, 328, 530, 120,
+    content += _card(40, 320, 530, 135,
                      'Timers',
                      'app.setInterval, app.setTimeOut,\napp.clearInterval, app.clearTimeOut')
-    content += _label(field_x + 10, 406, 'Timer Display (updates every second)')
+    content += _label(field_x + 10, 398, 'Timer Display (updates every second)')
 
     # === CARD 4: Beep & Menu ===
-    content += _card(40, 198, 252, 120,
+    content += _card(40, 185, 252, 128,
                      'Beep',
                      'app.beep(type) plays\na system sound')
-    content += _card(308, 198, 262, 120,
+    content += _card(308, 185, 262, 128,
                      'Popup Menu',
                      'app.popUpMenu() shows\na context menu')
-    content += _label(col2_x + 10, 266, 'Menu Result')
+    content += _label(col2_x + 10, 253, 'Menu Result')
 
     # === CARD 5: Navigation ===
-    content += _card(40, 98, 252, 100,
+    content += _card(40, 82, 252, 96,
                      'Launch URL',
                      'app.launchURL(url, newWin)\nopens external URL')
-    content += _card(308, 98, 262, 100,
+    content += _card(308, 82, 262, 96,
                      'Execute Menu Item',
                      'app.execMenuItem(name)\ntriggers a viewer menu action')
-    content += _label(col2_x + 10, 176, 'Exec Result')
+    content += _label(col2_x + 10, 148, 'Exec Result')
 
     # === FOOTER ===
     content += b"""
