@@ -1402,7 +1402,7 @@ def add_color_object_demo_page(pdf):
         x = field_x + 10 + col * 175
         y = swatch_y - row * 30
         swatch_focus = f'var f = getField("clr_swatch_{name}"); f.readonly = true; f.textColor = color.black; f.alignment = "center"; f.textSize = 9; f.value = "{name}";'
-        swatch_click = f'var f = getField("clr_swatch_{name}"); f.fillColor = {expr}; f.textColor = {expr} == color.black || {expr} == color.dkGray ? color.white : color.black; f.alignment = "center"; f.value = "{name}";'
+        swatch_click = f'var f = getField("clr_swatch_{name}"); f.fillColor = {expr}; f.textColor = {expr} == color.black || {expr} == color.dkGray || {expr} == color.blue ? color.white : color.black; f.alignment = "center"; f.value = "{name}";'
         field = create_text_field(pdf, page, f'clr_swatch_{name}', x, y, swatch_w, swatch_h, {
             '/Fo': swatch_focus,
             '/U': swatch_click,
