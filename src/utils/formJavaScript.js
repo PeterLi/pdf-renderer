@@ -747,6 +747,10 @@ function createSandboxScope(context) {
     get numFields() { return _getFieldNames().length; },
   };
 
+  // Persistent global object (survives across executions via context)
+  const global = context._global || {};
+  context._global = global;
+
   // app object (Acrobat JS API subset)
   const _appTimers = { nextId: 1, intervals: {}, timeouts: {} };
   const app = {
@@ -759,33 +763,48 @@ function createSandboxScope(context) {
 
     // ---- Dialogs ----
     alert(cMsg, nIcon, nType, cTitle) {
+      // Check for pre-supplied response (from modal re-run)
+      if (context._pendingAlertResponses && context._pendingAlertResponses.length > 0) {
+        return context._pendingAlertResponses.shift();
+      }
       alerts.push(String(cMsg));
+      if (!context._docRequests) context._docRequests = [];
+      context._docRequests.push({
+        type: 'alert',
+        message: String(cMsg),
+        icon: (nIcon != null && nIcon >= 0 && nIcon <= 3) ? nIcon : 0,
+        buttonType: (nType != null && nType >= 0 && nType <= 3) ? nType : 0,
+        title: String(cTitle || 'Alert'),
+      });
       // Return 1 (OK) for single-button, simulate OK for multi-button
       return 1;
     },
 
-    response(cQuestion, cTitle, cDefault, bPassword) {
-      const request = {
+    response(cQuestion, cTitle, cDefault, bPassword, cLabel) {
+      // Check for pre-supplied response (from modal re-run)
+      if (context._pendingResponses && context._pendingResponses.length > 0) {
+        return context._pendingResponses.shift();
+      }
+      if (!context._docRequests) context._docRequests = [];
+      context._docRequests.push({
         type: 'response',
         question: String(cQuestion || ''),
         title: String(cTitle || 'Adobe Acrobat'),
         default: cDefault != null ? String(cDefault) : '',
         password: !!bPassword,
-      };
-      if (!context._docRequests) context._docRequests = [];
-      context._docRequests.push(request);
+        label: cLabel != null ? String(cLabel) : '',
+      });
       // Return the default value (simulates user clicking OK with default)
       return cDefault != null ? String(cDefault) : null;
     },
 
     // ---- Sound ----
     beep(nType) {
-      const request = {
+      if (!context._docRequests) context._docRequests = [];
+      context._docRequests.push({
         type: 'beep',
         beepType: (nType != null && nType >= 0 && nType <= 4) ? nType : 0,
-      };
-      if (!context._docRequests) context._docRequests = [];
-      context._docRequests.push(request);
+      });
     },
 
     // ---- Timers ----
@@ -1816,6 +1835,7 @@ function createSandboxScope(context) {
     AFRange_Validate,
     AFRegex_Validate,
     util,
+    global,
   };
 
   // Don't add BLOCKED_GLOBALS to scope - they're blocked by not being in scope!
