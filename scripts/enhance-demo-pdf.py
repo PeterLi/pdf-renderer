@@ -1026,8 +1026,8 @@ def add_util_object_demo_page(pdf):
     created_fields.append(printx_result)
 
     printx_btn = create_text_field(pdf, page, 'util_printx_btn', field_x + 10, 588, 510, 24, {
-        '/Fo': 'var f = getField("util_printx_btn"); f.fillColor = ["RGB", 0.2, 0.5, 0.8]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Format with Mask: (999) 999-9999";',
-        '/Bl': 'var raw = getField("util_printx_input").value || "5551234567"; var formatted = util.printx("(999) 999-9999", raw); getField("util_printx_result").value = formatted;'
+        '/Fo': 'var f = getField("util_printx_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.55]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Format with Mask: (999) 999-9999";',
+        '/U': 'var raw = getField("util_printx_input").value || "5551234567"; var formatted = util.printx("(999) 999-9999", raw); getField("util_printx_result").value = formatted; var f = getField("util_printx_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.55]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Format with Mask: (999) 999-9999";'
     })
     created_fields.append(printx_btn)
 
@@ -1041,8 +1041,8 @@ def add_util_object_demo_page(pdf):
     created_fields.append(printx2_result)
 
     printx2_btn = create_text_field(pdf, page, 'util_printx2_btn', field_x + 10, 528, 510, 24, {
-        '/Fo': 'var f = getField("util_printx2_btn"); f.fillColor = ["RGB", 0.15, 0.45, 0.7]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Format SSN Mask: 999-99-9999";',
-        '/Bl': 'var raw = getField("util_printx2_input").value || "123456789"; var formatted = util.printx("999-99-9999", raw); getField("util_printx2_result").value = formatted;'
+        '/Fo': 'var f = getField("util_printx2_btn"); f.fillColor = ["RGB", 0.2, 0.5, 0.8]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Format SSN Mask: 999-99-9999";',
+        '/U': 'var raw = getField("util_printx2_input").value || "123456789"; var formatted = util.printx("999-99-9999", raw); getField("util_printx2_result").value = formatted; var f = getField("util_printx2_btn"); f.fillColor = ["RGB", 0.2, 0.5, 0.8]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Format SSN Mask: 999-99-9999";'
     })
     created_fields.append(printx2_btn)
 
@@ -1054,7 +1054,7 @@ def add_util_object_demo_page(pdf):
 
     printf_btn = create_text_field(pdf, page, 'util_printf_btn', field_x + 10, 390, 510, 24, {
         '/Fo': 'var f = getField("util_printf_btn"); f.fillColor = ["RGB", 0.6, 0.3, 0.6]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Run printf Examples";',
-        '/Bl': 'var lines = []; lines.push("Integer: " + util.printf("%d", 42)); lines.push("Float: " + util.printf("%.2f", 3.14159)); lines.push("Padded: " + util.printf("%05d", 42)); lines.push("String: " + util.printf("Hello %s!", "World")); lines.push("Hex: " + util.printf("%x", 255)); getField("util_printf_result").value = lines.join("\\n");'
+        '/U': 'var lines = []; lines.push("Integer: " + util.printf("%d", 42)); lines.push("Float: " + util.printf("%.2f", 3.14159)); lines.push("Padded: " + util.printf("%05d", 42)); lines.push("String: " + util.printf("Hello %s!", "World")); lines.push("Hex: " + util.printf("%x", 255)); getField("util_printf_result").value = lines.join("\\n"); var f = getField("util_printf_btn"); f.fillColor = ["RGB", 0.6, 0.3, 0.6]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Run printf Examples";'
     })
     created_fields.append(printf_btn)
 
@@ -1068,8 +1068,8 @@ def add_util_object_demo_page(pdf):
     created_fields.append(crack_result)
 
     crack_btn = create_text_field(pdf, page, 'util_crack_btn', field_x + 10, 270, 510, 24, {
-        '/Fo': 'var f = getField("util_crack_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.55]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Crack URL into Components";',
-        '/Bl': 'var url = getField("util_crack_input").value || "https://user:pass@example.com:8080/path/file.html?q=test#section"; var parts = util.crackURL(url); var lines = []; lines.push("cScheme: " + parts.cScheme); lines.push("cUser: " + parts.cUser + " | cPassword: " + parts.cPassword); lines.push("cHost: " + parts.cHost + " | nPort: " + parts.nPort); lines.push("cPath: " + parts.cPath + " | cParameters: " + parts.cParameters); lines.push("cFragment: " + parts.cFragment); getField("util_crack_result").value = lines.join("\\n");'
+        '/Fo': 'var f = getField("util_crack_btn"); f.fillColor = ["RGB", 0.4, 0.2, 0.6]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Crack URL into Components";',
+        '/U': 'var url = getField("util_crack_input").value || "https://user:pass@example.com:8080/path/file.html?q=test#section"; var parts = util.crackURL(url); var lines = []; lines.push("cScheme: " + parts.cScheme); lines.push("cUser: " + parts.cUser + " | cPassword: " + parts.cPassword); lines.push("cHost: " + parts.cHost + " | nPort: " + parts.nPort); lines.push("cPath: " + parts.cPath + " | cParameters: " + parts.cParameters); lines.push("cFragment: " + parts.cFragment); getField("util_crack_result").value = lines.join("\\n"); var f = getField("util_crack_btn"); f.fillColor = ["RGB", 0.4, 0.2, 0.6]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Crack URL into Components";'
     })
     created_fields.append(crack_btn)
 
@@ -1083,8 +1083,8 @@ def add_util_object_demo_page(pdf):
     created_fields.append(date_result)
 
     date_btn = create_text_field(pdf, page, 'util_date_btn', field_x + 10, 118, 510, 24, {
-        '/Fo': 'var f = getField("util_date_btn"); f.fillColor = ["RGB", 0.55, 0.35, 0.13]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Format Date with util.printd";',
-        '/Bl': 'var input = getField("util_date_input").value || "03/15/2024"; var d = util.scand("mm/dd/yyyy", input); if (d) { getField("util_date_result").value = util.printd("yyyy-mm-dd", d) + " | " + util.printd("mmmm d, yyyy", d); } else { getField("util_date_result").value = "Invalid date format"; }'
+        '/Fo': 'var f = getField("util_date_btn"); f.fillColor = ["RGB", 0.85, 0.45, 0.1]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Format Date with util.printd";',
+        '/U': 'var input = getField("util_date_input").value || "03/15/2024"; var d = util.scand("mm/dd/yyyy", input); if (d) { getField("util_date_result").value = util.printd("yyyy-mm-dd", d) + " | " + util.printd("mmmm d, yyyy", d); } else { getField("util_date_result").value = "Invalid date format"; } var f = getField("util_date_btn"); f.fillColor = ["RGB", 0.85, 0.45, 0.1]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Format Date with util.printd";'
     })
     created_fields.append(date_btn)
 
