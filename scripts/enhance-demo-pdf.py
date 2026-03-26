@@ -1247,13 +1247,13 @@ def add_event_object_demo_page(pdf):
     created_fields.append(focus_info)
 
     # Card 6: event.source and event.target
-    source_trigger = create_text_field(pdf, page, 'evt_source_trigger', field_x + 10, 118, 220, 24, {
+    source_trigger = create_text_field(pdf, page, 'evt_source_trigger', field_x + 10, 93, 220, 24, {
         '/Fo': 'var f = getField("evt_source_trigger"); f.fillColor = ["RGB", 0.2, 0.5, 0.8]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Click Me (source demo)";',
         '/U': 'getField("evt_source_info").value = "target: " + event.target.name + " | targetName: " + event.targetName + " | type: " + event.type; var f = getField("evt_source_trigger"); f.fillColor = ["RGB", 0.2, 0.5, 0.8]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Click Me (source demo)";'
     })
     created_fields.append(source_trigger)
 
-    source_info = create_text_field(pdf, page, 'evt_source_info', col2_x + 10, 118, 220, 24, {
+    source_info = create_text_field(pdf, page, 'evt_source_info', col2_x + 10, 93, 220, 24, {
         '/Fo': 'var f = getField("evt_source_info"); f.readonly = true; f.fillColor = ["RGB", 1, 0.96, 0.96]; f.textSize = 8;'
     })
     created_fields.append(source_info)
@@ -1338,11 +1338,11 @@ ET
     content += _label(col2_x + 10, 213, 'Focus/Blur Info')
 
     # === CARD 6: Source & Target ===
-    content += _card(40, 88, 530, 77,
+    content += _card(40, 82, 530, 83,
                      'Event Source & Target',
                      'event.target, event.targetName, event.type')
-    content += _label(field_x + 10, 146, 'Click Me (source demo)')
-    content += _label(col2_x + 10, 146, 'Event Details')
+    content += _label(field_x + 10, 120, 'Click Me (source demo)')
+    content += _label(col2_x + 10, 120, 'Event Details')
 
     # === FOOTER ===
     content += b"""
