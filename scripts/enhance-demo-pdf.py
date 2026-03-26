@@ -829,23 +829,23 @@ def add_app_object_demo_page(pdf):
     created_fields.append(app_info)
 
     # Card 2: Alert and Response
-    alert_result = create_text_field(pdf, page, 'app_alert_result', col2_x + 10, 515, 220, 24, {
+    alert_result = create_text_field(pdf, page, 'app_alert_result', col2_x + 10, 510, 220, 24, {
         '/Fo': 'var f = getField("app_alert_result"); f.readonly = true; f.fillColor = ["RGB", 0.96, 1, 0.96]; f.alignment = "center";'
     })
     created_fields.append(alert_result)
 
-    alert_btn = create_text_field(pdf, page, 'app_alert_btn', field_x + 10, 515, 220, 24, {
+    alert_btn = create_text_field(pdf, page, 'app_alert_btn', field_x + 10, 510, 220, 24, {
         '/Fo': 'var f = getField("app_alert_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.55]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Show Alert Dialog";',
         '/U': 'var r = app.alert("Hello from app.alert!\\nChoose an option:", "Alert Demo", 1); getField("app_alert_result").value = "Button: " + r; var f = getField("app_alert_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.55]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Show Alert Dialog";'
     })
     created_fields.append(alert_btn)
 
-    response_result = create_text_field(pdf, page, 'app_response_result', col2_x + 10, 480, 220, 24, {
+    response_result = create_text_field(pdf, page, 'app_response_result', col2_x + 10, 475, 220, 24, {
         '/Fo': 'var f = getField("app_response_result"); f.readonly = true; f.fillColor = ["RGB", 1, 0.98, 0.96]; f.alignment = "center";'
     })
     created_fields.append(response_result)
 
-    response_btn = create_text_field(pdf, page, 'app_response_btn', field_x + 10, 480, 220, 24, {
+    response_btn = create_text_field(pdf, page, 'app_response_btn', field_x + 10, 475, 220, 24, {
         '/Fo': 'var f = getField("app_response_btn"); f.fillColor = ["RGB", 0.2, 0.5, 0.8]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Show Response Dialog";',
         '/U': 'var r = app.response("Enter your name:", "Response Demo", "World"); getField("app_response_result").value = r ? "Hello, " + r + "!" : "(cancelled)"; var f = getField("app_response_btn"); f.fillColor = ["RGB", 0.2, 0.5, 0.8]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Show Response Dialog";'
     })
@@ -894,18 +894,18 @@ def add_app_object_demo_page(pdf):
     created_fields.append(menu_btn)
 
     # Card 5: Launch URL and Exec Menu Item
-    launch_btn = create_text_field(pdf, page, 'app_launch_btn', field_x + 10, 120, 220, 24, {
+    launch_btn = create_text_field(pdf, page, 'app_launch_btn', field_x + 10, 105, 220, 24, {
         '/Fo': 'var f = getField("app_launch_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.55]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Launch URL";',
         '/U': 'app.launchURL("https://example.com", true); var f = getField("app_launch_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.55]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Launch URL";'
     })
     created_fields.append(launch_btn)
 
-    exec_result = create_text_field(pdf, page, 'app_exec_result', col2_x + 10, 120, 220, 24, {
+    exec_result = create_text_field(pdf, page, 'app_exec_result', col2_x + 10, 108, 220, 24, {
         '/Fo': 'var f = getField("app_exec_result"); f.readonly = true; f.fillColor = ["RGB", 0.96, 1, 0.96]; f.alignment = "center";'
     })
     created_fields.append(exec_result)
 
-    exec_btn = create_text_field(pdf, page, 'app_exec_btn', col2_x + 10, 90, 220, 24, {
+    exec_btn = create_text_field(pdf, page, 'app_exec_btn', col2_x + 10, 80, 220, 24, {
         '/Fo': 'var f = getField("app_exec_btn"); f.fillColor = ["RGB", 0.4, 0.6, 0.3]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Exec Menu: ZoomTo";',
         '/U': 'app.execMenuItem("ZoomTo"); getField("app_exec_result").value = "Executed: ZoomTo"; var f = getField("app_exec_btn"); f.fillColor = ["RGB", 0.4, 0.6, 0.3]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Exec Menu: ZoomTo";'
     })
@@ -954,17 +954,17 @@ Q
     # === CARD 2: Alert & Response ===
     content += _card(40, 462, 530, 140,
                      'Dialogs: Alert & Response',
-                     'app.alert() shows message box,\napp.response() prompts for input')
-    content += _label(field_x + 10, 543, 'Alert (returns button index)')
-    content += _label(col2_x + 10, 543, 'Result')
-    content += _label(field_x + 10, 508, 'Response (returns user input)')
-    content += _label(col2_x + 10, 508, 'Result')
+                     'app.alert() shows message box, app.response() prompts for input')
+    content += _label(field_x + 10, 538, 'Alert (returns button index)')
+    content += _label(col2_x + 10, 538, 'Result')
+    content += _label(field_x + 10, 503, 'Response (returns user input)')
+    content += _label(col2_x + 10, 503, 'Result')
 
     # === CARD 3: Timers ===
     content += _card(40, 320, 530, 135,
                      'Timers',
-                     'app.setInterval, app.setTimeOut,\napp.clearInterval, app.clearTimeOut')
-    content += _label(field_x + 10, 398, 'Timer Display (updates every second)')
+                     'setInterval, setTimeout, clearInterval, clearTimeout')
+    content += _label(field_x + 10, 395, 'Timer Display (updates every second)')
 
     # === CARD 4: Beep & Menu ===
     content += _card(40, 185, 252, 128,
@@ -976,24 +976,24 @@ Q
     content += _label(col2_x + 10, 253, 'Menu Result')
 
     # === CARD 5: Navigation ===
-    content += _card(40, 82, 252, 96,
+    content += _card(40, 72, 252, 106,
                      'Launch URL',
-                     'app.launchURL(url, newWin)\nopens external URL')
-    content += _card(308, 82, 262, 96,
+                     'app.launchURL(url, newWin) opens external URL')
+    content += _card(308, 72, 262, 106,
                      'Execute Menu Item',
-                     'app.execMenuItem(name)\ntriggers a viewer menu action')
-    content += _label(col2_x + 10, 148, 'Exec Result')
+                     'app.execMenuItem(name) triggers menu action')
+    content += _label(col2_x + 10, 132, 'Exec Result')
 
     # === FOOTER ===
     content += b"""
 q
 0.94 0.95 0.97 rg
-0 0 612 80 re f
+0 0 612 68 re f
 
 BT
 /Helvetica-Bold 10 Tf
 0.3 0.35 0.4 rg
-50 55 Td
+50 45 Td
 (App Object API:) Tj
 /Helvetica 9 Tf
 0.5 0.55 0.6 rg
