@@ -281,23 +281,25 @@ function createSandboxScope(context) {
   const logs = context.logs || [];
   const alerts = context.alerts || [];
 
-  // event object (Acrobat JS API)
+  // event object (Acrobat JS API) — Phase 7: Enhanced Event Object
+  const currentValue = context.currentValue || '';
   const event = {
-    value: context.currentValue || '',
-    target: {
-      name: context.currentFieldName || '',
-      value: context.currentValue || '',
-    },
+    value: currentValue,
+    target: { name: context.currentFieldName || '', value: currentValue },  // upgraded below
     rc: true,               // Return code — false rejects the change
-    change: '',
-    commitKey: 0,
-    fieldFull: false,
-    keyDown: true,
-    modifier: false,
-    selStart: 0,
-    selEnd: 0,
-    shift: false,
-    willCommit: true,
+    change: context.change || '',           // The text that is being inserted
+    changeEx: context.changeEx || '',       // Export value of the change (for choice fields)
+    commitKey: context.commitKey || 0,      // Key that triggered commit (0=none, 1=enter, 2=tab)
+    fieldFull: context.fieldFull || false,  // Whether the field is full
+    keyDown: context.keyDown !== undefined ? context.keyDown : true,  // true on keyDown, false on keyUp
+    modifier: context.modifier || false,    // true if Ctrl/Cmd held during event
+    selStart: context.selStart || 0,        // Selection start index in field value
+    selEnd: context.selEnd || 0,            // Selection end index in field value
+    shift: context.shift || false,          // true if Shift held during event
+    source: context.source || null,         // Source field object (for keystroke/mouse events)
+    targetName: context.currentFieldName || '',  // Name of the target field
+    type: context.eventType || 'Format',    // Event type: Format, Keystroke, Validate, Calculate, etc.
+    willCommit: context.willCommit !== undefined ? context.willCommit : true,  // true when value is committed
   };
 
   // ---- Field Object API (Phase 3) ----
@@ -1655,6 +1657,12 @@ function createSandboxScope(context) {
   const displayHidden = 1;
   const displayNoPrint = 2;
   const displayNoView = 3;
+
+  // Upgrade event.target to a full Field object now that _createFieldObject is available
+  // Only do this if the field already exists in fieldValues to avoid polluting fieldMeta
+  if (context.currentFieldName && context.fieldValues && context.fieldValues.has(context.currentFieldName)) {
+    event.target = _createFieldObject(context.currentFieldName);
+  }
 
   // Build scope (filter out 'undefined' - can't be a parameter name in strict mode)
   const allowedGlobalsFiltered = { ...ALLOWED_GLOBALS };

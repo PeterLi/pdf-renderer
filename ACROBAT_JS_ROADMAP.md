@@ -2,7 +2,7 @@
 
 **Goal:** Implement ALL Acrobat JavaScript functions with visual demos
 
-**Status:** 🚀 Phase 6 - Util Object API Complete (68/800+ done)
+**Status:** 🚀 Phase 7 - Event Object (Enhanced) Complete (78/800+ done)
 
 ---
 
@@ -164,23 +164,25 @@
 
 ---
 
-## 🎯 Phase 7: Event Object (Enhanced)
+## ✅ Phase 7: Event Object (Enhanced) (DONE)
 
 ### Event Properties:
 - [x] `event.value` - Field value ✅
-- [x] `event.rc` - Return code ✅
-- [ ] `event.change` - Changed text
-- [ ] `event.changeEx` - Export value of change
-- [ ] `event.keyDown` - Key down flag
-- [ ] `event.modifier` - Modifier keys
-- [ ] `event.shift` - Shift key
-- [ ] `event.source` - Source object
-- [ ] `event.target` - Target field ✅ Basic
-- [ ] `event.targetName` - Target name
-- [ ] `event.type` - Event type
-- [ ] `event.willCommit` - Will commit flag
-- [ ] `event.selStart` - Selection start
-- [ ] `event.selEnd` - Selection end
+- [x] `event.rc` - Return code (true/false to accept/reject changes)
+- [x] `event.change` - Changed text (inserted text during keystroke)
+- [x] `event.changeEx` - Export value of change (for choice fields)
+- [x] `event.keyDown` - Key down flag (true on keyDown, false on keyUp)
+- [x] `event.modifier` - Modifier keys (true if Ctrl/Cmd held)
+- [x] `event.shift` - Shift key (true if Shift held)
+- [x] `event.source` - Source object (source field for events)
+- [x] `event.target` - Target field ✅ Enhanced (full Field object when field exists)
+- [x] `event.targetName` - Target field name
+- [x] `event.type` - Event type (Format, Keystroke, Validate, Calculate, Focus, Blur, Mouse Up/Down)
+- [x] `event.willCommit` - Will commit flag (true when value is being committed)
+- [x] `event.selStart` - Selection start index
+- [x] `event.selEnd` - Selection end index
+- [x] `event.commitKey` - Commit key code (0=none, 1=enter, 2=tab)
+- [x] `event.fieldFull` - Whether field is full
 
 **Demo Goal:** Enhanced event handling across all demos
 
@@ -218,12 +220,12 @@
 
 ## 📈 Progress Tracking
 
-**Functions Implemented:** 62 / ~800
+**Functions Implemented:** 78 / ~800
 **Demo Pages:** 4 / 13+
-**Phase:** 5 / 8
-**Tests:** 152 passing (vitest)
+**Phase:** 7 / 8
+**Tests:** 230 passing (vitest)
 
-**Next Up:** Phase 7 - Event Object (Enhanced)
+**Next Up:** Phase 8 - Color Object
 
 ---
 
@@ -239,4 +241,4 @@ Each page should be:
 
 ---
 
-*Last Updated: March 26, 2026 — Phase 6 Complete*
+*Last Updated: March 26, 2026 — Phase 7 Complete*

@@ -1596,3 +1596,254 @@ describe('parseRangeValidation', () => {
     expect(result.max).toBeUndefined();
   });
 });
+
+// ============================================================
+// Phase 7: Event Object (Enhanced)
+// ============================================================
+
+describe('Phase 7: Event Object (Enhanced)', () => {
+  describe('event.change', () => {
+    it('defaults to empty string', () => {
+      const result = run('event.value = event.change;', '');
+      expect(result.event.value).toBe('');
+    });
+
+    it('receives change from context', () => {
+      const result = run('event.value = event.change;', '', new Map(), { change: 'abc' });
+      expect(result.event.value).toBe('abc');
+    });
+
+    it('is writable', () => {
+      const result = run('event.change = "xyz"; event.value = event.change;', '');
+      expect(result.event.value).toBe('xyz');
+    });
+  });
+
+  describe('event.changeEx', () => {
+    it('defaults to empty string', () => {
+      const result = run('event.value = event.changeEx;', '');
+      expect(result.event.value).toBe('');
+    });
+
+    it('receives changeEx from context', () => {
+      const result = run('event.value = event.changeEx;', '', new Map(), { changeEx: 'export_val' });
+      expect(result.event.value).toBe('export_val');
+    });
+  });
+
+  describe('event.keyDown', () => {
+    it('defaults to true', () => {
+      const result = run('event.value = String(event.keyDown);', '');
+      expect(result.event.value).toBe('true');
+    });
+
+    it('can be set to false via context', () => {
+      const result = run('event.value = String(event.keyDown);', '', new Map(), { keyDown: false });
+      expect(result.event.value).toBe('false');
+    });
+  });
+
+  describe('event.modifier', () => {
+    it('defaults to false', () => {
+      const result = run('event.value = String(event.modifier);', '');
+      expect(result.event.value).toBe('false');
+    });
+
+    it('can be set to true via context', () => {
+      const result = run('event.value = String(event.modifier);', '', new Map(), { modifier: true });
+      expect(result.event.value).toBe('true');
+    });
+  });
+
+  describe('event.shift', () => {
+    it('defaults to false', () => {
+      const result = run('event.value = String(event.shift);', '');
+      expect(result.event.value).toBe('false');
+    });
+
+    it('can be set to true via context', () => {
+      const result = run('event.value = String(event.shift);', '', new Map(), { shift: true });
+      expect(result.event.value).toBe('true');
+    });
+  });
+
+  describe('event.source', () => {
+    it('defaults to null', () => {
+      const result = run('event.value = String(event.source);', '');
+      expect(result.event.value).toBe('null');
+    });
+
+    it('receives source from context', () => {
+      const fields = new Map([['srcField', 'hello']]);
+      const result = run('event.value = event.source;', '', fields, { source: 'srcField' });
+      expect(result.event.value).toBe('srcField');
+    });
+  });
+
+  describe('event.targetName', () => {
+    it('returns the current field name', () => {
+      const result = run('event.value = event.targetName;', 'val');
+      expect(result.event.value).toBe('testField');
+    });
+
+    it('returns custom field name from context', () => {
+      const result = run('event.value = event.targetName;', '', new Map(), { currentFieldName: 'myField' });
+      expect(result.event.value).toBe('myField');
+    });
+  });
+
+  describe('event.type', () => {
+    it('defaults to Format', () => {
+      const result = run('event.value = event.type;', '');
+      expect(result.event.value).toBe('Format');
+    });
+
+    it('receives event type from context', () => {
+      const result = run('event.value = event.type;', '', new Map(), { eventType: 'Keystroke' });
+      expect(result.event.value).toBe('Keystroke');
+    });
+
+    it('supports all standard event types', () => {
+      for (const type of ['Format', 'Keystroke', 'Validate', 'Calculate', 'Focus', 'Blur', 'Mouse Up', 'Mouse Down']) {
+        const result = run('event.value = event.type;', '', new Map(), { eventType: type });
+        expect(result.event.value).toBe(type);
+      }
+    });
+  });
+
+  describe('event.willCommit', () => {
+    it('defaults to true', () => {
+      const result = run('event.value = String(event.willCommit);', '');
+      expect(result.event.value).toBe('true');
+    });
+
+    it('can be set to false via context', () => {
+      const result = run('event.value = String(event.willCommit);', '', new Map(), { willCommit: false });
+      expect(result.event.value).toBe('false');
+    });
+  });
+
+  describe('event.selStart and event.selEnd', () => {
+    it('default to 0', () => {
+      const result = run('event.value = event.selStart + "," + event.selEnd;', '');
+      expect(result.event.value).toBe('0,0');
+    });
+
+    it('receive values from context', () => {
+      const result = run('event.value = event.selStart + "," + event.selEnd;', '', new Map(), { selStart: 2, selEnd: 5 });
+      expect(result.event.value).toBe('2,5');
+    });
+
+    it('are writable', () => {
+      const result = run(`
+        event.selStart = 3;
+        event.selEnd = 7;
+        event.value = event.selStart + "," + event.selEnd;
+      `, '');
+      expect(result.event.value).toBe('3,7');
+    });
+  });
+
+  describe('event.target (enhanced)', () => {
+    it('has name property matching current field', () => {
+      const fields = new Map([['testField', 'hello']]);
+      const result = run('event.value = event.target.name;', 'hello', fields);
+      expect(result.event.value).toBe('testField');
+    });
+
+    it('provides full field object when field exists in fieldValues', () => {
+      const fields = new Map([['testField', 'hello']]);
+      const result = run('event.value = event.target.value;', 'hello', fields);
+      expect(result.event.value).toBe('hello');
+    });
+
+    it('target is writable for field property changes', () => {
+      const fields = new Map([['testField', 'hello']]);
+      const result = run(`
+        event.target.value = "world";
+        event.value = event.target.value;
+      `, 'hello', fields);
+      expect(result.event.value).toBe('world');
+    });
+  });
+
+  describe('event.rc (return code)', () => {
+    it('defaults to true', () => {
+      const result = run('event.value = String(event.rc);', '');
+      expect(result.event.value).toBe('true');
+    });
+
+    it('can be set to false to reject changes', () => {
+      const result = run('event.rc = false;', '');
+      expect(result.event.rc).toBe(false);
+    });
+  });
+
+  describe('event.commitKey', () => {
+    it('defaults to 0', () => {
+      const result = run('event.value = String(event.commitKey);', '');
+      expect(result.event.value).toBe('0');
+    });
+
+    it('receives commitKey from context', () => {
+      const result = run('event.value = String(event.commitKey);', '', new Map(), { commitKey: 2 });
+      expect(result.event.value).toBe('2');
+    });
+  });
+
+  describe('event.fieldFull', () => {
+    it('defaults to false', () => {
+      const result = run('event.value = String(event.fieldFull);', '');
+      expect(result.event.value).toBe('false');
+    });
+
+    it('receives fieldFull from context', () => {
+      const result = run('event.value = String(event.fieldFull);', '', new Map(), { fieldFull: true });
+      expect(result.event.value).toBe('true');
+    });
+  });
+
+  describe('event properties integration', () => {
+    it('keystroke event simulation', () => {
+      const fields = new Map([['testField', 'helo']]);
+      const result = run(`
+        // Simulate a keystroke event inserting 'l' at position 3
+        event.value = event.type + ":" + event.change + ":" + event.willCommit + ":" + event.keyDown;
+      `, 'helo', fields, {
+        eventType: 'Keystroke',
+        change: 'l',
+        willCommit: false,
+        keyDown: true,
+        selStart: 3,
+        selEnd: 3,
+      });
+      expect(result.event.value).toBe('Keystroke:l:false:true');
+    });
+
+    it('format event simulation', () => {
+      const result = run(`
+        event.value = event.type + ":" + event.targetName + ":" + event.willCommit;
+      `, '12345', new Map(), {
+        eventType: 'Format',
+        willCommit: true,
+      });
+      expect(result.event.value).toBe('Format:testField:true');
+    });
+
+    it('all event properties are accessible', () => {
+      const result = run(`
+        var props = [
+          "value", "rc", "change", "changeEx", "commitKey", "fieldFull",
+          "keyDown", "modifier", "selStart", "selEnd", "shift", "source",
+          "target", "targetName", "type", "willCommit"
+        ];
+        var missing = [];
+        for (var i = 0; i < props.length; i++) {
+          if (event[props[i]] === undefined) missing.push(props[i]);
+        }
+        event.value = missing.length === 0 ? "all present" : "missing: " + missing.join(",");
+      `, '');
+      expect(result.event.value).toBe('all present');
+    });
+  });
+});
