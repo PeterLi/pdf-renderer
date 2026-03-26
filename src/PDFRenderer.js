@@ -492,6 +492,12 @@ class PDFRenderer {
 
     const dims = await renderPage(this.pdfDoc, this.currentPage, this.els.pdfCanvas, this.currentScale);
 
+    // When form mode is ON, blank out form field areas on the canvas so the
+    // PDF-rendered field text doesn't bleed through the HTML form inputs.
+    if (this.formMode) {
+      await this._blankFormFieldAreas();
+    }
+
     // Size annotation canvas to match
     this.annotationLayer.page = this.currentPage;
     this.annotationLayer.scale = this.currentScale;
@@ -509,6 +515,38 @@ class PDFRenderer {
     if (this.formMode) {
       await this._renderFormFields();
     }
+  }
+
+  /**
+   * Paint white rectangles over form field positions on the PDF canvas
+   * to hide the PDF-rendered field appearances underneath the HTML inputs.
+   */
+  async _blankFormFieldAreas() {
+    const widgets = this.formFieldsByPage.get(this.currentPage) || [];
+    if (widgets.length === 0) return;
+
+    const page = await this.pdfDoc.getPage(this.currentPage);
+    const viewport = page.getViewport({ scale: this.currentScale });
+    const dpr = window.devicePixelRatio || 1;
+
+    const canvas = this.els.pdfCanvas;
+    const ctx = canvas.getContext('2d');
+    ctx.save();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    for (const widget of widgets) {
+      if (!widget.rect) continue;
+      const [vx1, vy1, vx2, vy2] = viewport.convertToViewportRectangle(widget.rect);
+      const x = Math.min(vx1, vx2);
+      const y = Math.min(vy1, vy2);
+      const w = Math.abs(vx2 - vx1);
+      const h = Math.abs(vy2 - vy1);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x, y, w, h);
+    }
+
+    ctx.restore();
   }
 
   _enableControls(enabled) {
