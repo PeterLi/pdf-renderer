@@ -1400,8 +1400,10 @@ def add_color_object_demo_page(pdf):
         row = i // cols
         x = field_x + 10 + col * 175
         y = swatch_y - row * 30
+        swatch_style = f'var f = getField("clr_swatch_{name}"); f.readonly = true; f.fillColor = {expr}; f.textColor = {expr} == color.black || {expr} == color.dkGray ? color.white : color.black; f.alignment = "center"; f.textSize = 9; f.value = "{name}";'
         field = create_text_field(pdf, page, f'clr_swatch_{name}', x, y, swatch_w, swatch_h, {
-            '/Fo': f'var f = getField("clr_swatch_{name}"); f.readonly = true; f.fillColor = {expr}; f.textColor = {expr} == color.black || {expr} == color.dkGray ? color.white : color.black; f.alignment = "center"; f.textSize = 9; f.value = "{name}";'
+            '/Fo': swatch_style,
+            '/U': swatch_style,
         })
         created_fields.append(field)
 
@@ -1418,9 +1420,10 @@ def add_color_object_demo_page(pdf):
     })
     created_fields.append(convert_result)
 
+    cvt_btn_style = 'var f = getField("clr_cvt_btn"); f.fillColor = ["RGB", 0.2, 0.5, 0.8]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Convert RGB to CMYK";'
     convert_btn = create_text_field(pdf, page, 'clr_cvt_btn', field_x + 10, 398, 250, 24, {
-        '/Fo': 'var f = getField("clr_cvt_btn"); f.fillColor = ["RGB", 0.2, 0.5, 0.8]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Convert RGB to CMYK";',
-        '/Bl': 'var r = parseFloat(getField("clr_cvt_r").value) || 0; var g = parseFloat(getField("clr_cvt_g").value) || 0; var b = parseFloat(getField("clr_cvt_b").value) || 0; var rgb = ["RGB", r, g, b]; var cmyk = color.convert(rgb, "CMYK"); getField("clr_cvt_result").value = "CMYK: " + cmyk[1].toFixed(2) + ", " + cmyk[2].toFixed(2) + ", " + cmyk[3].toFixed(2) + ", " + cmyk[4].toFixed(2);'
+        '/Fo': cvt_btn_style,
+        '/U': 'var r = parseFloat(getField("clr_cvt_r").value) || 0; var g = parseFloat(getField("clr_cvt_g").value) || 0; var b = parseFloat(getField("clr_cvt_b").value) || 0; var rgb = ["RGB", r, g, b]; var cmyk = color.convert(rgb, "CMYK"); getField("clr_cvt_result").value = "CMYK: " + cmyk[1].toFixed(2) + ", " + cmyk[2].toFixed(2) + ", " + cmyk[3].toFixed(2) + ", " + cmyk[4].toFixed(2); ' + cvt_btn_style
     })
     created_fields.append(convert_btn)
 
@@ -1429,42 +1432,45 @@ def add_color_object_demo_page(pdf):
     })
     created_fields.append(convert_preview)
 
+    preview_btn_style = 'var f = getField("clr_preview_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.13]; f.textColor = color.white; f.alignment = "center"; f.textSize = 10; f.value = "Show Color Preview";'
     preview_btn = create_text_field(pdf, page, 'clr_preview_btn', col2_x + 10, 368, 220, 24, {
-        '/Fo': 'var f = getField("clr_preview_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.13]; f.textColor = color.white; f.alignment = "center"; f.textSize = 10; f.value = "Show Color Preview";',
-        '/Bl': 'var r = parseFloat(getField("clr_cvt_r").value) || 0; var g = parseFloat(getField("clr_cvt_g").value) || 0; var b = parseFloat(getField("clr_cvt_b").value) || 0; getField("clr_cvt_preview").fillColor = ["RGB", r, g, b]; getField("clr_cvt_preview").textColor = (r + g + b) < 1.0 ? color.white : color.black; getField("clr_cvt_preview").value = "RGB(" + r + ", " + g + ", " + b + ")";'
+        '/Fo': preview_btn_style,
+        '/U': 'var r = parseFloat(getField("clr_cvt_r").value) || 0; var g = parseFloat(getField("clr_cvt_g").value) || 0; var b = parseFloat(getField("clr_cvt_b").value) || 0; getField("clr_cvt_preview").fillColor = ["RGB", r, g, b]; getField("clr_cvt_preview").textColor = (r + g + b) < 1.0 ? color.white : color.black; getField("clr_cvt_preview").value = "RGB(" + r + ", " + g + ", " + b + ")"; ' + preview_btn_style
     })
     created_fields.append(preview_btn)
 
     # Card 3: CMYK to Gray
-    cmyk_c = create_text_field(pdf, page, 'clr_cmyk_c', field_x + 10, 288, 55, 24, {})
+    cmyk_c = create_text_field(pdf, page, 'clr_cmyk_c', field_x + 10, 272, 55, 24, {})
     created_fields.append(cmyk_c)
-    cmyk_m = create_text_field(pdf, page, 'clr_cmyk_m', field_x + 75, 288, 55, 24, {})
+    cmyk_m = create_text_field(pdf, page, 'clr_cmyk_m', field_x + 75, 272, 55, 24, {})
     created_fields.append(cmyk_m)
-    cmyk_y = create_text_field(pdf, page, 'clr_cmyk_y', field_x + 140, 288, 55, 24, {})
+    cmyk_y = create_text_field(pdf, page, 'clr_cmyk_y', field_x + 140, 272, 55, 24, {})
     created_fields.append(cmyk_y)
-    cmyk_k = create_text_field(pdf, page, 'clr_cmyk_k', field_x + 205, 288, 55, 24, {})
+    cmyk_k = create_text_field(pdf, page, 'clr_cmyk_k', field_x + 205, 272, 55, 24, {})
     created_fields.append(cmyk_k)
 
-    cmyk_result = create_text_field(pdf, page, 'clr_cmyk_result', col2_x + 10, 288, 220, 24, {
+    cmyk_result = create_text_field(pdf, page, 'clr_cmyk_result', col2_x + 10, 272, 220, 24, {
         '/Fo': 'var f = getField("clr_cmyk_result"); f.readonly = true; f.fillColor = ["RGB", 0.96, 1, 0.96]; f.textSize = 10; f.alignment = "center";'
     })
     created_fields.append(cmyk_result)
 
-    cmyk_btn = create_text_field(pdf, page, 'clr_cmyk_btn', field_x + 10, 258, 510, 24, {
-        '/Fo': 'var f = getField("clr_cmyk_btn"); f.fillColor = ["RGB", 0.55, 0.35, 0.13]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Convert CMYK to Gray";',
-        '/Bl': 'var c = parseFloat(getField("clr_cmyk_c").value) || 0; var m = parseFloat(getField("clr_cmyk_m").value) || 0; var y = parseFloat(getField("clr_cmyk_y").value) || 0; var k = parseFloat(getField("clr_cmyk_k").value) || 0; var cmyk = ["CMYK", c, m, y, k]; var gray = color.convert(cmyk, "G"); getField("clr_cmyk_result").value = "Gray: " + gray[1].toFixed(3); getField("clr_cmyk_result").fillColor = gray;'
+    cmyk_btn_style = 'var f = getField("clr_cmyk_btn"); f.fillColor = ["RGB", 0.55, 0.35, 0.13]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Convert CMYK to Gray";'
+    cmyk_btn = create_text_field(pdf, page, 'clr_cmyk_btn', field_x + 10, 244, 510, 24, {
+        '/Fo': cmyk_btn_style,
+        '/U': 'var c = parseFloat(getField("clr_cmyk_c").value) || 0; var m = parseFloat(getField("clr_cmyk_m").value) || 0; var y = parseFloat(getField("clr_cmyk_y").value) || 0; var k = parseFloat(getField("clr_cmyk_k").value) || 0; var cmyk = ["CMYK", c, m, y, k]; var gray = color.convert(cmyk, "G"); getField("clr_cmyk_result").value = "Gray: " + gray[1].toFixed(3); getField("clr_cmyk_result").fillColor = gray; ' + cmyk_btn_style
     })
     created_fields.append(cmyk_btn)
 
     # Card 4: color.equal
-    equal_result = create_text_field(pdf, page, 'clr_equal_result', field_x + 10, 168, 510, 50, {
+    equal_result = create_text_field(pdf, page, 'clr_equal_result', field_x + 10, 150, 510, 50, {
         '/Fo': 'var f = getField("clr_equal_result"); f.readonly = true; f.multiline = true; f.fillColor = ["RGB", 0.97, 0.97, 1]; f.textSize = 10;'
     })
     created_fields.append(equal_result)
 
-    equal_btn = create_text_field(pdf, page, 'clr_equal_btn', field_x + 10, 138, 510, 24, {
-        '/Fo': 'var f = getField("clr_equal_btn"); f.fillColor = ["RGB", 0.6, 0.3, 0.6]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Run color.equal Comparisons";',
-        '/Bl': 'var lines = []; lines.push("color.red == color.red: " + color.equal(color.red, color.red)); lines.push("color.red == color.blue: " + color.equal(color.red, color.blue)); lines.push("color.black == [G, 0]: " + color.equal(color.black, ["G", 0])); lines.push("[RGB,1,0,0] == color.red: " + color.equal(["RGB", 1, 0, 0], color.red)); getField("clr_equal_result").value = lines.join("\\n");'
+    equal_btn_style = 'var f = getField("clr_equal_btn"); f.fillColor = ["RGB", 0.6, 0.3, 0.6]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Run color.equal Comparisons";'
+    equal_btn = create_text_field(pdf, page, 'clr_equal_btn', field_x + 10, 120, 510, 24, {
+        '/Fo': equal_btn_style,
+        '/U': 'var lines = []; lines.push("color.red == color.red: " + color.equal(color.red, color.red)); lines.push("color.red == color.blue: " + color.equal(color.red, color.blue)); lines.push("color.black == [G, 0]: " + color.equal(color.black, ["G", 0])); lines.push("[RGB,1,0,0] == color.red: " + color.equal(["RGB", 1, 0, 0], color.red)); getField("clr_equal_result").value = lines.join("\\n"); ' + equal_btn_style
     })
     created_fields.append(equal_btn)
 
@@ -1526,20 +1532,19 @@ Q
     content += _hint(field_x + 10, 370, 'Try: R=0.8, G=0.2, B=0.4')
 
     # === CARD 3: CMYK to Gray ===
-    content += _card(40, 248, 530, 110,
+    content += _card(40, 235, 530, 123,
                      'color.convert: CMYK to Gray',
-                     'Enter CMYK values (0-1 each),\nresult field fills with the gray level')
-    content += _label(field_x + 10, 316, 'C')
-    content += _label(field_x + 75, 316, 'M')
-    content += _label(field_x + 140, 316, 'Y')
-    content += _label(field_x + 205, 316, 'K')
-    content += _label(col2_x + 10, 316, 'Gray Result')
+                     'Enter CMYK values (0-1 each), result fills with computed gray')
+    content += _label(field_x + 10, 300, 'C')
+    content += _label(field_x + 75, 300, 'M')
+    content += _label(field_x + 140, 300, 'Y')
+    content += _label(field_x + 205, 300, 'K')
+    content += _label(col2_x + 10, 300, 'Gray Result')
 
     # === CARD 4: color.equal ===
-    content += _card(40, 128, 530, 120,
+    content += _card(40, 108, 530, 122,
                      'color.equal - Color Comparison',
-                     'Compares two color values,\nreturns true if they are equivalent')
-    content += _label(field_x + 10, 222, 'Comparison Results (click button)')
+                     'Compares two color arrays, returns true if equivalent')
 
     # === FOOTER ===
     content += b"""
