@@ -690,7 +690,10 @@ export class FormLayer {
     console.log('[FormLayer] Running initial actions for all fields');
 
     // Properties that are permanent/static and should apply on load
-    const PERMANENT_PROPS = ['textColor', 'textFont', 'textSize', 'alignment', 'readonly', 'display', 'required', 'multiline', 'password', 'charLimit', 'comb'];
+    // NOTE: textColor is NOT included — it is typically set by Focus scripts for
+    // interactive styling (e.g. red text on focus) and should only apply when
+    // the user actually focuses the field, not on page load.
+    const PERMANENT_PROPS = ['textFont', 'textSize', 'alignment', 'readonly', 'display', 'required', 'multiline', 'password', 'charLimit', 'comb'];
 
     // Collect all field metadata from Focus actions first
     const combinedFieldMeta = new Map();
