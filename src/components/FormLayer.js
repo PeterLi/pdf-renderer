@@ -768,9 +768,15 @@ export class FormLayer {
         el.style.color = this._acrobatColorToCSS(meta.textColor);
       }
 
-      // Fill/background color
+      // Fill/background color — use setProperty with !important to override
+      // the .field-readonly CSS rule which also uses !important on background.
       if (meta.fillColor) {
-        el.style.backgroundColor = this._acrobatColorToCSS(meta.fillColor);
+        const fillCSS = this._acrobatColorToCSS(meta.fillColor);
+        if (fillCSS !== 'transparent' && fillCSS !== 'inherit') {
+          el.style.setProperty('background-color', fillCSS, 'important');
+        } else {
+          el.style.removeProperty('background-color');
+        }
       }
 
       // Border color
