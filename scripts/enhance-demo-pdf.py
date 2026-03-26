@@ -815,6 +815,757 @@ Q
     print('  + Page 10 with Document Operations (5 cards, 16 interactive fields)')
 
 
+def add_app_object_demo_page(pdf):
+    """Add page 11 with App Object API demos"""
+    page = pdf.add_blank_page(page_size=(612, 792))
+    created_fields = []
+    field_x = 50
+    col2_x = 320
+
+    # Card 1: App Properties - readonly display fields
+    app_info = create_text_field(pdf, page, 'app_info_display', field_x + 10, 618, 510, 24, {
+        '/Fo': 'var f = getField("app_info_display"); f.readonly = true; f.fillColor = ["RGB", 0.96, 0.98, 1]; f.textSize = 9; f.value = "viewerType: " + app.viewerType + " | version: " + app.viewerVersion + " | platform: " + app.platform + " | language: " + app.language;'
+    })
+    created_fields.append(app_info)
+
+    # Card 2: Alert and Response
+    alert_result = create_text_field(pdf, page, 'app_alert_result', col2_x + 10, 505, 220, 24, {
+        '/Fo': 'var f = getField("app_alert_result"); f.readonly = true; f.fillColor = ["RGB", 0.96, 1, 0.96]; f.alignment = "center";'
+    })
+    created_fields.append(alert_result)
+
+    alert_btn = create_text_field(pdf, page, 'app_alert_btn', field_x + 10, 505, 220, 24, {
+        '/Fo': 'var f = getField("app_alert_btn"); f.fillColor = ["RGB", 0.2, 0.5, 0.8]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Show Alert Dialog";',
+        '/Bl': 'var r = app.alert("Hello from app.alert!\\nChoose an option:", "Alert Demo", 1); getField("app_alert_result").value = "Button: " + r;'
+    })
+    created_fields.append(alert_btn)
+
+    response_result = create_text_field(pdf, page, 'app_response_result', col2_x + 10, 475, 220, 24, {
+        '/Fo': 'var f = getField("app_response_result"); f.readonly = true; f.fillColor = ["RGB", 1, 0.98, 0.96]; f.alignment = "center";'
+    })
+    created_fields.append(response_result)
+
+    response_btn = create_text_field(pdf, page, 'app_response_btn', field_x + 10, 475, 220, 24, {
+        '/Fo': 'var f = getField("app_response_btn"); f.fillColor = ["RGB", 0.6, 0.3, 0.6]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Show Response Dialog";',
+        '/Bl': 'var r = app.response("Enter your name:", "Response Demo", "World"); getField("app_response_result").value = r ? "Hello, " + r + "!" : "(cancelled)";'
+    })
+    created_fields.append(response_btn)
+
+    # Card 3: Timers
+    timer_display = create_text_field(pdf, page, 'app_timer_display', field_x + 10, 378, 510, 24, {
+        '/Fo': 'var f = getField("app_timer_display"); f.readonly = true; f.fillColor = ["RGB", 1, 1, 0.92]; f.alignment = "center"; f.textSize = 12;'
+    })
+    created_fields.append(timer_display)
+
+    interval_btn = create_text_field(pdf, page, 'app_interval_btn', field_x + 10, 348, 160, 24, {
+        '/Fo': 'var f = getField("app_interval_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.13]; f.textColor = color.white; f.alignment = "center"; f.textSize = 10; f.value = "Start Interval";',
+        '/Bl': 'if (!global._demoCount) global._demoCount = 0; global._demoTimer = app.setInterval("global._demoCount++; getField(\\"app_timer_display\\").value = \\"Count: \\" + global._demoCount;", 1000); getField("app_timer_display").value = "Timer started!";'
+    })
+    created_fields.append(interval_btn)
+
+    clear_btn = create_text_field(pdf, page, 'app_clear_btn', field_x + 180, 348, 160, 24, {
+        '/Fo': 'var f = getField("app_clear_btn"); f.fillColor = ["RGB", 0.8, 0.2, 0.2]; f.textColor = color.white; f.alignment = "center"; f.textSize = 10; f.value = "Stop Interval";',
+        '/Bl': 'if (global._demoTimer) { app.clearInterval(global._demoTimer); global._demoTimer = null; } getField("app_timer_display").value = "Timer stopped at count: " + (global._demoCount || 0);'
+    })
+    created_fields.append(clear_btn)
+
+    timeout_btn = create_text_field(pdf, page, 'app_timeout_btn', col2_x + 10, 348, 220, 24, {
+        '/Fo': 'var f = getField("app_timeout_btn"); f.fillColor = ["RGB", 0.55, 0.35, 0.13]; f.textColor = color.white; f.alignment = "center"; f.textSize = 10; f.value = "Set Timeout (2s)";',
+        '/Bl': 'getField("app_timer_display").value = "Waiting 2 seconds..."; app.setTimeOut("getField(\\"app_timer_display\\").value = \\"Timeout fired!\\";", 2000);'
+    })
+    created_fields.append(timeout_btn)
+
+    # Card 4: Beep and Menu
+    beep_btn = create_text_field(pdf, page, 'app_beep_btn', field_x + 10, 238, 220, 24, {
+        '/Fo': 'var f = getField("app_beep_btn"); f.fillColor = ["RGB", 0.9, 0.6, 0.1]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Beep!";',
+        '/Bl': 'app.beep(0);'
+    })
+    created_fields.append(beep_btn)
+
+    menu_result = create_text_field(pdf, page, 'app_menu_result', col2_x + 10, 238, 220, 24, {
+        '/Fo': 'var f = getField("app_menu_result"); f.readonly = true; f.fillColor = ["RGB", 0.96, 0.96, 1]; f.alignment = "center";'
+    })
+    created_fields.append(menu_result)
+
+    menu_btn = create_text_field(pdf, page, 'app_menu_btn', col2_x + 10, 208, 220, 24, {
+        '/Fo': 'var f = getField("app_menu_btn"); f.fillColor = ["RGB", 0.3, 0.3, 0.5]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Show Popup Menu";',
+        '/Bl': 'var r = app.popUpMenu("Option A", "-", "Option B", ["Submenu", "Sub 1", "Sub 2"]); getField("app_menu_result").value = r ? "Selected: " + r : "(cancelled)";'
+    })
+    created_fields.append(menu_btn)
+
+    # Card 5: Launch URL and Exec Menu Item
+    launch_btn = create_text_field(pdf, page, 'app_launch_btn', field_x + 10, 148, 220, 24, {
+        '/Fo': 'var f = getField("app_launch_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.55]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Launch URL";',
+        '/Bl': 'app.launchURL("https://example.com", true);'
+    })
+    created_fields.append(launch_btn)
+
+    exec_result = create_text_field(pdf, page, 'app_exec_result', col2_x + 10, 148, 220, 24, {
+        '/Fo': 'var f = getField("app_exec_result"); f.readonly = true; f.fillColor = ["RGB", 0.96, 1, 0.96]; f.alignment = "center";'
+    })
+    created_fields.append(exec_result)
+
+    exec_btn = create_text_field(pdf, page, 'app_exec_btn', col2_x + 10, 118, 220, 24, {
+        '/Fo': 'var f = getField("app_exec_btn"); f.fillColor = ["RGB", 0.4, 0.6, 0.3]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Exec Menu: ZoomTo";',
+        '/Bl': 'app.execMenuItem("ZoomTo"); getField("app_exec_result").value = "Executed: ZoomTo";'
+    })
+    created_fields.append(exec_btn)
+
+    # Add fields to page
+    if '/Annots' not in page:
+        page['/Annots'] = []
+    for field in created_fields:
+        ref = pdf.make_indirect(field)
+        page['/Annots'].append(ref)
+        pdf.Root['/AcroForm']['/Fields'].append(ref)
+
+    # Build content stream
+    content = b""
+
+    # === HEADER ===
+    content += b"""
+q
+% Vibrant blue header
+0.15 0.35 0.65 rg
+0 720 612 72 re f
+
+BT
+/Helvetica-Bold 22 Tf
+1 1 1 rg
+50 755 Td
+(App Object API Demo) Tj
+ET
+
+BT
+/Helvetica 10 Tf
+0.75 0.85 1 rg
+50 735 Td
+(Phase 5: Application properties, dialogs, timers, menus, and navigation) Tj
+ET
+Q
+"""
+
+    # === CARD 1: App Properties ===
+    content += _card(40, 598, 530, 120,
+                     'Application Properties',
+                     'app.viewerType, app.viewerVersion,\napp.platform, app.language')
+    content += _label(field_x + 10, 646, 'App Info (auto-populated on focus)')
+
+    # === CARD 2: Alert & Response ===
+    content += _card(40, 458, 530, 120,
+                     'Dialogs: Alert & Response',
+                     'app.alert() shows message box,\napp.response() prompts for input')
+    content += _label(field_x + 10, 533, 'Alert (returns button index)')
+    content += _label(col2_x + 10, 533, 'Result')
+    content += _label(field_x + 10, 503, 'Response (returns user input)')
+    content += _label(col2_x + 10, 503, 'Result')
+
+    # === CARD 3: Timers ===
+    content += _card(40, 328, 530, 120,
+                     'Timers',
+                     'app.setInterval, app.setTimeOut,\napp.clearInterval, app.clearTimeOut')
+    content += _label(field_x + 10, 406, 'Timer Display (updates every second)')
+
+    # === CARD 4: Beep & Menu ===
+    content += _card(40, 198, 252, 120,
+                     'Beep',
+                     'app.beep(type) plays\na system sound')
+    content += _card(308, 198, 262, 120,
+                     'Popup Menu',
+                     'app.popUpMenu() shows\na context menu')
+    content += _label(col2_x + 10, 266, 'Menu Result')
+
+    # === CARD 5: Navigation ===
+    content += _card(40, 98, 252, 100,
+                     'Launch URL',
+                     'app.launchURL(url, newWin)\nopens external URL')
+    content += _card(308, 98, 262, 100,
+                     'Execute Menu Item',
+                     'app.execMenuItem(name)\ntriggers a viewer menu action')
+    content += _label(col2_x + 10, 176, 'Exec Result')
+
+    # === FOOTER ===
+    content += b"""
+q
+0.94 0.95 0.97 rg
+0 0 612 80 re f
+
+BT
+/Helvetica-Bold 10 Tf
+0.3 0.35 0.4 rg
+50 55 Td
+(App Object API:) Tj
+/Helvetica 9 Tf
+0.5 0.55 0.6 rg
+140 0 Td
+(app.alert\\(\\), response\\(\\), beep\\(\\), setInterval\\(\\), setTimeOut\\(\\), clearInterval\\(\\), clearTimeOut\\(\\)) Tj
+0 -14 Td
+(app.viewerType, viewerVersion, platform, language, execMenuItem\\(\\), launchURL\\(\\), popUpMenu\\(\\)) Tj
+ET
+Q
+"""
+
+    page.Contents = pdf.make_stream(content)
+    print('  + Page 11 with App Object API demo (5 cards, 15 interactive fields)')
+
+
+def add_util_object_demo_page(pdf):
+    """Add page 12 with Util Object API demos"""
+    page = pdf.add_blank_page(page_size=(612, 792))
+    created_fields = []
+    field_x = 50
+    col2_x = 320
+
+    # Card 1: util.printx - Phone mask
+    printx_input = create_text_field(pdf, page, 'util_printx_input', field_x + 10, 618, 220, 24, {})
+    created_fields.append(printx_input)
+
+    printx_result = create_text_field(pdf, page, 'util_printx_result', col2_x + 10, 618, 220, 24, {
+        '/Fo': 'var f = getField("util_printx_result"); f.readonly = true; f.fillColor = ["RGB", 0.96, 1, 0.96]; f.alignment = "center";'
+    })
+    created_fields.append(printx_result)
+
+    printx_btn = create_text_field(pdf, page, 'util_printx_btn', field_x + 10, 588, 510, 24, {
+        '/Fo': 'var f = getField("util_printx_btn"); f.fillColor = ["RGB", 0.2, 0.5, 0.8]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Format with Mask: (999) 999-9999";',
+        '/Bl': 'var raw = getField("util_printx_input").value || "5551234567"; var formatted = util.printx("(999) 999-9999", raw); getField("util_printx_result").value = formatted;'
+    })
+    created_fields.append(printx_btn)
+
+    # More printx masks
+    printx2_input = create_text_field(pdf, page, 'util_printx2_input', field_x + 10, 558, 220, 24, {})
+    created_fields.append(printx2_input)
+
+    printx2_result = create_text_field(pdf, page, 'util_printx2_result', col2_x + 10, 558, 220, 24, {
+        '/Fo': 'var f = getField("util_printx2_result"); f.readonly = true; f.fillColor = ["RGB", 0.96, 1, 0.96]; f.alignment = "center";'
+    })
+    created_fields.append(printx2_result)
+
+    printx2_btn = create_text_field(pdf, page, 'util_printx2_btn', field_x + 10, 528, 510, 24, {
+        '/Fo': 'var f = getField("util_printx2_btn"); f.fillColor = ["RGB", 0.15, 0.45, 0.7]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Format SSN Mask: 999-99-9999";',
+        '/Bl': 'var raw = getField("util_printx2_input").value || "123456789"; var formatted = util.printx("999-99-9999", raw); getField("util_printx2_result").value = formatted;'
+    })
+    created_fields.append(printx2_btn)
+
+    # Card 2: util.printf
+    printf_result = create_text_field(pdf, page, 'util_printf_result', field_x + 10, 420, 510, 50, {
+        '/Fo': 'var f = getField("util_printf_result"); f.readonly = true; f.multiline = true; f.fillColor = ["RGB", 0.96, 0.96, 1]; f.textSize = 10;'
+    })
+    created_fields.append(printf_result)
+
+    printf_btn = create_text_field(pdf, page, 'util_printf_btn', field_x + 10, 390, 510, 24, {
+        '/Fo': 'var f = getField("util_printf_btn"); f.fillColor = ["RGB", 0.6, 0.3, 0.6]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Run printf Examples";',
+        '/Bl': 'var lines = []; lines.push("Integer: " + util.printf("%d", 42)); lines.push("Float: " + util.printf("%.2f", 3.14159)); lines.push("Padded: " + util.printf("%05d", 42)); lines.push("String: " + util.printf("Hello %s!", "World")); lines.push("Hex: " + util.printf("%x", 255)); getField("util_printf_result").value = lines.join("\\n");'
+    })
+    created_fields.append(printf_btn)
+
+    # Card 3: util.crackURL
+    crack_input = create_text_field(pdf, page, 'util_crack_input', field_x + 10, 300, 510, 24, {})
+    created_fields.append(crack_input)
+
+    crack_result = create_text_field(pdf, page, 'util_crack_result', field_x + 10, 228, 510, 68, {
+        '/Fo': 'var f = getField("util_crack_result"); f.readonly = true; f.multiline = true; f.fillColor = ["RGB", 1, 0.98, 0.94]; f.textSize = 9;'
+    })
+    created_fields.append(crack_result)
+
+    crack_btn = create_text_field(pdf, page, 'util_crack_btn', field_x + 10, 270, 510, 24, {
+        '/Fo': 'var f = getField("util_crack_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.55]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Crack URL into Components";',
+        '/Bl': 'var url = getField("util_crack_input").value || "https://user:pass@example.com:8080/path/file.html?q=test#section"; var parts = util.crackURL(url); var lines = []; lines.push("cScheme: " + parts.cScheme); lines.push("cUser: " + parts.cUser + " | cPassword: " + parts.cPassword); lines.push("cHost: " + parts.cHost + " | nPort: " + parts.nPort); lines.push("cPath: " + parts.cPath + " | cParameters: " + parts.cParameters); lines.push("cFragment: " + parts.cFragment); getField("util_crack_result").value = lines.join("\\n");'
+    })
+    created_fields.append(crack_btn)
+
+    # Card 4: util.printd / scand
+    date_input = create_text_field(pdf, page, 'util_date_input', field_x + 10, 148, 220, 24, {})
+    created_fields.append(date_input)
+
+    date_result = create_text_field(pdf, page, 'util_date_result', col2_x + 10, 148, 220, 24, {
+        '/Fo': 'var f = getField("util_date_result"); f.readonly = true; f.fillColor = ["RGB", 0.96, 0.98, 1]; f.alignment = "center";'
+    })
+    created_fields.append(date_result)
+
+    date_btn = create_text_field(pdf, page, 'util_date_btn', field_x + 10, 118, 510, 24, {
+        '/Fo': 'var f = getField("util_date_btn"); f.fillColor = ["RGB", 0.55, 0.35, 0.13]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Format Date with util.printd";',
+        '/Bl': 'var input = getField("util_date_input").value || "03/15/2024"; var d = util.scand("mm/dd/yyyy", input); if (d) { getField("util_date_result").value = util.printd("yyyy-mm-dd", d) + " | " + util.printd("mmmm d, yyyy", d); } else { getField("util_date_result").value = "Invalid date format"; }'
+    })
+    created_fields.append(date_btn)
+
+    # Add fields to page
+    if '/Annots' not in page:
+        page['/Annots'] = []
+    for field in created_fields:
+        ref = pdf.make_indirect(field)
+        page['/Annots'].append(ref)
+        pdf.Root['/AcroForm']['/Fields'].append(ref)
+
+    # Build content stream
+    content = b""
+
+    # === HEADER ===
+    content += b"""
+q
+% Orange-teal header
+0.55 0.35 0.13 rg
+0 720 612 72 re f
+
+BT
+/Helvetica-Bold 22 Tf
+1 1 1 rg
+50 755 Td
+(Util Object API Demo) Tj
+ET
+
+BT
+/Helvetica 10 Tf
+1 0.9 0.75 rg
+50 735 Td
+(Phase 6: printx masks, printf formatting, crackURL parsing, date conversions) Tj
+ET
+Q
+"""
+
+    # === CARD 1: util.printx ===
+    content += _card(40, 518, 530, 200,
+                     'util.printx - Input Masks',
+                     'Apply formatting masks to raw input.\n9 = digit, A = alpha, X = alphanumeric')
+    content += _label(field_x + 10, 646, 'Raw Input (e.g. 5551234567)')
+    content += _label(col2_x + 10, 646, 'Formatted Result')
+    content += _label(field_x + 10, 586, 'Raw Input (e.g. 123456789)')
+    content += _label(col2_x + 10, 586, 'Formatted Result')
+
+    # === CARD 2: util.printf ===
+    content += _card(40, 378, 530, 140,
+                     'util.printf - C-Style Formatting',
+                     '%d integer, %f float, %s string,\n%x hex, %05d zero-padded')
+    content += _label(field_x + 10, 474, 'printf Results (click button to run all examples)')
+
+    # === CARD 3: util.crackURL ===
+    content += _card(40, 218, 530, 160,
+                     'util.crackURL - URL Parser',
+                     'Parses URL into components:\ncScheme, cUser, cHost, nPort, cPath, cParameters, cFragment')
+    content += _label(field_x + 10, 328, 'URL Input (leave blank for example URL)')
+    content += _label(field_x + 10, 300, 'Parsed Components:')
+
+    # === CARD 4: util.printd / scand ===
+    content += _card(40, 98, 530, 120,
+                     'Date Formatting & Parsing',
+                     'util.printd(format, date) formats dates,\nutil.scand(format, string) parses date strings')
+    content += _label(field_x + 10, 176, 'Date Input (mm/dd/yyyy)')
+    content += _label(col2_x + 10, 176, 'Formatted Result')
+
+    # === FOOTER ===
+    content += b"""
+q
+0.94 0.95 0.97 rg
+0 0 612 80 re f
+
+BT
+/Helvetica-Bold 10 Tf
+0.3 0.35 0.4 rg
+50 55 Td
+(Util Object API:) Tj
+/Helvetica 9 Tf
+0.5 0.55 0.6 rg
+130 0 Td
+(util.printx\\(mask, src\\), util.printf\\(format, ...args\\), util.crackURL\\(url\\)) Tj
+0 -14 Td
+(util.printd\\(format, date\\), util.scand\\(format, string\\), util.spansToXML\\(spans\\)) Tj
+ET
+Q
+"""
+
+    page.Contents = pdf.make_stream(content)
+    print('  + Page 12 with Util Object API demo (4 cards, 14 interactive fields)')
+
+
+def add_event_object_demo_page(pdf):
+    """Add page 13 with Event Object demos"""
+    page = pdf.add_blank_page(page_size=(612, 792))
+    created_fields = []
+    field_x = 50
+    col2_x = 320
+
+    # Card 1: Keystroke event
+    keystroke_input = create_text_field(pdf, page, 'evt_keystroke_input', field_x + 10, 618, 220, 24, {
+        '/K': 'var f = getField("evt_keystroke_info"); f.value = "change: \\"" + event.change + "\\" | keyDown: " + event.keyDown + " | selStart: " + event.selStart + " | selEnd: " + event.selEnd + " | shift: " + event.shift + " | modifier: " + event.modifier;'
+    })
+    created_fields.append(keystroke_input)
+
+    keystroke_info = create_text_field(pdf, page, 'evt_keystroke_info', col2_x + 10, 618, 220, 24, {
+        '/Fo': 'var f = getField("evt_keystroke_info"); f.readonly = true; f.fillColor = ["RGB", 1, 1, 0.92]; f.textSize = 8;'
+    })
+    created_fields.append(keystroke_info)
+
+    # Card 2: Format event
+    format_input = create_text_field(pdf, page, 'evt_format_input', field_x + 10, 505, 220, 24, {
+        '/F': 'event.value = event.value.toUpperCase();',
+        '/K': 'getField("evt_format_info").value = "value: \\"" + event.value + "\\" | change: \\"" + event.change + "\\"";'
+    })
+    created_fields.append(format_input)
+
+    format_info = create_text_field(pdf, page, 'evt_format_info', col2_x + 10, 505, 220, 24, {
+        '/Fo': 'var f = getField("evt_format_info"); f.readonly = true; f.fillColor = ["RGB", 0.96, 0.96, 1]; f.textSize = 8;'
+    })
+    created_fields.append(format_info)
+
+    # Card 3: Validate event
+    validate_input = create_text_field(pdf, page, 'evt_validate_input', field_x + 10, 398, 220, 24, {
+        '/V': 'if (event.value && isNaN(Number(event.value))) { event.rc = false; getField("evt_validate_info").value = "REJECTED: \\"" + event.value + "\\" is not a number"; } else { event.rc = true; getField("evt_validate_info").value = "OK: \\"" + event.value + "\\" is valid"; }'
+    })
+    created_fields.append(validate_input)
+
+    validate_info = create_text_field(pdf, page, 'evt_validate_info', col2_x + 10, 398, 220, 24, {
+        '/Fo': 'var f = getField("evt_validate_info"); f.readonly = true; f.fillColor = ["RGB", 0.96, 1, 0.96]; f.textSize = 9;'
+    })
+    created_fields.append(validate_info)
+
+    # Card 4: Calculate event
+    calc_a = create_text_field(pdf, page, 'evt_calc_a', field_x + 10, 288, 100, 24, {
+        '/Bl': 'this.calculateNow();'
+    })
+    created_fields.append(calc_a)
+
+    calc_b = create_text_field(pdf, page, 'evt_calc_b', field_x + 125, 288, 100, 24, {
+        '/Bl': 'this.calculateNow();'
+    })
+    created_fields.append(calc_b)
+
+    calc_result = create_text_field(pdf, page, 'evt_calc_result', col2_x + 10, 288, 220, 24, {
+        '/Fo': 'var f = getField("evt_calc_result"); f.readonly = true; f.fillColor = ["RGB", 1, 0.98, 0.94]; f.alignment = "center"; f.textSize = 14;',
+        '/C': 'var a = parseFloat(getField("evt_calc_a").value) || 0; var b = parseFloat(getField("evt_calc_b").value) || 0; event.value = a + b;'
+    })
+    created_fields.append(calc_result)
+
+    # Card 5: Focus/Blur events
+    focus_input = create_text_field(pdf, page, 'evt_focus_input', field_x + 10, 188, 220, 24, {
+        '/Fo': 'getField("evt_focus_info").value = "FOCUS: name=" + event.targetName + " | type=Focus";',
+        '/Bl': 'getField("evt_focus_info").value = "BLUR: name=" + event.targetName + " | type=Blur";'
+    })
+    created_fields.append(focus_input)
+
+    focus_info = create_text_field(pdf, page, 'evt_focus_info', col2_x + 10, 188, 220, 24, {
+        '/Fo': 'var f = getField("evt_focus_info"); f.readonly = true; f.fillColor = ["RGB", 0.96, 0.98, 1]; f.textSize = 9;'
+    })
+    created_fields.append(focus_info)
+
+    # Card 6: event.source and event.target
+    source_trigger = create_text_field(pdf, page, 'evt_source_trigger', field_x + 10, 118, 220, 24, {
+        '/Fo': 'var f = getField("evt_source_trigger"); f.fillColor = ["RGB", 0.2, 0.5, 0.8]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Click Me (source demo)";',
+        '/Bl': 'getField("evt_source_info").value = "target: " + event.target.name + " | targetName: " + event.targetName + " | type: " + event.type;'
+    })
+    created_fields.append(source_trigger)
+
+    source_info = create_text_field(pdf, page, 'evt_source_info', col2_x + 10, 118, 220, 24, {
+        '/Fo': 'var f = getField("evt_source_info"); f.readonly = true; f.fillColor = ["RGB", 1, 0.96, 0.96]; f.textSize = 8;'
+    })
+    created_fields.append(source_info)
+
+    # Add fields to page
+    if '/Annots' not in page:
+        page['/Annots'] = []
+    for field in created_fields:
+        ref = pdf.make_indirect(field)
+        page['/Annots'].append(ref)
+        pdf.Root['/AcroForm']['/Fields'].append(ref)
+
+    # Build content stream
+    content = b""
+
+    # === HEADER ===
+    content += b"""
+q
+% Purple header
+0.35 0.2 0.55 rg
+0 720 612 72 re f
+
+BT
+/Helvetica-Bold 22 Tf
+1 1 1 rg
+50 755 Td
+(Event Object Demo) Tj
+ET
+
+BT
+/Helvetica 10 Tf
+0.85 0.78 1 rg
+50 735 Td
+(Phase 7: Keystroke, Format, Validate, Calculate, Focus, and Blur events) Tj
+ET
+Q
+"""
+
+    # === CARD 1: Keystroke Event ===
+    content += _card(40, 598, 530, 120,
+                     'Keystroke Event',
+                     'event.change, event.keyDown,\nevent.selStart, event.selEnd, event.shift, event.modifier')
+    content += _label(field_x + 10, 646, 'Type here (keystroke events fire)')
+    content += _label(col2_x + 10, 646, 'Event Properties')
+
+    # === CARD 2: Format Event ===
+    content += _card(40, 485, 530, 110,
+                     'Format Event',
+                     'event.value is set during format.\nThis demo converts to UPPERCASE on blur.')
+    content += _label(field_x + 10, 533, 'Type text, then tab out (auto-uppercase)')
+    content += _label(col2_x + 10, 533, 'Event Info')
+
+    # === CARD 3: Validate Event ===
+    content += _card(40, 378, 530, 107,
+                     'Validate Event',
+                     'event.rc = false rejects input.\nThis demo only accepts numbers.')
+    content += _label(field_x + 10, 426, 'Numbers only (tab out to validate)')
+    content += _label(col2_x + 10, 426, 'Validation Result')
+
+    # === CARD 4: Calculate Event ===
+    content += _card(40, 268, 530, 110,
+                     'Calculate Event',
+                     'event.value in Calculate trigger\nauto-computes field values')
+    content += _label(field_x + 10, 316, 'Value A')
+    content += _label(field_x + 125, 316, 'Value B')
+    content += _label(col2_x + 10, 316, 'Sum (auto-calculated)')
+    # Plus sign
+    content += f"""
+BT
+/Helvetica-Bold 14 Tf
+0.3 0.4 0.5 rg
+{field_x + 113} 292 Td
+(+) Tj
+ET
+""".encode('latin-1')
+
+    # === CARD 5: Focus & Blur ===
+    content += _card(40, 168, 530, 100,
+                     'Focus & Blur Events',
+                     'event.targetName, event.type\nidentify which field and event type')
+    content += _label(field_x + 10, 216, 'Click in/out of this field')
+    content += _label(col2_x + 10, 216, 'Focus/Blur Info')
+
+    # === CARD 6: Source & Target ===
+    content += _card(40, 98, 530, 70,
+                     'Event Source & Target',
+                     'event.target, event.targetName, event.type')
+    content += _label(col2_x + 10, 146, 'Event Details')
+
+    # === FOOTER ===
+    content += b"""
+q
+0.94 0.95 0.97 rg
+0 0 612 80 re f
+
+BT
+/Helvetica-Bold 10 Tf
+0.3 0.35 0.4 rg
+50 55 Td
+(Event Properties:) Tj
+/Helvetica 9 Tf
+0.5 0.55 0.6 rg
+140 0 Td
+(event.value, change, keyDown, modifier, shift, selStart, selEnd, rc, willCommit) Tj
+0 -14 Td
+(event.target, targetName, type, source, name, commitKey, fieldFull, richValue) Tj
+ET
+Q
+"""
+
+    page.Contents = pdf.make_stream(content)
+    print('  + Page 13 with Event Object demo (6 cards, 14 interactive fields)')
+
+
+def add_color_object_demo_page(pdf):
+    """Add page 14 with Color Object demos"""
+    page = pdf.add_blank_page(page_size=(612, 792))
+    created_fields = []
+    field_x = 50
+    col2_x = 320
+
+    # Card 1: Named color swatches (12 colors displayed as filled fields)
+    color_names = [
+        ('black', 'color.black'),
+        ('white', 'color.white'),
+        ('red', 'color.red'),
+        ('green', 'color.green'),
+        ('blue', 'color.blue'),
+        ('cyan', 'color.cyan'),
+        ('magenta', 'color.magenta'),
+        ('yellow', 'color.yellow'),
+        ('dkGray', 'color.dkGray'),
+        ('gray', 'color.gray'),
+        ('ltGray', 'color.ltGray'),
+        ('transparent', 'color.transparent'),
+    ]
+
+    swatch_y = 618
+    swatch_w = 80
+    swatch_h = 24
+    cols = 3
+    for i, (name, expr) in enumerate(color_names):
+        col = i % cols
+        row = i // cols
+        x = field_x + 10 + col * 175
+        y = swatch_y - row * 30
+        field = create_text_field(pdf, page, f'clr_swatch_{name}', x, y, swatch_w, swatch_h, {
+            '/Fo': f'var f = getField("clr_swatch_{name}"); f.readonly = true; f.fillColor = {expr}; f.textColor = {expr} == color.black || {expr} == color.dkGray ? color.white : color.black; f.alignment = "center"; f.textSize = 9; f.value = "{name}";'
+        })
+        created_fields.append(field)
+
+    # Card 2: color.convert - RGB to CMYK
+    convert_r = create_text_field(pdf, page, 'clr_cvt_r', field_x + 10, 428, 60, 24, {})
+    created_fields.append(convert_r)
+    convert_g = create_text_field(pdf, page, 'clr_cvt_g', field_x + 80, 428, 60, 24, {})
+    created_fields.append(convert_g)
+    convert_b = create_text_field(pdf, page, 'clr_cvt_b', field_x + 150, 428, 60, 24, {})
+    created_fields.append(convert_b)
+
+    convert_result = create_text_field(pdf, page, 'clr_cvt_result', col2_x + 10, 428, 220, 24, {
+        '/Fo': 'var f = getField("clr_cvt_result"); f.readonly = true; f.fillColor = ["RGB", 0.96, 0.96, 1]; f.textSize = 9;'
+    })
+    created_fields.append(convert_result)
+
+    convert_btn = create_text_field(pdf, page, 'clr_cvt_btn', field_x + 10, 398, 250, 24, {
+        '/Fo': 'var f = getField("clr_cvt_btn"); f.fillColor = ["RGB", 0.2, 0.5, 0.8]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Convert RGB to CMYK";',
+        '/Bl': 'var r = parseFloat(getField("clr_cvt_r").value) || 0; var g = parseFloat(getField("clr_cvt_g").value) || 0; var b = parseFloat(getField("clr_cvt_b").value) || 0; var rgb = ["RGB", r, g, b]; var cmyk = color.convert(rgb, "CMYK"); getField("clr_cvt_result").value = "CMYK: " + cmyk[1].toFixed(2) + ", " + cmyk[2].toFixed(2) + ", " + cmyk[3].toFixed(2) + ", " + cmyk[4].toFixed(2);'
+    })
+    created_fields.append(convert_btn)
+
+    convert_preview = create_text_field(pdf, page, 'clr_cvt_preview', col2_x + 10, 398, 220, 24, {
+        '/Fo': 'var f = getField("clr_cvt_preview"); f.readonly = true; f.alignment = "center"; f.textSize = 9; f.value = "Color Preview";'
+    })
+    created_fields.append(convert_preview)
+
+    preview_btn = create_text_field(pdf, page, 'clr_preview_btn', col2_x + 10, 368, 220, 24, {
+        '/Fo': 'var f = getField("clr_preview_btn"); f.fillColor = ["RGB", 0.13, 0.55, 0.13]; f.textColor = color.white; f.alignment = "center"; f.textSize = 10; f.value = "Show Color Preview";',
+        '/Bl': 'var r = parseFloat(getField("clr_cvt_r").value) || 0; var g = parseFloat(getField("clr_cvt_g").value) || 0; var b = parseFloat(getField("clr_cvt_b").value) || 0; getField("clr_cvt_preview").fillColor = ["RGB", r, g, b]; getField("clr_cvt_preview").textColor = (r + g + b) < 1.0 ? color.white : color.black; getField("clr_cvt_preview").value = "RGB(" + r + ", " + g + ", " + b + ")";'
+    })
+    created_fields.append(preview_btn)
+
+    # Card 3: CMYK to Gray
+    cmyk_c = create_text_field(pdf, page, 'clr_cmyk_c', field_x + 10, 288, 55, 24, {})
+    created_fields.append(cmyk_c)
+    cmyk_m = create_text_field(pdf, page, 'clr_cmyk_m', field_x + 75, 288, 55, 24, {})
+    created_fields.append(cmyk_m)
+    cmyk_y = create_text_field(pdf, page, 'clr_cmyk_y', field_x + 140, 288, 55, 24, {})
+    created_fields.append(cmyk_y)
+    cmyk_k = create_text_field(pdf, page, 'clr_cmyk_k', field_x + 205, 288, 55, 24, {})
+    created_fields.append(cmyk_k)
+
+    cmyk_result = create_text_field(pdf, page, 'clr_cmyk_result', col2_x + 10, 288, 220, 24, {
+        '/Fo': 'var f = getField("clr_cmyk_result"); f.readonly = true; f.fillColor = ["RGB", 0.96, 1, 0.96]; f.textSize = 10; f.alignment = "center";'
+    })
+    created_fields.append(cmyk_result)
+
+    cmyk_btn = create_text_field(pdf, page, 'clr_cmyk_btn', field_x + 10, 258, 510, 24, {
+        '/Fo': 'var f = getField("clr_cmyk_btn"); f.fillColor = ["RGB", 0.55, 0.35, 0.13]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Convert CMYK to Gray";',
+        '/Bl': 'var c = parseFloat(getField("clr_cmyk_c").value) || 0; var m = parseFloat(getField("clr_cmyk_m").value) || 0; var y = parseFloat(getField("clr_cmyk_y").value) || 0; var k = parseFloat(getField("clr_cmyk_k").value) || 0; var cmyk = ["CMYK", c, m, y, k]; var gray = color.convert(cmyk, "G"); getField("clr_cmyk_result").value = "Gray: " + gray[1].toFixed(3); getField("clr_cmyk_result").fillColor = gray;'
+    })
+    created_fields.append(cmyk_btn)
+
+    # Card 4: color.equal
+    equal_result = create_text_field(pdf, page, 'clr_equal_result', field_x + 10, 168, 510, 50, {
+        '/Fo': 'var f = getField("clr_equal_result"); f.readonly = true; f.multiline = true; f.fillColor = ["RGB", 0.97, 0.97, 1]; f.textSize = 10;'
+    })
+    created_fields.append(equal_result)
+
+    equal_btn = create_text_field(pdf, page, 'clr_equal_btn', field_x + 10, 138, 510, 24, {
+        '/Fo': 'var f = getField("clr_equal_btn"); f.fillColor = ["RGB", 0.6, 0.3, 0.6]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Run color.equal Comparisons";',
+        '/Bl': 'var lines = []; lines.push("color.red == color.red: " + color.equal(color.red, color.red)); lines.push("color.red == color.blue: " + color.equal(color.red, color.blue)); lines.push("color.black == [G, 0]: " + color.equal(color.black, ["G", 0])); lines.push("[RGB,1,0,0] == color.red: " + color.equal(["RGB", 1, 0, 0], color.red)); getField("clr_equal_result").value = lines.join("\\n");'
+    })
+    created_fields.append(equal_btn)
+
+    # Add fields to page
+    if '/Annots' not in page:
+        page['/Annots'] = []
+    for field in created_fields:
+        ref = pdf.make_indirect(field)
+        page['/Annots'].append(ref)
+        pdf.Root['/AcroForm']['/Fields'].append(ref)
+
+    # Build content stream
+    content = b""
+
+    # === HEADER ===
+    content += b"""
+q
+% Crimson header
+0.6 0.15 0.2 rg
+0 720 612 72 re f
+
+BT
+/Helvetica-Bold 22 Tf
+1 1 1 rg
+50 755 Td
+(Color Object Demo) Tj
+ET
+
+BT
+/Helvetica 10 Tf
+1 0.8 0.82 rg
+50 735 Td
+(Phase 8: Named colors, color.convert, color.equal, and color space conversions) Tj
+ET
+Q
+"""
+
+    # === CARD 1: Named Colors ===
+    content += _card(40, 518, 530, 200,
+                     'Named Color Constants',
+                     'All 12 built-in color constants.\nClick each swatch to see its fillColor applied.')
+
+    # Swatch labels above the fields
+    for i, (name, expr) in enumerate(color_names):
+        col = i % cols
+        row = i // cols
+        x = field_x + 10 + col * 175
+        y = swatch_y - row * 30
+        content += _label(x, y + 26, name)
+
+    # === CARD 2: RGB to CMYK ===
+    content += _card(40, 358, 530, 160,
+                     'color.convert: RGB to CMYK',
+                     'Enter RGB values (0-1 each),\nthen convert and preview the color')
+    content += _label(field_x + 10, 456, 'R')
+    content += _label(field_x + 80, 456, 'G')
+    content += _label(field_x + 150, 456, 'B')
+    content += _label(col2_x + 10, 456, 'CMYK Result')
+    content += _hint(field_x + 10, 370, 'Try: R=0.8, G=0.2, B=0.4')
+
+    # === CARD 3: CMYK to Gray ===
+    content += _card(40, 248, 530, 110,
+                     'color.convert: CMYK to Gray',
+                     'Enter CMYK values (0-1 each),\nresult field fills with the gray level')
+    content += _label(field_x + 10, 316, 'C')
+    content += _label(field_x + 75, 316, 'M')
+    content += _label(field_x + 140, 316, 'Y')
+    content += _label(field_x + 205, 316, 'K')
+    content += _label(col2_x + 10, 316, 'Gray Result')
+
+    # === CARD 4: color.equal ===
+    content += _card(40, 128, 530, 120,
+                     'color.equal - Color Comparison',
+                     'Compares two color values,\nreturns true if they are equivalent')
+    content += _label(field_x + 10, 222, 'Comparison Results (click button)')
+
+    # === FOOTER ===
+    content += b"""
+q
+0.94 0.95 0.97 rg
+0 0 612 80 re f
+
+BT
+/Helvetica-Bold 10 Tf
+0.3 0.35 0.4 rg
+50 55 Td
+(Color Object API:) Tj
+/Helvetica 9 Tf
+0.5 0.55 0.6 rg
+145 0 Td
+(color.convert\\(colorArray, colorSpace\\), color.equal\\(c1, c2\\)) Tj
+0 -14 Td
+(color.black, white, red, green, blue, cyan, magenta, yellow, dkGray, gray, ltGray, transparent) Tj
+ET
+Q
+"""
+
+    page.Contents = pdf.make_stream(content)
+    print('  + Page 14 with Color Object demo (4 cards, ~30 interactive fields)')
+
+
 def main():
     input_pdf = Path('public/sample.pdf')
     output_pdf = Path('public/sample-enhanced.pdf')
@@ -832,6 +1583,10 @@ def main():
     add_js_test_page(pdf)
     add_field_api_demo_page(pdf)
     add_document_api_demo_pages(pdf)
+    add_app_object_demo_page(pdf)
+    add_util_object_demo_page(pdf)
+    add_event_object_demo_page(pdf)
+    add_color_object_demo_page(pdf)
 
     print(f'Saving to {output_pdf}...')
     pdf.save(output_pdf)
