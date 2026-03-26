@@ -132,9 +132,10 @@ export class FormLayer {
 
     this._container.appendChild(this._overlay);
 
-    // Execute Focus actions on initial render (applies styling immediately)
+    // Run initial calculations and value sync (but NOT Focus actions —
+    // Focus styling should only apply when user actually clicks into a field)
     if (this._config.allowFormJavaScript) {
-      this._runInitialActions();
+      this._runInitialSetup();
     }
   }
 
@@ -678,26 +679,17 @@ export class FormLayer {
   }
 
   /**
-   * Run Focus actions on initial page render to apply ONLY permanent styling.
-   * Permanent properties (textColor, textFont, textSize, alignment, readonly, display)
-   * are applied immediately so fields look correct without user interaction.
-   * Interactive properties (fillColor, borderColor) are NOT applied here — they only
-   * take effect when the user actually focuses the field.
+   * Run initial setup on page render: sync values and run calculations.
+   * Focus actions are NOT executed here — they should only run when the
+   * user actually clicks/focuses a field, so initial render shows default
+   * PDF styling (small text, left-aligned, black, enabled).
    */
-  _runInitialActions() {
+  _runInitialSetup() {
     if (!this._overlay) return;
 
-    console.log('[FormLayer] Running initial actions for all fields');
+    console.log('[FormLayer] Running initial setup (calculations + value sync only, NO Focus actions)');
 
-    // Properties that are permanent/static and should apply on load
-    // NOTE: textColor is NOT included — it is typically set by Focus scripts for
-    // interactive styling (e.g. red text on focus) and should only apply when
-    // the user actually focuses the field, not on page load.
-    const PERMANENT_PROPS = ['textFont', 'textSize', 'alignment', 'readonly', 'display', 'required', 'multiline', 'password', 'charLimit', 'comb'];
-
-    // Collect all field metadata from Focus actions first
-    const combinedFieldMeta = new Map();
-
+    // Log which triggers exist for debugging — but do NOT execute them
     this._overlay.querySelectorAll('.form-field-input').forEach(el => {
       const fieldName = el.dataset.fieldName;
       if (!fieldName) return;
@@ -705,56 +697,9 @@ export class FormLayer {
       const actions = this._fieldActions.get(fieldName);
       if (!actions) return;
 
-      // Run Focus actions to extract initial styling
-      const focusAction = actions.find(a => a.trigger === 'Focus');
-      if (focusAction) {
-        if (focusAction.safety === SafetyLevel.UNSAFE && !this._config.allowFormJavaScript) {
-          return;
-        }
-
-        console.log(`[FormLayer] Initial Focus action for ${fieldName}:`, focusAction.code);
-
-        const result = executeSandboxed(focusAction.code, {
-          fieldValues: this._values,
-          currentFieldName: fieldName,
-          currentValue: el.value,
-        });
-
-        if (result.success) {
-          if (result.event && result.event.value !== undefined) {
-            const newValue = String(result.event.value);
-            if (newValue !== el.value) {
-              el.value = newValue;
-              this._values.set(fieldName, newValue);
-            }
-          }
-          // Merge field metadata — but only permanent properties
-          if (result.fieldMeta) {
-            for (const [name, meta] of result.fieldMeta) {
-              const filteredMeta = {};
-              let hasPermanent = false;
-              for (const prop of PERMANENT_PROPS) {
-                if (meta[prop] !== undefined) {
-                  filteredMeta[prop] = meta[prop];
-                  hasPermanent = true;
-                }
-              }
-              if (hasPermanent) {
-                combinedFieldMeta.set(name, filteredMeta);
-              }
-            }
-          }
-          if (result.logs?.length) {
-            result.logs.forEach(log => console.log(`[JS:init:${fieldName}]`, log));
-          }
-        }
-      }
+      const triggers = actions.map(a => a.trigger);
+      console.log(`[FormLayer] Field "${fieldName}" has triggers: [${triggers.join(', ')}] — Focus skipped on load`);
     });
-
-    // Apply only permanent field metadata at once
-    if (combinedFieldMeta.size > 0) {
-      this._applyFieldMeta(combinedFieldMeta);
-    }
 
     // Sync any cross-field value updates
     this._syncFieldValues();

@@ -750,7 +750,7 @@ class PDFRenderer {
     }
   }
 
-  _toggleFormMode() {
+  async _toggleFormMode() {
     if (!this.hasForm) return;
 
     this.formMode = !this.formMode;
@@ -763,7 +763,9 @@ class PDFRenderer {
       this.els.annotCanvas.style.pointerEvents = 'none';
       this.els.annotCanvas.style.opacity = '0.3';
       this.els.formFieldCount.textContent = `${this.formFieldCount} field${this.formFieldCount !== 1 ? 's' : ''}`;
-      this._renderFormFields();
+      // Blank out PDF text under form fields, then render the HTML form overlay
+      await this._blankFormFieldAreas();
+      await this._renderFormFields();
     } else {
       this.els.formBar.classList.add('hidden');
       this.els.annotCanvas.style.pointerEvents = '';
@@ -772,6 +774,8 @@ class PDFRenderer {
         this.formLayer.snapshotValues();
         this.formLayer.destroy();
       }
+      // Re-render the page to remove white rectangles from the canvas
+      const dims = await renderPage(this.pdfDoc, this.currentPage, this.els.pdfCanvas, this.currentScale);
     }
   }
 
