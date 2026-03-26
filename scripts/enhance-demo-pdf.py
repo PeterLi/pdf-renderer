@@ -1054,7 +1054,7 @@ def add_util_object_demo_page(pdf):
 
     printf_btn = create_text_field(pdf, page, 'util_printf_btn', field_x + 10, 360, 510, 24, {
         '/Fo': 'var f = getField("util_printf_btn"); f.fillColor = ["RGB", 0.6, 0.3, 0.6]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Run printf Examples";',
-        '/U': 'var lines = []; lines.push("Integer: " + util.printf("%d", 42)); lines.push("Float: " + util.printf("%.2f", 3.14159)); lines.push("Padded: " + util.printf("%05d", 42)); lines.push("String: " + util.printf("Hello %s!", "World")); lines.push("Hex: " + util.printf("%x", 255)); getField("util_printf_result").value = lines.join("\\n"); var f = getField("util_printf_btn"); f.fillColor = ["RGB", 0.6, 0.3, 0.6]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Run printf Examples";'
+        '/U': 'var intVal = util.printf("%d", 42); var floatVal = util.printf("%.2f", 3.14159); var paddedVal = util.printf("%05d", 42); var strVal = util.printf("Hello %s!", "World"); var hexVal = util.printf("%x", 255); getField("util_printf_result").value = "Integer: " + intVal + " | Float: " + floatVal + " | Padded: " + paddedVal + " | String: " + strVal + " | Hex: " + hexVal; var f = getField("util_printf_btn"); f.fillColor = ["RGB", 0.6, 0.3, 0.6]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Run printf Examples";'
     })
     created_fields.append(printf_btn)
 
@@ -1069,7 +1069,7 @@ def add_util_object_demo_page(pdf):
 
     crack_btn = create_text_field(pdf, page, 'util_crack_btn', field_x + 10, 240, 510, 24, {
         '/Fo': 'var f = getField("util_crack_btn"); f.fillColor = ["RGB", 0.4, 0.2, 0.6]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Crack URL into Components";',
-        '/U': 'var url = getField("util_crack_input").value || "https://user:pass@example.com:8080/path/file.html?q=test#section"; var parts = util.crackURL(url); var lines = []; lines.push("cScheme: " + parts.cScheme); lines.push("cUser: " + parts.cUser + " | cPassword: " + parts.cPassword); lines.push("cHost: " + parts.cHost + " | nPort: " + parts.nPort); lines.push("cPath: " + parts.cPath + " | cParameters: " + parts.cParameters); lines.push("cFragment: " + parts.cFragment); getField("util_crack_result").value = lines.join("\\n"); var f = getField("util_crack_btn"); f.fillColor = ["RGB", 0.4, 0.2, 0.6]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Crack URL into Components";'
+        '/U': 'var url = getField("util_crack_input").value || "https://user:pass@example.com:8080/path/file.html?q=test#section"; var parts = util.crackURL(url); getField("util_crack_result").value = "cScheme: " + parts.cScheme + " | cUser: " + parts.cUser + " | cPassword: " + parts.cPassword + " | cHost: " + parts.cHost + " | nPort: " + parts.nPort + " | cPath: " + parts.cPath + " | cParameters: " + parts.cParameters + " | cFragment: " + parts.cFragment; var f = getField("util_crack_btn"); f.fillColor = ["RGB", 0.4, 0.2, 0.6]; f.textColor = color.white; f.alignment = "center"; f.textSize = 11; f.value = "Crack URL into Components";'
     })
     created_fields.append(crack_btn)
 
