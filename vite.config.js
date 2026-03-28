@@ -2,6 +2,10 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   base: './',
+  server: {
+    host: true, // Listen on all network interfaces (LAN access)
+    port: 5176,
+  },
   build: {
     outDir: 'dist',
     assetsDir: 'assets',

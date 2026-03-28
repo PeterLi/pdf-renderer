@@ -30,7 +30,7 @@
   --transition:  150ms ease;
   --toolbar-h:   48px;
   --annot-bar-h: 46px;
-  --sidebar-w:   180px;
+  --sidebar-w:   200px;
   --font:        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
@@ -358,7 +358,10 @@ body {
   border-radius: var(--radius-sm);
   padding: 4px;
   transition: border-color var(--transition), background var(--transition);
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
 }
 .thumbnail-item:hover { background: var(--surface-alt); }
 .thumbnail-item.active {
@@ -367,10 +370,9 @@ body {
 }
 
 .thumbnail-item canvas {
-  width: 100%;
-  height: auto;
   border-radius: 4px;
   box-shadow: var(--shadow-sm);
+  /* No width/height overrides - let inline styles from renderThumbnail control size */
 }
 
 .thumbnail-label {
@@ -625,6 +627,18 @@ body {
   padding: 5px 0;
   font-size: 13px;
   color: var(--text-secondary);
+  gap: 12px;
+}
+
+.shortcut-row > *:not(span) {
+  /* Left-align all kbd elements and slashes together */
+  margin-right: 0;
+}
+
+.shortcut-row > span {
+  /* Right-align the description */
+  margin-left: auto;
+  text-align: right;
 }
 
 .shortcut-row kbd {
@@ -1121,7 +1135,15 @@ select.form-field-input:not([value=""]) option[value=""] {
   .toolbar-filename { display: none; }
   .tool-btn span { display: none; }
   .shortcut-grid { grid-template-columns: 1fr; }
-  :root { --sidebar-w: 140px; }
+  :root { --sidebar-w: 200px; }
+  
+  /* Hide page count, zoom percentage, and help button on mobile (save toolbar space) */
+  .page-separator,
+  .page-count,
+  #zoom-level,
+  #btn-help {
+    display: none;
+  }
   
   .stamp-dropdown {
     max-width: 200px;
